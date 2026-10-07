@@ -1,0 +1,721 @@
+{
+  "schema_version": "1.0.0",
+  "metadata": {
+    "id": "shizuoka_2015_math_06",
+    "prefecture": "静岡県",
+    "exam_type": "公立高校入試",
+    "subject": "数学",
+    "year": 2015,
+    "problem_number": "6",
+    "points": 9,
+    "source": {
+      "type": "past_exam",
+      "problem_url": "https://resemom.jp/feature/public-highschool-exam/shizuoka/2015/math/question06.html",
+      "answer_url": "https://resemom.jp/feature/public-highschool-exam/shizuoka/2015/math/answer01.html",
+      "note": "問題図は公開資料を参照。問題文は著作権上、構造化した要約として収録。"
+    },
+    "tags": [
+      "circle",
+      "diameter",
+      "isosceles_triangle",
+      "parallel_lines",
+      "similarity",
+      "inscribed_angle",
+      "central_angle",
+      "arc_length"
+    ]
+  },
+  "problem": {
+    "section": "大問6",
+    "subproblems": [
+      {
+        "id": "P1",
+        "number": "(1)",
+        "type": "similarity_proof",
+        "points": 6
+      },
+      {
+        "id": "P2",
+        "number": "(2)",
+        "type": "arc_length",
+        "points": 3
+      }
+    ]
+  },
+  "geometry": {
+    "coordinate_system": {
+      "type": "schematic",
+      "exact_coordinates": null
+    },
+    "objects": {
+      "points": [
+        {
+          "id": "A",
+          "role": "circle_point"
+        },
+        {
+          "id": "B",
+          "role": "circle_point"
+        },
+        {
+          "id": "C",
+          "role": "circle_point"
+        },
+        {
+          "id": "D",
+          "role": "diameter_point"
+        },
+        {
+          "id": "E",
+          "role": "circle_point"
+        },
+        {
+          "id": "F",
+          "role": "intersection"
+        },
+        {
+          "id": "G",
+          "role": "intersection"
+        },
+        {
+          "id": "H",
+          "role": "circle_point"
+        },
+        {
+          "id": "O",
+          "role": "circle_center"
+        }
+      ],
+      "segments": [
+        {
+          "id": "AB",
+          "from": "A",
+          "to": "B"
+        },
+        {
+          "id": "AC",
+          "from": "A",
+          "to": "C"
+        },
+        {
+          "id": "AD",
+          "from": "A",
+          "to": "D"
+        },
+        {
+          "id": "BC",
+          "from": "B",
+          "to": "C"
+        },
+        {
+          "id": "BD",
+          "from": "B",
+          "to": "D"
+        },
+        {
+          "id": "BE",
+          "from": "B",
+          "to": "E"
+        },
+        {
+          "id": "CE",
+          "from": "C",
+          "to": "E"
+        },
+        {
+          "id": "EC",
+          "from": "E",
+          "to": "C"
+        },
+        {
+          "id": "DH",
+          "from": "D",
+          "to": "H"
+        }
+      ],
+      "lines": [
+        {
+          "id": "l_BC",
+          "through": [
+            "B",
+            "C"
+          ]
+        },
+        {
+          "id": "l_DA",
+          "through": [
+            "D",
+            "A",
+            "H"
+          ]
+        },
+        {
+          "id": "l_BE",
+          "through": [
+            "B",
+            "E"
+          ]
+        },
+        {
+          "id": "l_AC",
+          "through": [
+            "A",
+            "C"
+          ]
+        },
+        {
+          "id": "l_CE",
+          "through": [
+            "C",
+            "E"
+          ]
+        }
+      ],
+      "circles": [
+        {
+          "id": "O1",
+          "center": "O",
+          "radius": 9,
+          "through_points": [
+            "A",
+            "B",
+            "C",
+            "E",
+            "H"
+          ]
+        }
+      ],
+      "triangles": [
+        {
+          "id": "T1",
+          "vertices": [
+            "A",
+            "B",
+            "D"
+          ],
+          "properties": [
+            "isosceles",
+            "BA=BD"
+          ]
+        },
+        {
+          "id": "T2",
+          "vertices": [
+            "F",
+            "B",
+            "D"
+          ]
+        },
+        {
+          "id": "T3",
+          "vertices": [
+            "E",
+            "C",
+            "G"
+          ]
+        }
+      ]
+    },
+    "incidence": [
+      {
+        "type": "point_on_segment",
+        "point": "D",
+        "segment": "BC"
+      },
+      {
+        "type": "point_on_line",
+        "point": "F",
+        "line": "l_BE"
+      },
+      {
+        "type": "point_on_line",
+        "point": "F",
+        "line": "l_DA"
+      },
+      {
+        "type": "point_on_line",
+        "point": "G",
+        "line": "l_BE"
+      },
+      {
+        "type": "point_on_line",
+        "point": "G",
+        "line": "l_AC"
+      },
+      {
+        "type": "point_on_line",
+        "point": "H",
+        "line": "l_DA"
+      },
+      {
+        "type": "point_on_circle",
+        "point": "A",
+        "circle": "O1"
+      },
+      {
+        "type": "point_on_circle",
+        "point": "B",
+        "circle": "O1"
+      },
+      {
+        "type": "point_on_circle",
+        "point": "C",
+        "circle": "O1"
+      },
+      {
+        "type": "point_on_circle",
+        "point": "E",
+        "circle": "O1"
+      },
+      {
+        "type": "point_on_circle",
+        "point": "H",
+        "circle": "O1"
+      }
+    ],
+    "relationships": [
+      {
+        "type": "diameter",
+        "segment": "BC"
+      },
+      {
+        "type": "equal_length",
+        "objects": [
+          "BA",
+          "BD"
+        ],
+        "source": "given"
+      },
+      {
+        "type": "parallel",
+        "objects": [
+          "CE",
+          "AD"
+        ],
+        "source": "given"
+      },
+      {
+        "type": "radius",
+        "circle": "O1",
+        "value": 9
+      }
+    ],
+    "construction_sequence": [
+      {
+        "step": 1,
+        "action": "create_circle",
+        "object": "O1",
+        "radius": 9
+      },
+      {
+        "step": 2,
+        "action": "create_diameter",
+        "object": "BC",
+        "circle": "O1"
+      },
+      {
+        "step": 3,
+        "action": "place_point_on_segment",
+        "point": "D",
+        "segment": "BC"
+      },
+      {
+        "step": 4,
+        "action": "set_equal_lengths",
+        "objects": [
+          "BA",
+          "BD"
+        ]
+      },
+      {
+        "step": 5,
+        "action": "draw_line",
+        "object": "AD"
+      },
+      {
+        "step": 6,
+        "action": "through_point_parallel",
+        "point": "C",
+        "parallel_to": "AD",
+        "result_line": "l_CE"
+      },
+      {
+        "step": 7,
+        "action": "intersect_circle",
+        "line": "l_CE",
+        "circle": "O1",
+        "result": "E"
+      },
+      {
+        "step": 8,
+        "action": "draw_line",
+        "object": "BE"
+      },
+      {
+        "step": 9,
+        "action": "intersect",
+        "objects": [
+          "BE",
+          "AD"
+        ],
+        "result": "F"
+      },
+      {
+        "step": 10,
+        "action": "intersect",
+        "objects": [
+          "BE",
+          "AC"
+        ],
+        "result": "G"
+      },
+      {
+        "step": 11,
+        "action": "extend_line",
+        "line": "AD",
+        "from": "D",
+        "result": "H"
+      },
+      {
+        "step": 12,
+        "action": "intersect_circle",
+        "line": "AD",
+        "circle": "O1",
+        "result": "H"
+      }
+    ],
+    "display": {
+      "visible_objects": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G",
+        "O",
+        "AB",
+        "AC",
+        "AD",
+        "BC",
+        "BD",
+        "BE",
+        "CE",
+        "O1"
+      ],
+      "marks": [
+        {
+          "type": "equal_length",
+          "objects": [
+            "BA",
+            "BD"
+          ]
+        },
+        {
+          "type": "parallel",
+          "objects": [
+            "CE",
+            "AD"
+          ]
+        },
+        {
+          "type": "diameter",
+          "object": "BC"
+        }
+      ]
+    }
+  },
+  "given_conditions": [
+    {
+      "id": "C01",
+      "type": "concyclic",
+      "objects": [
+        "A",
+        "B",
+        "C"
+      ],
+      "display_text": "A，B，Cは円Oの円周上"
+    },
+    {
+      "id": "C02",
+      "type": "diameter",
+      "object": "BC",
+      "display_text": "BCは円Oの直径"
+    },
+    {
+      "id": "C03",
+      "type": "equal_length",
+      "objects": [
+        "BA",
+        "BD"
+      ],
+      "display_text": "BA＝BD"
+    },
+    {
+      "id": "C04",
+      "type": "parallel",
+      "objects": [
+        "CE",
+        "AD"
+      ],
+      "display_text": "CE∥AD"
+    },
+    {
+      "id": "C05",
+      "type": "intersection",
+      "objects": [
+        "BE",
+        "AD"
+      ],
+      "result": "F"
+    },
+    {
+      "id": "C06",
+      "type": "intersection",
+      "objects": [
+        "BE",
+        "AC"
+      ],
+      "result": "G"
+    }
+  ],
+  "derived_facts": [
+    {
+      "id": "F01",
+      "type": "right_angle",
+      "statement": "∠CEG＝90°",
+      "derived_from": [
+        "C02"
+      ],
+      "theorem": "angle_in_semicircle"
+    },
+    {
+      "id": "F02",
+      "type": "right_angle",
+      "statement": "∠DFB＝90°",
+      "derived_from": [
+        "C02",
+        "C04"
+      ],
+      "theorem": "parallel_lines_and_diameter"
+    },
+    {
+      "id": "F03",
+      "type": "equal_angle",
+      "statement": "∠DBF＝∠ABF",
+      "derived_from": [
+        "C03",
+        "F02"
+      ],
+      "theorem": "isosceles_triangle_angle_bisector"
+    },
+    {
+      "id": "F04",
+      "type": "equal_angle",
+      "statement": "∠ABF＝∠GCE",
+      "derived_from": [
+        "C01"
+      ],
+      "theorem": "inscribed_angles_same_arc"
+    },
+    {
+      "id": "F05",
+      "type": "equal_angle",
+      "statement": "∠DBF＝∠GCE",
+      "derived_from": [
+        "F03",
+        "F04"
+      ],
+      "theorem": "transitivity"
+    }
+  ],
+  "proof": {
+    "problem_id": "P1",
+    "target": {
+      "type": "similarity",
+      "objects": [
+        "T2",
+        "T3"
+      ],
+      "statement": "△FBD∽△ECG"
+    },
+    "target_decomposition": {
+      "required_conditions": [
+        {
+          "type": "equal_angle",
+          "statement": "∠DFB＝∠CEG＝90°"
+        },
+        {
+          "type": "equal_angle",
+          "statement": "∠DBF＝∠GCE"
+        }
+      ],
+      "criterion": "AA",
+      "japanese_criterion": "2組の角がそれぞれ等しい"
+    },
+    "selected_solution": {
+      "strategy": "two_angle_similarity",
+      "steps": [
+        {
+          "id": "S01",
+          "order": 1,
+          "statement": "∠DFB＝∠CEG＝90°",
+          "reason": "BCが直径であること、およびCE∥ADから直角関係を導く",
+          "input": [
+            "C02",
+            "C04"
+          ],
+          "output": "F01_F02"
+        },
+        {
+          "id": "S02",
+          "order": 2,
+          "statement": "∠DBF＝∠ABF",
+          "reason": "BA＝BDより△ABDは二等辺三角形であり、BFは直角二等辺的構成から頂角の二等分線となる",
+          "input": [
+            "C03",
+            "F02"
+          ],
+          "output": "F03"
+        },
+        {
+          "id": "S03",
+          "order": 3,
+          "statement": "∠ABF＝∠GCE",
+          "reason": "同じ弧AEに対する円周角は等しい",
+          "input": [
+            "C01"
+          ],
+          "output": "F04"
+        },
+        {
+          "id": "S04",
+          "order": 4,
+          "statement": "∠DBF＝∠GCE",
+          "reason": "S02，S03より",
+          "input": [
+            "F03",
+            "F04"
+          ],
+          "output": "F05"
+        },
+        {
+          "id": "S05",
+          "order": 5,
+          "statement": "△FBD∽△ECG",
+          "reason": "2組の角がそれぞれ等しい",
+          "input": [
+            "F01",
+            "F02",
+            "F05"
+          ],
+          "output": "PROOF_CONCLUSION"
+        }
+      ]
+    },
+    "answer_generation": {
+      "sentence_templates": [
+        "{reason}より、{statement}。",
+        "{statement}である。"
+      ],
+      "final_template": "{triangle_statement}は、2組の角がそれぞれ等しいので相似である。"
+    }
+  },
+  "follow_up": {
+    "exists": true,
+    "problems": [
+      {
+        "id": "P2",
+        "number": "(2)",
+        "type": "arc_length",
+        "given": [
+          {
+            "id": "C07",
+            "type": "angle",
+            "object": "∠CDH",
+            "value": 56,
+            "unit": "degree"
+          },
+          {
+            "id": "C08",
+            "type": "radius",
+            "circle": "O1",
+            "value": 9,
+            "unit": "cm"
+          }
+        ],
+        "target": {
+          "type": "arc_length",
+          "object": "arc_CH",
+          "answer": "17π/5",
+          "unit": "cm"
+        },
+        "uses_proof_result": false,
+        "reasoning": [
+          {
+            "order": 1,
+            "statement": "∠DAC＝34°",
+            "reason": "∠CDH＝56°とBCが直径であることから直角を利用"
+          },
+          {
+            "order": 2,
+            "statement": "∠COH＝68°",
+            "reason": "中心角は同じ弧に対する円周角の2倍"
+          },
+          {
+            "order": 3,
+            "statement": "CH＝2π×9×68/360",
+            "reason": "弧の長さ＝円周×中心角/360"
+          },
+          {
+            "order": 4,
+            "statement": "CH＝17π/5 cm",
+            "reason": "計算"
+          }
+        ],
+        "answer": {
+          "value": "17π/5",
+          "unit": "cm",
+          "expression": "18π×68/360＝17π/5"
+        }
+      }
+    ]
+  },
+  "analysis": {
+    "proof_pattern": [
+      "diameter_right_angle",
+      "parallel_line",
+      "isosceles_triangle",
+      "inscribed_angle",
+      "AA_similarity"
+    ],
+    "reasoning_depth": 5,
+    "proof_uses_follow_up": false,
+    "notable_feature": "直径による直角と、二等辺三角形・円周角を組み合わせて相似を成立させる。"
+  },
+  "generation": {
+    "can_generate_problem": true,
+    "can_generate_answer": true,
+    "template_id": "SHIZUOKA_DIAMETER_ISOSCELES_AA_001",
+    "randomizable": {
+      "radius": true,
+      "given_angle": true,
+      "point_position": true
+    },
+    "constraints": [
+      "BC must be a diameter",
+      "BA=BD",
+      "CE parallel AD",
+      "F=BE∩AD",
+      "G=BE∩AC",
+      "proof target must remain AA similarity",
+      "arc-length result must be positive and geometrically valid"
+    ]
+  },
+  "validation": {
+    "proof_valid": true,
+    "answer_valid": true,
+    "geometry_constraints_checked": true,
+    "numeric_constraints_checked": true
+  }
+}

@@ -1,0 +1,545 @@
+{
+  "schema_version": "1.0.0",
+  "metadata": {
+    "id": "shizuoka_2015_math_demo",
+    "prefecture": "静岡県",
+    "exam_type": "公立高校入試",
+    "subject": "数学",
+    "year": 2015,
+    "problem_number": "7",
+    "points": 9,
+    "tags": [
+      "circle",
+      "inscribed_angle",
+      "chord",
+      "isosceles_triangle",
+      "parallel_lines",
+      "congruence",
+      "arc_ratio",
+      "angle_calculation"
+    ]
+  },
+  "problem": {
+    "section": "大問7",
+    "subproblems": [
+      {
+        "id": "P1",
+        "number": "(1)",
+        "type": "proof",
+        "points": 6
+      },
+      {
+        "id": "P2",
+        "number": "(2)",
+        "type": "angle",
+        "points": 3
+      }
+    ]
+  },
+  "geometry": {
+    "coordinate_system": {
+      "type": "schematic",
+      "exact_coordinates": null
+    },
+    "objects": {
+      "points": [
+        {
+          "id": "A",
+          "role": "circle_point"
+        },
+        {
+          "id": "B",
+          "role": "circle_point"
+        },
+        {
+          "id": "C",
+          "role": "circle_point"
+        },
+        {
+          "id": "D",
+          "role": "circle_point"
+        },
+        {
+          "id": "E",
+          "role": "circle_point"
+        },
+        {
+          "id": "F",
+          "role": "intersection"
+        },
+        {
+          "id": "G",
+          "role": "intersection"
+        },
+        {
+          "id": "O",
+          "role": "circle_center"
+        }
+      ],
+      "segments": [
+        {
+          "id": "AB",
+          "from": "A",
+          "to": "B"
+        },
+        {
+          "id": "AC",
+          "from": "A",
+          "to": "C"
+        },
+        {
+          "id": "AD",
+          "from": "A",
+          "to": "D"
+        },
+        {
+          "id": "AE",
+          "from": "A",
+          "to": "E"
+        },
+        {
+          "id": "BC",
+          "from": "B",
+          "to": "C"
+        },
+        {
+          "id": "BD",
+          "from": "B",
+          "to": "D"
+        },
+        {
+          "id": "CD",
+          "from": "C",
+          "to": "D"
+        },
+        {
+          "id": "CE",
+          "from": "C",
+          "to": "E"
+        }
+      ],
+      "lines": [
+        {
+          "id": "l_BD",
+          "through": [
+            "B",
+            "D"
+          ]
+        },
+        {
+          "id": "l_CE",
+          "through": [
+            "C",
+            "E"
+          ]
+        },
+        {
+          "id": "l_AE",
+          "through": [
+            "A",
+            "E"
+          ]
+        }
+      ],
+      "circles": [
+        {
+          "id": "O1",
+          "center": "O",
+          "through_points": [
+            "A",
+            "B",
+            "C",
+            "D",
+            "E"
+          ]
+        }
+      ],
+      "triangles": [
+        {
+          "id": "T1",
+          "vertices": [
+            "A",
+            "C",
+            "D"
+          ],
+          "properties": [
+            "isosceles",
+            "AC=AD"
+          ]
+        },
+        {
+          "id": "T2",
+          "vertices": [
+            "A",
+            "B",
+            "C"
+          ]
+        },
+        {
+          "id": "T3",
+          "vertices": [
+            "A",
+            "G",
+            "D"
+          ]
+        }
+      ]
+    },
+    "incidence": [],
+    "intersections": [],
+    "relationships": [
+      {
+        "type": "equal_length",
+        "objects": [
+          "AC",
+          "AD"
+        ],
+        "source": "given"
+      },
+      {
+        "type": "parallel",
+        "objects": [
+          "BD",
+          "CE"
+        ],
+        "source": "construction"
+      },
+      {
+        "type": "concyclic",
+        "objects": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E"
+        ],
+        "source": "circle"
+      }
+    ],
+    "display": {
+      "visible_objects": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G",
+        "O",
+        "AB",
+        "AC",
+        "AD",
+        "AE",
+        "BC",
+        "BD",
+        "CD",
+        "CE",
+        "O1"
+      ],
+      "marks": [
+        {
+          "type": "equal_length",
+          "objects": [
+            "AC",
+            "AD"
+          ]
+        },
+        {
+          "type": "parallel",
+          "objects": [
+            "BD",
+            "CE"
+          ]
+        }
+      ]
+    }
+  },
+  "given_conditions": [
+    {
+      "id": "C01",
+      "type": "concyclic",
+      "objects": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "display_text": "A，B，C，Dは円Oの円周上"
+    },
+    {
+      "id": "C02",
+      "type": "equal_length",
+      "objects": [
+        "AC",
+        "AD"
+      ],
+      "display_text": "AC＝AD"
+    },
+    {
+      "id": "C03",
+      "type": "parallel",
+      "objects": [
+        "BD",
+        "CE"
+      ],
+      "display_text": "CE∥BD"
+    },
+    {
+      "id": "C04",
+      "type": "intersection",
+      "objects": [
+        "BD",
+        "AC"
+      ],
+      "result": "F",
+      "display_text": "BDとACの交点をFとする"
+    },
+    {
+      "id": "C05",
+      "type": "intersection",
+      "objects": [
+        "BD",
+        "AE"
+      ],
+      "result": "G",
+      "display_text": "BDとAEの交点をGとする"
+    }
+  ],
+  "derived_facts": [
+    {
+      "id": "F01",
+      "type": "equal_angle",
+      "statement": "∠ACB＝∠ADG",
+      "derived_from": [
+        "C01"
+      ],
+      "theorem": "inscribed_angles_same_arc",
+      "reason": "弧ABに対する円周角"
+    },
+    {
+      "id": "F02",
+      "type": "equal_angle",
+      "statement": "∠BAC＝∠BDC",
+      "derived_from": [
+        "C01"
+      ],
+      "theorem": "inscribed_angles_same_arc",
+      "reason": "弧BCに対する円周角"
+    },
+    {
+      "id": "F03",
+      "type": "equal_angle",
+      "statement": "∠BDC＝∠DCE",
+      "derived_from": [
+        "C03"
+      ],
+      "theorem": "alternate_interior_angles",
+      "reason": "BD∥CE"
+    },
+    {
+      "id": "F04",
+      "type": "equal_angle",
+      "statement": "∠DCE＝∠GAD",
+      "derived_from": [
+        "C01"
+      ],
+      "theorem": "inscribed_angles_same_arc",
+      "reason": "弧DEに対する円周角"
+    },
+    {
+      "id": "F05",
+      "type": "equal_angle",
+      "statement": "∠BAC＝∠GAD",
+      "derived_from": [
+        "F02",
+        "F03",
+        "F04"
+      ],
+      "theorem": "transitivity"
+    }
+  ],
+  "proof": {
+    "problem_id": "P1",
+    "target": {
+      "type": "congruence",
+      "objects": [
+        "T2",
+        "T3"
+      ],
+      "statement": "△ABC≡△AGD"
+    },
+    "target_decomposition": {
+      "required_conditions": [
+        {
+          "type": "equal_length",
+          "statement": "AC＝AD"
+        },
+        {
+          "type": "equal_angle",
+          "statement": "∠ACB＝∠ADG"
+        },
+        {
+          "type": "equal_angle",
+          "statement": "∠BAC＝∠GAD"
+        }
+      ],
+      "criterion": "ASA",
+      "japanese_criterion": "1組の辺とその両端の角がそれぞれ等しい"
+    },
+    "selected_solution": {
+      "strategy": "forward_with_angle_chain",
+      "steps": [
+        {
+          "id": "S01",
+          "order": 1,
+          "statement": "AC＝AD",
+          "reason": "仮定",
+          "input": [
+            "C02"
+          ],
+          "output": "F06"
+        },
+        {
+          "id": "S02",
+          "order": 2,
+          "statement": "∠ACB＝∠ADG",
+          "reason": "弧ABに対する円周角は等しい",
+          "input": [
+            "C01"
+          ],
+          "output": "F01"
+        },
+        {
+          "id": "S03",
+          "order": 3,
+          "statement": "∠BAC＝∠BDC",
+          "reason": "弧BCに対する円周角は等しい",
+          "input": [
+            "C01"
+          ],
+          "output": "F02"
+        },
+        {
+          "id": "S04",
+          "order": 4,
+          "statement": "∠BDC＝∠DCE",
+          "reason": "BD∥CEより錯角は等しい",
+          "input": [
+            "C03"
+          ],
+          "output": "F03"
+        },
+        {
+          "id": "S05",
+          "order": 5,
+          "statement": "∠DCE＝∠GAD",
+          "reason": "弧DEに対する円周角は等しい",
+          "input": [
+            "C01"
+          ],
+          "output": "F04"
+        },
+        {
+          "id": "S06",
+          "order": 6,
+          "statement": "∠BAC＝∠GAD",
+          "reason": "S03，S04，S05より",
+          "input": [
+            "F02",
+            "F03",
+            "F04"
+          ],
+          "output": "F05"
+        },
+        {
+          "id": "S07",
+          "order": 7,
+          "statement": "△ABC≡△AGD",
+          "reason": "1組の辺とその両端の角がそれぞれ等しい",
+          "input": [
+            "C02",
+            "F01",
+            "F05"
+          ],
+          "output": "PROOF_CONCLUSION"
+        }
+      ]
+    }
+  },
+  "follow_up": {
+    "exists": true,
+    "problems": [
+      {
+        "id": "P2",
+        "number": "(2)",
+        "type": "angle",
+        "given": [
+          {
+            "id": "C06",
+            "type": "arc_ratio",
+            "objects": [
+              "arc_AB",
+              "arc_BC"
+            ],
+            "value": [
+              3,
+              1
+            ],
+            "display_text": "弧AB：弧BC＝3：1"
+          },
+          {
+            "id": "C07",
+            "type": "angle",
+            "object": "∠AFB",
+            "value": 100,
+            "unit": "degree",
+            "display_text": "∠AFB＝100°"
+          }
+        ],
+        "target": {
+          "type": "angle",
+          "object": "∠CAE",
+          "answer": 36,
+          "unit": "degree"
+        }
+      }
+    ]
+  },
+  "analysis": {
+    "proof_pattern": [
+      "equal_side",
+      "inscribed_angle",
+      "parallel_line",
+      "inscribed_angle",
+      "angle_transitivity",
+      "ASA_congruence"
+    ],
+    "reasoning_depth": 6
+  },
+  "generation": {
+    "can_generate_problem": true,
+    "can_generate_answer": true,
+    "template_id": "SHIZUOKA_CIRCLE_ISOSCELES_PARALLEL_ASA_001",
+    "randomizable": {
+      "point_labels": true,
+      "arc_ratio": true,
+      "given_angle": true,
+      "circle_orientation": true
+    },
+    "constraints": [
+      "A,B,C,D,E must be concyclic",
+      "AC=AD",
+      "BD parallel CE",
+      "F=AC∩BD",
+      "G=AE∩BD",
+      "proof target must remain ASA congruence",
+      "generated angles must be geometrically valid"
+    ]
+  },
+  "validation": {
+    "proof_valid": true,
+    "answer_valid": true,
+    "geometry_constraints_checked": true,
+    "numeric_constraints_checked": true
+  }
+}

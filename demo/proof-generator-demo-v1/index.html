@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>入試対策証明ジェネレーター Demo</title>
+</head>
+<body>
+  <div id="app-root"></div>
+
+  <script type="module">
+    import { appInit } from "./generator.js";
+
+    appInit().catch(error => {
+      console.error(error);
+      document.getElementById("app-root").innerHTML =
+        `<pre style="padding:20px;color:#b00">${error.stack ?? error}</pre>`;
+    });
+  </script>
+</body>
+</html>
