@@ -35,6 +35,31 @@ const appModules = {
 //app setting
 //appname:imported module
 };
+export function registerApp(appName, appModule) {
+
+  if (!appName || !appModule) {
+
+    throw new Error('registerApp: appName と appModule は必須です');
+
+  }
+
+  appModules[appName] = appModule;
+
+  if (window.ds) {
+
+    window.ds.log({
+
+      from: `db.app.${appName}.out`,
+
+      message: `${appName}アプリを登録しました`,
+
+      level: 'info'
+
+    });
+
+  }
+
+}
 
 // Deep-Base ログシステム
 class DeepShell {
@@ -52,10 +77,10 @@ class DeepShell {
     const logFunc = this.log.bind(this);
     logFunc.sw = this.log_sw.bind(this);
     this.log = logFunc;
-    
+
     // バージョン管理機能を初期化
     this._initVersionCommands();
-    
+
     window.ds = this; // コマンド用
     applyLangToDOM();
   }
@@ -72,7 +97,7 @@ class DeepShell {
         this.log({from: 'db.sys.version', message: 'Version information displayed', level: 'info'});
         return formatted;
       },
-      
+
       // 特定コンポーネントのバージョン情報を表示
       get: async (component = 'client') => {
         await versionManager.loadVersionConfig();
@@ -81,7 +106,7 @@ class DeepShell {
         this.log({from: 'db.sys.version', message: `${component} version information displayed`, level: 'info'});
         return formatted;
       },
-      
+
       // 利用可能なコンポーネント一覧
       list: () => {
         const components = ['family', 'client', 'server', 'workmaker', 'toaster'];
@@ -89,7 +114,7 @@ class DeepShell {
         this.log({from: 'db.sys.version', message: 'Available components listed', level: 'info'});
         return components;
       },
-      
+
       // アップデートチェック
       check: async () => {
         await versionManager.loadVersionConfig();
@@ -98,7 +123,7 @@ class DeepShell {
         this.log({from: 'db.sys.version', message: 'Update check completed', level: 'info'});
         return updates;
       },
-      
+
       // バージョン比較
       compare: (version1, version2) => {
         const result = versionManager.compareVersions(version1, version2);
@@ -241,4 +266,4 @@ if (typeof window !== 'undefined') {
   window.shell = new DeepShell();
 }
 
-// 例: window.shell = new DeepSchoolShell(); window.shell.loadApp('menu'); 
+// 例: window.shell = new DeepSchoolShell(); window.shell.loadApp('menu');
