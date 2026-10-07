@@ -1,266 +1,918 @@
 /**
- * Drawer
+ * GeometryModelをCanvasへ描画する。
  *
- * GeometryModelをCanvasへ描画するだけ。
- * 座標計算・交点計算・制約判定は geometry_solver が担当する。
- */
+ * 数学座標:
+ *   x → 右
+ *   y → 上
+ *
+ * Canvas座標:
+ *   x → 右
+ *   y → 下
+ *
+ * Drawerでは数学座標を保持したまま、
+ * Canvasへ変換するときだけY軸を反転する。
+ */export class Drawer {
 
-export class Drawer {
-  constructor(canvasManager) {
-    this.manager = canvasManager;
-    this.ctx = canvasManager.getContext();
-  }
+   constructor(canvasManager) {
 
-  drawGeometry(geometry) {
-    this.manager.clear();
+     if (!canvasManager) {
+       throw new Error(
+         'DrawerにはCanvasManagerが必要です。'
+       );
+     }
 
-    const model = geometry?.model;
-    if (!model) return;
+     this.canvasManager =
+       canvasManager;
 
-    const screen = createScreenTransform(
-      model.points,
-      this.manager.getSize(),
-      56
-    );
+     this.context =
+       canvasManager.getContext();
 
-    this.drawCircles(model, screen);
-    this.drawSegments(model, screen);
-    this.drawLines(model, screen);
-    this.drawRelations(geometry, model, screen);
-    this.drawPoints(geometry, model, screen);
-  }
+     if (!this.context) {
+       throw new Error(
+         'Canvasの2Dコンテキストを取得できません。'
+       );
+     }
 
-  drawCircles(model, screen) {
-    for (const circle of model.circles) {
-      const c = model.points.get(circle.center);
-      if (!c) continue;
+     this.transform = {
+       scale: 100,
+       offsetX: 0,
+       offsetY: 0
+     };
 
-      const center = screen.map(c);
-      const radius = circle.radius * screen.scale;
+     this.style = {
+       background: '#ffffff',
+       lineColor: '#111111',
+       pointColor: '#111111',
+       labelColor: '#111111',
 
-      this.ctx.beginPath();
-      this.ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
-      this.ctx.stroke();
-    }
-  }
+       lineWidth: 2,
+       pointRadius: 4,
 
-  drawSegments(model, screen) {
-    for (const segment of model.segments) {
-      const a = model.points.get(segment.from);
-      const b = model.points.get(segment.to);
+       labelFont:
+         '16px sans-serif',
 
-      if (!a || !b) continue;
-      this.line(screen.map(a), screen.map(b));
-    }
-  }
+       auxiliaryLineWidth: 1,
 
-  drawLines(model, screen) {
-    for (const line of model.lines) {
-      const a = model.points.get(line.through?.[0]);
-      const b = model.points.get(line.through?.[1]);
+       auxiliaryDash: [
+         6,
+         5
+       ]
+     };
+   }
 
-      if (!a || !b) continue;
 
-      const extended = extendMathLine(
-        a,
-        b,
-        screen.worldBounds
-      );
+   /**
+    * GeometryModel全体を描画
+    */
+   drawGeometry(geometry) {
 
-      this.ctx.save();
-      this.ctx.setLineDash([7, 5]);
-      this.line(screen.map(extended.a), screen.map(extended.b));
-      this.ctx.restore();
-    }
-  }
+     if (!geometry) {
+       console.warn(
+         'GeometryModelがありません。'
+       );
+       return;
+     }
 
-  drawRelations(geometry, model, screen) {
-    for (const mark of geometry.display?.marks ?? []) {
-      if (mark.type === "equal_length") {
-        drawEqualMark(
-          this.ctx,
-          model,
-          screen,
-          mark.objects
-        );
-      }
+     /*
+      * Map / Object の違いを
+      * ここで吸収する。
+      */
+     const normalized =
+       this.normalizeGeometry(
+         geometry
+       );
 
-      if (mark.type === "parallel") {
-        drawParallelMark(
-          this.ctx,
-          model,
-          screen,
-          mark.objects
-        );
-      }
-    }
-  }
+     if (!normalized) {
+       console.warn(
+         'GeometryModelの正規化に失敗しました。',
+         geometry
+       );
+       return;
+     }
 
-  drawPoints(geometry, model, screen) {
-    for (const point of geometry.objects.points ?? []) {
-      const p = model.points.get(point.id);
-      if (!p) continue;
+     this.currentGeometry =
+       normalized;
 
-      const s = screen.map(p);
+     /*
+      * デバッグ用。
+      *
+      * 一度動作確認できたら
+      * console.logは削除してよい。
+      */
+     console.log(
+       '描画GeometryModel:',
+       normalized
+     );
 
-      this.ctx.beginPath();
-      this.ctx.arc(s.x, s.y, point.id === "O" ? 4 : 4.5, 0, Math.PI * 2);
-      this.ctx.fill();
+     this.clear();
 
-      this.ctx.font = "15px system-ui, sans-serif";
-      this.ctx.fillText(
-        point.id,
-        s.x + 8,
-        s.y - 8
-      );
-    }
-  }
+     this.fitToGeometry(
+       normalized
+     );
 
-  line(a, b) {
-    this.ctx.beginPath();
-    this.ctx.moveTo(a.x, a.y);
-    this.ctx.lineTo(b.x, b.y);
-    this.ctx.stroke();
-  }
-}
+     /*
+      * 描画順序
+      *
+      * 円
+      * ↓
+      * 直線
+      * ↓
+      * 線分
+      * ↓
+      * 点
+      * ↓
+      * ラベル
+      */
+     this.drawCircles(
+       normalized
+     );
 
-function createScreenTransform(points, size, margin) {
-  const values = [...points.values()];
+     this.drawLines(
+       normalized
+     );
 
-  if (!values.length) {
-    return {
-      scale: 1,
-      map: p => p,
-      worldBounds: { minX: -1, maxX: 1, minY: -1, maxY: 1 }
-    };
-  }
+     this.drawSegments(
+       normalized
+     );
 
-  const xs = values.map(p => p.x);
-  const ys = values.map(p => p.y);
+     this.drawPoints(
+       normalized
+     );
 
-  const minX = Math.min(...xs);
-  const maxX = Math.max(...xs);
-  const minY = Math.min(...ys);
-  const maxY = Math.max(...ys);
+     this.drawLabels(
+       normalized
+     );
+   }
 
-  const cx = (minX + maxX) / 2;
-  const cy = (minY + maxY) / 2;
 
-  const spanX = Math.max(maxX - minX, 1e-6);
-  const spanY = Math.max(maxY - minY, 1e-6);
+   /**
+    * GeometryModelの形式を統一する。
+    *
+    * points:
+    *   Map
+    *   Object
+    *
+    * の両方に対応。
+    */
+   normalizeGeometry(geometry) {
 
-  const scale = Math.min(
-    (size.width - margin * 2) / spanX,
-    (size.height - margin * 2) / spanY
-  );
+     if (!geometry) {
+       return null;
+     }
 
-  return {
-    scale,
-    worldBounds: { minX, maxX, minY, maxY },
-    map(p) {
-      return {
-        x: size.width / 2 + (p.x - cx) * scale,
-        y: size.height / 2 - (p.y - cy) * scale
-      };
-    }
-  };
-}
+     /*
+      * points
+      */
+     let points;
 
-function extendMathLine(a, b, bounds) {
-  const v = {
-    x: b.x - a.x,
-    y: b.y - a.y
-  };
+     if (
+       geometry.points instanceof Map
+     ) {
+       points =
+         geometry.points;
+     }
 
-  const len = Math.hypot(v.x, v.y) || 1;
-  const ux = v.x / len;
-  const uy = v.y / len;
+     else if (
+       geometry.points &&
+       typeof geometry.points === 'object'
+     ) {
+       points =
+         new Map(
+           Object.entries(
+             geometry.points
+           )
+         );
+     }
 
-  const span = Math.max(
-    bounds.maxX - bounds.minX,
-    bounds.maxY - bounds.minY
-  ) * 4;
+     else {
+       console.warn(
+         'GeometryModel.points が存在しません。',
+         geometry
+       );
 
-  return {
-    a: {
-      x: a.x - ux * span,
-      y: a.y - uy * span
-    },
-    b: {
-      x: b.x + ux * span,
-      y: b.y + uy * span
-    }
-  };
-}
+       return null;
+     }
 
-function drawEqualMark(ctx, model, screen, objects) {
-  const [s1, s2] = objects ?? [];
 
-  const a = segmentEndpoints(model, s1);
-  const b = segmentEndpoints(model, s2);
+     /*
+      * segments
+      */
+     const segments =
+       Array.isArray(
+         geometry.segments
+       )
+         ? geometry.segments
+         : [];
 
-  if (!a || !b) return;
 
-  drawTick(ctx, screen.map(midpoint(a[0], a[1])),
-    screen.map(a[0]), screen.map(a[1]));
-  drawTick(ctx, screen.map(midpoint(b[0], b[1])),
-    screen.map(b[0]), screen.map(b[1]));
-}
+     /*
+      * lines
+      */
+     const lines =
+       Array.isArray(
+         geometry.lines
+       )
+         ? geometry.lines
+         : [];
 
-function drawParallelMark(ctx, model, screen, objects) {
-  for (const id of objects ?? []) {
-    const endpoints = segmentEndpoints(model, id);
-    if (!endpoints) continue;
 
-    const a = screen.map(endpoints[0]);
-    const b = screen.map(endpoints[1]);
-    const p = {
-      x: (a.x + b.x) / 2,
-      y: (a.y + b.y) / 2
-    };
+     /*
+      * circles
+      */
+     const circles =
+       Array.isArray(
+         geometry.circles
+       )
+         ? geometry.circles
+         : [];
 
-    ctx.save();
-    ctx.font = "13px system-ui, sans-serif";
-    ctx.fillText("∥", p.x + 6, p.y);
-    ctx.restore();
-  }
-}
 
-function segmentEndpoints(model, id) {
-  const segment = model.segments.find(s => s.id === id);
+     /*
+      * 線分・直線側に
+      * a / b が存在しない場合、
+      * point IDから解決する。
+      */
+     const resolvedSegments =
+       segments.map(segment => {
+         const a =
+           typeof segment.a === 'string'
+             ? points.get(segment.a)
+             : segment.a ??
+               points.get(segment.start);
 
-  if (segment) {
-    const a = model.points.get(segment.from);
-    const b = model.points.get(segment.to);
-    return a && b ? [a, b] : null;
-  }
+         const b =
+           typeof segment.b === 'string'
+             ? points.get(segment.b)
+             : segment.b ??
+               points.get(segment.end);
 
-  if (typeof id === "string" && id.length === 2) {
-    const a = model.points.get(id[0]);
-    const b = model.points.get(id[1]);
-    return a && b ? [a, b] : null;
-  }
+         return {
+           ...segment,
+           a,
+           b
+         };
+       });
 
-  return null;
-}
+     const resolvedLines =
+       lines.map(line => {
+         const rawA =
+           line.a ??
+           line.start ??
+           line.through?.[0];
 
-function drawTick(ctx, p, a, b) {
-  const dx = b.x - a.x;
-  const dy = b.y - a.y;
-  const len = Math.hypot(dx, dy) || 1;
+         const rawB =
+           line.b ??
+           line.end ??
+           line.through?.[1];
 
-  const nx = -dy / len;
-  const ny = dx / len;
+         const a =
+           typeof rawA === 'string'
+             ? points.get(rawA)
+             : rawA;
 
-  ctx.beginPath();
-  ctx.moveTo(p.x - nx * 6, p.y - ny * 6);
-  ctx.lineTo(p.x + nx * 6, p.y + ny * 6);
-  ctx.stroke();
-}
+         const b =
+           typeof rawB === 'string'
+             ? points.get(rawB)
+             : rawB;
 
-function midpoint(a, b) {
-  return {
-    x: (a.x + b.x) / 2,
-    y: (a.y + b.y) / 2
-  };
-}
+         return {
+           ...line,
+           a,
+           b
+         };
+       });
+
+     return {
+       ...geometry,
+
+       points,
+
+       segments:
+         resolvedSegments,
+
+       lines:
+         resolvedLines,
+
+       circles
+     };
+   }
+
+
+   /**
+    * Canvasクリア
+    */
+   clear() {
+
+     const width =
+       this.canvasManager.getWidth();
+
+     const height =
+       this.canvasManager.getHeight();
+
+     this.context.save();
+
+     this.context.setTransform(
+       1,
+       0,
+       0,
+       1,
+       0,
+       0
+     );
+
+     this.context.clearRect(
+       0,
+       0,
+       width,
+       height
+     );
+
+     this.context.fillStyle =
+       this.style.background;
+
+     this.context.fillRect(
+       0,
+       0,
+       width,
+       height
+     );
+
+     this.context.restore();
+   }
+
+
+   /**
+    * 図形をCanvasに収める
+    */
+   fitToGeometry(geometry) {
+
+     const points =
+       [...geometry.points.values()]
+         .filter(
+           point =>
+             Number.isFinite(
+               point.x
+             ) &&
+             Number.isFinite(
+               point.y
+             )
+         );
+
+     if (!points.length) {
+       console.warn(
+         '描画可能な座標がありません。',
+         geometry.points
+       );
+
+       return;
+     }
+
+     let minX =
+       Math.min(
+         ...points.map(
+           p => p.x
+         )
+       );
+
+     let maxX =
+       Math.max(
+         ...points.map(
+           p => p.x
+         )
+       );
+
+     let minY =
+       Math.min(
+         ...points.map(
+           p => p.y
+         )
+       );
+
+     let maxY =
+       Math.max(
+         ...points.map(
+           p => p.y
+         )
+       );
+
+
+     /*
+      * 円の範囲も含める
+      */
+     for (
+       const circle
+       of geometry.circles
+     ) {
+
+       const center =
+         geometry.points.get(
+           circle.center
+         );
+
+       if (!center) {
+         continue;
+       }
+
+       const radius =
+         Number(
+           circle.radius
+         );
+
+       if (
+         !Number.isFinite(radius)
+       ) {
+         continue;
+       }
+
+       minX =
+         Math.min(
+           minX,
+           center.x - radius
+         );
+
+       maxX =
+         Math.max(
+           maxX,
+           center.x + radius
+         );
+
+       minY =
+         Math.min(
+           minY,
+           center.y - radius
+         );
+
+       maxY =
+         Math.max(
+           maxY,
+           center.y + radius
+         );
+     }
+
+
+     let width =
+       maxX - minX;
+
+     let height =
+       maxY - minY;
+
+     if (width <= 0) {
+       width = 1;
+     }
+
+     if (height <= 0) {
+       height = 1;
+     }
+
+
+     const canvasWidth =
+       this.canvasManager.getWidth();
+
+     const canvasHeight =
+       this.canvasManager.getHeight();
+
+     const padding = 50;
+
+     const scaleX =
+       (canvasWidth - padding * 2)
+       / width;
+
+     const scaleY =
+       (canvasHeight - padding * 2)
+       / height;
+
+     const scale =
+       Math.min(
+         scaleX,
+         scaleY
+       );
+
+
+     const centerX =
+       (minX + maxX) / 2;
+
+     const centerY =
+       (minY + maxY) / 2;
+
+
+     this.transform = {
+
+       scale,
+
+       offsetX:
+         canvasWidth / 2 -
+         centerX * scale,
+
+       /*
+        * CanvasのY軸は下向き。
+        */
+       offsetY:
+         canvasHeight / 2 +
+         centerY * scale
+     };
+   }
+
+
+   /**
+    * 数学座標 → Canvas座標
+    */
+   toCanvas(point) {
+
+     return {
+
+       x:
+         this.transform.offsetX +
+         point.x *
+         this.transform.scale,
+
+       y:
+         this.transform.offsetY -
+         point.y *
+         this.transform.scale
+     };
+   }
+
+
+   /**
+    * 円
+    */
+   drawCircles(geometry) {
+
+     for (
+       const circle
+       of geometry.circles
+     ) {
+
+       this.drawCircle(
+         geometry,
+         circle
+       );
+     }
+   }
+
+
+   drawCircle(
+     geometry,
+     circle
+   ) {
+
+     const center =
+       geometry.points.get(
+         circle.center
+       );
+
+     if (!center) {
+       return;
+     }
+
+     const radius =
+       Number(
+         circle.radius
+       );
+
+     if (
+       !Number.isFinite(radius)
+     ) {
+       return;
+     }
+
+     const p =
+       this.toCanvas(
+         center
+       );
+
+     this.context.save();
+
+     this.context.strokeStyle =
+       circle.style?.color ??
+       this.style.lineColor;
+
+     this.context.lineWidth =
+       circle.style?.lineWidth ??
+       this.style.lineWidth;
+
+     this.context.setLineDash(
+       circle.style?.dash ??
+       []
+     );
+
+     this.context.beginPath();
+
+     this.context.arc(
+       p.x,
+       p.y,
+       radius *
+         this.transform.scale,
+       0,
+       Math.PI * 2
+     );
+
+     this.context.stroke();
+
+     this.context.restore();
+   }
+
+
+   /**
+    * 直線
+    */
+   drawLines(geometry) {
+
+     for (
+       const line
+       of geometry.lines
+     ) {
+
+       this.drawLine(
+         line
+       );
+     }
+   }
+
+
+   drawLine(line) {
+
+     if (
+       !line.a ||
+       !line.b
+     ) {
+       return;
+     }
+
+     const dx =
+       line.b.x -
+       line.a.x;
+
+     const dy =
+       line.b.y -
+       line.a.y;
+
+     const length =
+       Math.hypot(
+         dx,
+         dy
+       );
+
+     if (length === 0) {
+       return;
+     }
+
+     const ux =
+       dx / length;
+
+     const uy =
+       dy / length;
+
+     const extent =
+       10000;
+
+     const p1 = {
+       x:
+         line.a.x -
+         ux * extent,
+
+       y:
+         line.a.y -
+         uy * extent
+     };
+
+     const p2 = {
+       x:
+         line.a.x +
+         ux * extent,
+
+       y:
+         line.a.y +
+         uy * extent
+     };
+
+     const a =
+       this.toCanvas(p1);
+
+     const b =
+       this.toCanvas(p2);
+
+     this.context.save();
+
+     this.context.strokeStyle =
+       line.style?.color ??
+       this.style.lineColor;
+
+     this.context.lineWidth =
+       line.style?.lineWidth ??
+       this.style.auxiliaryLineWidth;
+
+     this.context.setLineDash(
+       line.style?.dash ??
+       this.style.auxiliaryDash
+     );
+
+     this.context.beginPath();
+
+     this.context.moveTo(
+       a.x,
+       a.y
+     );
+
+     this.context.lineTo(
+       b.x,
+       b.y
+     );
+
+     this.context.stroke();
+
+     this.context.restore();
+   }
+
+
+   /**
+    * 線分
+    */
+   drawSegments(geometry) {
+
+     for (
+       const segment
+       of geometry.segments
+     ) {
+
+       this.drawSegment(
+         segment
+       );
+     }
+   }
+
+
+   drawSegment(segment) {
+
+     if (
+       !segment.a ||
+       !segment.b
+     ) {
+       return;
+     }
+
+     const a =
+       this.toCanvas(
+         segment.a
+       );
+
+     const b =
+       this.toCanvas(
+         segment.b
+       );
+
+     this.context.save();
+
+     this.context.strokeStyle =
+       segment.style?.color ??
+       this.style.lineColor;
+
+     this.context.lineWidth =
+       segment.style?.lineWidth ??
+       this.style.lineWidth;
+
+     this.context.setLineDash(
+       segment.style?.dash ??
+       []
+     );
+
+     this.context.beginPath();
+
+     this.context.moveTo(
+       a.x,
+       a.y
+     );
+
+     this.context.lineTo(
+       b.x,
+       b.y
+     );
+
+     this.context.stroke();
+
+     this.context.restore();
+   }
+
+
+   /**
+    * 点
+    */
+   drawPoints(geometry) {
+
+     if (!geometry?.points) {
+       return;
+     }
+
+     for (
+       const point
+       of geometry.points.values()
+     ) {
+
+       this.drawPoint(
+         point
+       );
+     }
+   }
+
+
+   drawPoint(point) {
+
+     if (
+       !Number.isFinite(point.x) ||
+       !Number.isFinite(point.y)
+     ) {
+       return;
+     }
+
+     const p =
+       this.toCanvas(
+         point
+       );
+
+     this.context.save();
+
+     this.context.fillStyle =
+       point.style?.color ??
+       this.style.pointColor;
+
+     this.context.beginPath();
+
+     this.context.arc(
+       p.x,
+       p.y,
+       point.style?.radius ??
+       this.style.pointRadius,
+       0,
+       Math.PI * 2
+     );
+
+     this.context.fill();
+
+     this.context.restore();
+   }
+
+
+   /**
+    * ラベル
+    */
+   drawLabels(geometry) {
+
+     if (!geometry?.points) {
+       return;
+     }
+
+     for (
+       const point
+       of geometry.points.values()
+     ) {
+
+       this.drawLabel(
+         point
+       );
+     }
+   }
+
+
+   drawLabel(point) {
+
+     if (!point.id) {
+       return;
+     }
+
+     const p =
+       this.toCanvas(
+         point
+       );
+
+     const offset =
+       point.label_offset ?? {
+         x: 0,
+         y: -18
+       };
+
+     this.context.save();
+
+     this.context.fillStyle =
+       point.style?.labelColor ??
+       this.style.labelColor;
+
+     this.context.font =
+       point.style?.labelFont ??
+       this.style.labelFont;
+
+     this.context.textAlign =
+       'center';
+
+     this.context.textBaseline =
+       'middle';
+
+     this.context.fillText(
+       point.label ??
+       point.id,
+       p.x + offset.x,
+       p.y + offset.y
+     );
+
+     this.context.restore();
+   }
+ }

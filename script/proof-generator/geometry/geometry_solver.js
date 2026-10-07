@@ -1,481 +1,1814 @@
 /**
- * Geometry Solver
+ * geometry_solver.js
  *
- * JSONに記述された構成条件から、描画用の2次元座標を再構成する。
+ * JSONに記述された幾何条件から、
+ * Drawerがそのまま描画できるGeometryModelを構築する。
+ *
+ * 役割:
+ *
+ * JSON
+ *   ↓
+ * 座標・点・線・円を解決
+ *   ↓
+ * GeometryModel
+ *   ↓
+ * Drawer
  *
  * 重要:
- * - drawer.js は幾何学を解かない。
- * - このモジュールは「入試図形として成立する代表座標」を作る。
- * - exact_coordinates が将来追加された場合は、それを最優先する。
+ * - JSONに保存されたexactな座標式は保持する
+ * - 描画時に使用するx/yだけ数値化する
+ * - 線分・直線の端点はPointオブジェクトとして解決する
+ * - 円の半径は中心と通過点から計算する
  */
 
-const EPS = 1e-9;
+export function buildGeometryModel(
+  geometry,
+  generation = {},
+  metadata = {}
+) {
 
-export function buildGeometryModel(geometry, generation = {}, metadata = {}) {
-  const exact = geometry?.coordinate_system?.exact_coordinates;
-
-  if (exact && typeof exact === "object") {
-    return buildFromExactCoordinates(geometry, exact);
+  if (!geometry) {
+    throw new Error(
+      'geometry_solver: geometry がありません。'
+    );
   }
 
-  const templateId = generation?.template_id ?? "";
+  /*
+   * geometry.objects が存在する場合は
+   * JSONからGeometryModelを構築する。
+   */
+  if (
+    geometry.objects &&
+    Array.isArray(geometry.objects.points)
+  ) {
 
-  if (templateId.includes("DIAMETER_ISOSCELES_AA")) {
-    return build2015DiameterIsosceles(geometry);
+    return buildExplicitGeometry(
+      geometry,
+      generation,
+      metadata
+    );
   }
 
-  if (templateId.includes("CIRCLE_ISOSCELES_PARALLEL_ASA")) {
-    return build2014CircleIsoscelesParallel(geometry);
-  }
-
-  // 年度・template_idがまだ登録されていない場合も、
-  // 最低限の構造だけは復元する。
-  return buildGenericSchematic(geometry, metadata);
+  /*
+   * objects が存在しない場合は、
+   * generation情報などから簡易Geometryを生成する。
+   */
+  return buildGeneratedGeometry(
+    geometry,
+    generation,
+    metadata
+  );
 }
 
-function buildFromExactCoordinates(geometry, exact) {
-  const points = new Map();
 
-  for (const point of geometry?.objects?.points ?? []) {
-    const value = exact[point.id];
-    if (value && Number.isFinite(value.x) && Number.isFinite(value.y)) {
-      points.set(point.id, { x: value.x, y: value.y });
-    }
-  }
-
-  return finalizeModel(geometry, points, "exact");
-}
+/* =========================================================
+ * Explicit Geometry
+ * ======================================================= */
 
 /**
- * 2015:
- *
- * BCを円の直径とする。
- * DをBC上に置く。
- * BA=BD を満たすAを円周上に作る。
- * ADに平行な直線をCから引き、円との交点をEとする。
- * BEとADの交点F、BEとACの交点G、
- * ADと円のもう一つの交点Hを作る。
+ * JSONに明示されたGeometryから構築する。
  */
-function build2015DiameterIsosceles(geometry) {
-  const R = 1;
-  const O = { x: 0, y: 0 };
-  const B = { x: -R, y: 0 };
-  const C = { x: R, y: 0 };
+function buildExplicitGeometry(
+  geometry,
+  generation,
+  metadata
+) {
 
-  // Dを直径上の内部に置く。
-  // 固定値ではなく正規化された代表値。
-  const d = -0.22 * R;
-  const D = { x: d, y: 0 };
+  const points =
+    buildPointsFromCoordinates(
+      geometry
+    );
 
-  // BA = BD。
-  // Aは「中心O・半径R」の円と
-  // 「中心B・半径BD」の円の交点。
-  const BD = distance(B, D);
-  const ACandidates = circleCircleIntersections(O, R, B, BD);
+  const segments =
+    buildSegments(
+      geometry,
+      points
+    );
 
-  // 上側を採用。図が上下反転しないための決定規則。
-  const A = ACandidates
-    .filter(p => p.y > 0)
-    .sort((p, q) => q.y - p.y)[0];
+  const lines =
+    buildLines(
+      geometry,
+      points
+    );
 
-  if (!A) {
-    throw new Error("2015 geometry: A の構成に失敗しました。");
-  }
+  const circles =
+    buildCircles(
+      geometry,
+      points
+    );
 
-  const ad = sub(D, A);
+  const triangles =
+    buildTriangles(
+      geometry,
+      points
+    );
 
-  // Cを通りADに平行な直線と円の交点。
-  const eCandidates = lineCircleIntersections(C, ad, O, R);
-  const E = eCandidates
-    .filter(p => distance(p, C) > EPS)
-    .sort((p, q) => distance(q, C) - distance(p, C))[0];
-
-  if (!E) {
-    throw new Error("2015 geometry: E の構成に失敗しました。");
-  }
-
-  // F = BE ∩ AD
-  const F = lineLineIntersection(B, sub(E, B), A, ad);
-
-  // G = BE ∩ AC
-  const G = lineLineIntersection(B, sub(E, B), A, sub(C, A));
-
-  // H = AD と円のもう一つの交点
-  const hCandidates = lineCircleIntersections(A, ad, O, R);
-  const H = hCandidates
-    .filter(p => distance(p, A) > EPS)
-    .sort((p, q) => distance(q, A) - distance(p, A))[0];
-
-  const points = new Map([
-    ["O", O],
-    ["A", A],
-    ["B", B],
-    ["C", C],
-    ["D", D],
-    ["E", E],
-    ["F", F],
-    ["G", G],
-    ["H", H]
-  ]);
-
-  return finalizeModel(geometry, points, "generated-2015");
-}
-
-/**
- * 2014:
- *
- * 円周上にA,B,C,Dを置き、AC=ADを保証する。
- * BDを引き、Cを通ってBDに平行な直線を引く。
- * その円とのもう一つの交点をEとする。
- * F=AC∩BD、G=AE∩BD。
- *
- * Aを基準にC,Dを対称位置にすることでAC=ADを厳密に満たす。
- */
-function build2014CircleIsoscelesParallel(geometry) {
-  const R = 1;
-  const O = { x: 0, y: 0 };
-
-  const A = polar(R, -90);
-  const C = polar(R, 150);
-  const D = polar(R, 30);
-
-  // BDの位置によって図が極端にならないように選ぶ。
-  const B = polar(R, 240);
-
-  const bd = sub(D, B);
-
-  // Cを通りBDに平行な直線と円の交点E。
-  const eCandidates = lineCircleIntersections(C, bd, O, R);
-  const E = eCandidates
-    .filter(p => distance(p, C) > EPS)
-    .sort((p, q) => distance(q, C) - distance(p, C))[0];
-
-  if (!E) {
-    throw new Error("2014 geometry: E の構成に失敗しました。");
-  }
-
-  const F = lineLineIntersection(A, sub(C, A), B, bd);
-  const G = lineLineIntersection(A, sub(E, A), B, bd);
-
-  const points = new Map([
-    ["O", O],
-    ["A", A],
-    ["B", B],
-    ["C", C],
-    ["D", D],
-    ["E", E],
-    ["F", F],
-    ["G", G]
-  ]);
-
-  return finalizeModel(geometry, points, "generated-2014");
-}
-
-function buildGenericSchematic(geometry, metadata) {
-  const points = new Map();
-  const list = geometry?.objects?.points ?? [];
-
-  // 円がある場合はまず円を作る。
-  const circle = geometry?.objects?.circles?.[0];
-  const radius = 1;
-
-  if (circle?.center) {
-    points.set(circle.center, { x: 0, y: 0 });
-  }
-
-  const circlePointIds = list
-    .filter(p => p.role === "circle_point")
-    .map(p => p.id);
-
-  circlePointIds.forEach((id, i) => {
-    const angle = -90 + i * (360 / Math.max(circlePointIds.length, 1));
-    points.set(id, polar(radius, angle));
-  });
-
-  // 残りの点は単純な交点近似ではなく、既知点の平均付近へ置く。
-  // 新テンプレート追加時には専用solverへ移す。
-  for (const point of list) {
-    if (points.has(point.id)) continue;
-    const known = [...points.values()];
-    const base = known.length ? centroid(known) : { x: 0, y: 0 };
-    points.set(point.id, {
-      x: base.x + 0.15 * Math.cos(points.size),
-      y: base.y + 0.15 * Math.sin(points.size)
-    });
-  }
-
-  return finalizeModel(geometry, points, "generic");
-}
-
-function finalizeModel(geometry, points, source) {
-  const circles = (geometry?.objects?.circles ?? []).map(circle => {
-    const center = points.get(circle.center);
-    let radius = 1;
-
-    const candidates = (circle.through_points ?? [])
-      .map(id => points.get(id))
-      .filter(Boolean);
-
-    if (center && candidates.length) {
-      radius = average(
-        candidates.map(p => distance(center, p))
-      );
-    }
-
-    return {
-      id: circle.id,
-      center: circle.center,
-      radius
-    };
-  });
-
-  const segments = (geometry?.objects?.segments ?? []).map(s => ({
-    id: s.id,
-    from: s.from,
-    to: s.to
-  }));
-
-  const lines = (geometry?.objects?.lines ?? []).map(line => ({
-    id: line.id,
-    through: line.through
-  }));
-
-  const constraints = validateGeometry(geometry, points, circles);
+  const constraints =
+    validateGeometry(
+      geometry,
+      points
+    );
 
   return {
-    source,
+
+    type: 'GeometryModel',
+
+    metadata: {
+      ...metadata
+    },
+
+    source:
+      geometry,
+
     points,
+
     segments,
+
     lines,
+
     circles,
+
+    triangles,
+
     constraints
   };
 }
 
-/* ---------- geometry primitives ---------- */
 
-function add(a, b) {
-  return { x: a.x + b.x, y: a.y + b.y };
-}
+/* =========================================================
+ * Points
+ * ======================================================= */
 
-function sub(a, b) {
-  return { x: a.x - b.x, y: a.y - b.y };
-}
+/**
+ * geometry.objects.points
+ *
+ * ↓
+ *
+ * Map<string, Point>
+ */
+function buildPointsFromCoordinates(
+  geometry
+) {
 
-function scale(v, s) {
-  return { x: v.x * s, y: v.y * s };
-}
+  const result =
+    new Map();
 
-function dot(a, b) {
-  return a.x * b.x + a.y * b.y;
-}
+  const pointDefinitions =
+    geometry.objects?.points ?? [];
 
-function cross(a, b) {
-  return a.x * b.y - a.y * b.x;
-}
+  for (
+    const definition
+    of pointDefinitions
+  ) {
 
-function distance(a, b) {
-  return Math.hypot(a.x - b.x, a.y - b.y);
-}
+    const id =
+      definition.id;
 
-function average(values) {
-  return values.length
-    ? values.reduce((a, b) => a + b, 0) / values.length
-    : 0;
-}
+    if (!id) {
+      continue;
+    }
 
-function centroid(points) {
-  return {
-    x: average(points.map(p => p.x)),
-    y: average(points.map(p => p.y))
-  };
-}
+    /*
+     * coordinate_ref:
+     *
+     * geometry.coordinates.points.A
+     */
+    const coordinate =
+      resolvePath(
+        geometry,
+        definition.coordinate_ref
+      );
 
-function polar(r, deg) {
-  const rad = deg * Math.PI / 180;
-  return { x: r * Math.cos(rad), y: r * Math.sin(rad) };
-}
+    if (!coordinate) {
 
-function lineLineIntersection(p, v, q, w) {
-  const det = cross(v, w);
+      console.warn(
+        `geometry_solver: 点 ${id} の座標が見つかりません。`,
+        definition.coordinate_ref
+      );
 
-  if (Math.abs(det) < EPS) return null;
+      continue;
+    }
 
-  const t = cross(sub(q, p), w) / det;
-  return add(p, scale(v, t));
-}
+    const x =
+      evaluateCoordinate(
+        coordinate.x
+      );
 
-function lineCircleIntersections(p, v, center, radius) {
-  const a = dot(v, v);
+    const y =
+      evaluateCoordinate(
+        coordinate.y
+      );
 
-  if (a < EPS) return [];
+    if (
+      !Number.isFinite(x) ||
+      !Number.isFinite(y)
+    ) {
 
-  const m = sub(p, center);
-  const b = 2 * dot(m, v);
-  const c = dot(m, m) - radius * radius;
+      console.warn(
+        `geometry_solver: 点 ${id} の座標を数値化できません。`,
+        coordinate
+      );
 
-  const discriminant = b * b - 4 * a * c;
+      continue;
+    }
 
-  if (discriminant < -EPS) return [];
+    const point = {
 
-  const d = Math.sqrt(Math.max(0, discriminant));
+      id,
 
-  const t1 = (-b - d) / (2 * a);
-  const t2 = (-b + d) / (2 * a);
+      /*
+       * Drawerが使用する数値座標
+       */
+      x,
+      y,
 
-  return [
-    add(p, scale(v, t1)),
-    add(p, scale(v, t2))
-  ];
-}
+      /*
+       * JSONに書かれているexact表現
+       */
+      exact:
+        coordinate.exact ?? null,
 
-function circleCircleIntersections(c0, r0, c1, r1) {
-  const d = distance(c0, c1);
+      /*
+       * 数学的な意味
+       */
+      role:
+        definition.role ??
+        coordinate.role ??
+        null,
+
+      definition:
+        coordinate.definition ??
+        null,
+
+      /*
+       * 元の座標情報も保持
+       */
+      coordinate: {
+        x:
+          coordinate.x,
+
+        y:
+          coordinate.y
+      }
+    };
+
+    /*
+     * labelがJSONに存在する場合は保持。
+     */
+    if (
+      definition.label !== undefined
+    ) {
+
+      point.label =
+        definition.label;
+    }
+
+    /*
+     * ラベル位置
+     */
+    if (
+      definition.label_offset
+    ) {
+
+      point.label_offset =
+        definition.label_offset;
+    }
+
+    /*
+     * style
+     */
+    if (
+      definition.style
+    ) {
+
+      point.style =
+        definition.style;
+    }
+
+    result.set(
+      id,
+      point
+    );
+  }
+
+  /*
+   * objects.pointsに記載されていない点が
+   * coordinates.pointsに存在する場合も追加する。
+   *
+   * 2014年のF/Gなど、
+   * geometry.coordinates側には存在するが
+   * objects.pointsの定義状況によっては
+   * 抜ける可能性があるため。
+   */
+  const coordinatePoints =
+    geometry.coordinates?.points;
 
   if (
-    d < EPS ||
-    d > r0 + r1 + EPS ||
-    d < Math.abs(r0 - r1) - EPS
+    coordinatePoints &&
+    typeof coordinatePoints === 'object'
   ) {
-    return [];
+
+    for (
+      const [id, coordinate]
+      of Object.entries(
+        coordinatePoints
+      )
+    ) {
+
+      if (
+        result.has(id)
+      ) {
+        continue;
+      }
+
+      const x =
+        evaluateCoordinate(
+          coordinate.x
+        );
+
+      const y =
+        evaluateCoordinate(
+          coordinate.y
+        );
+
+      if (
+        !Number.isFinite(x) ||
+        !Number.isFinite(y)
+      ) {
+        continue;
+      }
+
+      result.set(
+        id,
+        {
+          id,
+
+          x,
+          y,
+
+          exact:
+            coordinate.exact ?? null,
+
+          role:
+            coordinate.role ??
+            null,
+
+          definition:
+            coordinate.definition ??
+            null,
+
+          coordinate: {
+            x:
+              coordinate.x,
+
+            y:
+              coordinate.y
+          }
+        }
+      );
+    }
   }
 
-  const ex = (c1.x - c0.x) / d;
-  const ey = (c1.y - c0.y) / d;
-
-  const a = (r0 * r0 - r1 * r1 + d * d) / (2 * d);
-  const h2 = r0 * r0 - a * a;
-
-  if (h2 < -EPS) return [];
-
-  const h = Math.sqrt(Math.max(0, h2));
-  const base = {
-    x: c0.x + a * ex,
-    y: c0.y + a * ey
-  };
-
-  return [
-    { x: base.x - h * ey, y: base.y + h * ex },
-    { x: base.x + h * ey, y: base.y - h * ex }
-  ];
+  return result;
 }
 
-/* ---------- validation ---------- */
 
-function validateGeometry(geometry, points, circles) {
-  const errors = [];
-  const warnings = [];
+/* =========================================================
+ * Segments
+ * ======================================================= */
 
-  for (const rel of geometry?.relationships ?? []) {
-    if (rel.type === "equal_length") {
-      const [s1, s2] = rel.objects ?? [];
-      const a = segmentEndpoints(s1, geometry, points);
-      const b = segmentEndpoints(s2, geometry, points);
+/**
+ * 線分を構築する。
+ *
+ * JSON:
+ *
+ * {
+ *   "id": "AB",
+ *   "from": "A",
+ *   "to": "B"
+ * }
+ *
+ * ↓
+ *
+ * {
+ *   id: "AB",
+ *   a: Point(A),
+ *   b: Point(B),
+ *   start: Point(A),
+ *   end: Point(B)
+ * }
+ */
+function buildSegments(
+  geometry,
+  points
+) {
 
-      if (a && b) {
-        const l1 = distance(a[0], a[1]);
-        const l2 = distance(b[0], b[1]);
+  const result = [];
 
-        if (Math.abs(l1 - l2) > 1e-7) {
-          errors.push(`${s1}=${s2} を満たしていません。`);
-        }
-      }
+  const definitions =
+    geometry.objects?.segments ?? [];
+
+  for (
+    const segment
+    of definitions
+  ) {
+
+    const a =
+      resolvePoint(
+        points,
+        segment.from ??
+        segment.start ??
+        segment.a
+      );
+
+    const b =
+      resolvePoint(
+        points,
+        segment.to ??
+        segment.end ??
+        segment.b
+      );
+
+    if (!a || !b) {
+
+      console.warn(
+        `geometry_solver: 線分 ${segment.id} の端点を解決できません。`,
+        segment
+      );
+
+      continue;
     }
 
-    if (rel.type === "parallel") {
-      const [s1, s2] = rel.objects ?? [];
-      const a = segmentEndpoints(s1, geometry, points);
-      const b = segmentEndpoints(s2, geometry, points);
+    result.push({
 
-      if (a && b) {
-        const va = sub(a[1], a[0]);
-        const vb = sub(b[1], b[0]);
+      id:
+        segment.id,
 
-        const norm = Math.hypot(va.x, va.y) * Math.hypot(vb.x, vb.y);
-        if (norm > EPS && Math.abs(cross(va, vb)) / norm > 1e-7) {
-          errors.push(`${s1}∥${s2} を満たしていません。`);
-        }
-      }
-    }
+      /*
+       * Drawer用
+       */
+      a,
+      b,
 
-    if (rel.type === "concyclic") {
-      const circle = circles[0];
-      if (!circle) continue;
+      /*
+       * 互換性用
+       */
+      start:
+        a,
 
-      const center = points.get(circle.center);
-      if (!center) continue;
+      end:
+        b,
 
-      for (const id of rel.objects ?? []) {
-        const p = points.get(id);
-        if (!p) continue;
-
-        if (Math.abs(distance(center, p) - circle.radius) > 1e-7) {
-          errors.push(`${id} が円周上にありません。`);
-        }
-      }
-    }
+      /*
+       * 元データ
+       */
+      source:
+        segment
+    });
   }
 
-  for (const intersection of geometry?.intersections ?? []) {
-    const result = points.get(intersection.result);
-    if (!result) continue;
-
-    const [left, right] = intersection.lines ?? [];
-    const l1 = findLine(left, geometry);
-    const l2 = findLine(right, geometry);
-
-    if (l1 && l2) {
-      const p1 = points.get(l1.through[0]);
-      const p2 = points.get(l1.through[1]);
-      const q1 = points.get(l2.through[0]);
-      const q2 = points.get(l2.through[1]);
-
-      if (p1 && p2 && q1 && q2) {
-        const e1 = distancePointToLine(result, p1, p2);
-        const e2 = distancePointToLine(result, q1, q2);
-
-        if (e1 > 1e-7 || e2 > 1e-7) {
-          warnings.push(`${intersection.result} の交点条件を確認してください。`);
-        }
-      }
-    }
-  }
-
-  return {
-    valid: errors.length === 0,
-    errors,
-    warnings
-  };
+  return result;
 }
 
-function segmentEndpoints(id, geometry, points) {
-  const segment = (geometry?.objects?.segments ?? []).find(s => s.id === id);
-  if (segment) {
-    const a = points.get(segment.from);
-    const b = points.get(segment.to);
-    return a && b ? [a, b] : null;
+
+/* =========================================================
+ * Lines
+ * ======================================================= */
+
+/**
+ * 無限直線を構築する。
+ *
+ * JSON:
+ *
+ * {
+ *   "id": "l_BD",
+ *   "through": ["B", "D"]
+ * }
+ */
+function buildLines(
+  geometry,
+  points
+) {
+
+  const result = [];
+
+  const definitions =
+    geometry.objects?.lines ?? [];
+
+  for (
+    const line
+    of definitions
+  ) {
+
+    const through =
+      Array.isArray(
+        line.through
+      )
+        ? line.through
+        : [];
+
+    const a =
+      resolvePoint(
+        points,
+        line.a ??
+        line.start ??
+        through[0]
+      );
+
+    const b =
+      resolvePoint(
+        points,
+        line.b ??
+        line.end ??
+        through[1]
+      );
+
+    if (!a || !b) {
+
+      console.warn(
+        `geometry_solver: 直線 ${line.id} の端点を解決できません。`,
+        line
+      );
+
+      continue;
+    }
+
+    result.push({
+
+      id:
+        line.id,
+
+      /*
+       * Drawer用
+       */
+      a,
+      b,
+
+      /*
+       * 互換性用
+       */
+      start:
+        a,
+
+      end:
+        b,
+
+      /*
+       * 元のthrough情報
+       */
+      through: [
+        a,
+        b
+      ],
+
+      /*
+       * 元データ
+       */
+      source:
+        line
+    });
   }
 
-  // 「BD」のような暗黙の線分表現も許容。
-  if (typeof id === "string" && id.length === 2) {
-    const a = points.get(id[0]);
-    const b = points.get(id[1]);
-    return a && b ? [a, b] : null;
+  return result;
+}
+
+
+/* =========================================================
+ * Circles
+ * ======================================================= */
+
+/**
+ * 円を構築する。
+ *
+ * JSON:
+ *
+ * {
+ *   "id": "O1",
+ *   "center": "O",
+ *   "through_points": ["A","B","C"]
+ * }
+ *
+ * 円の半径がJSONに存在しない場合、
+ * center → through_points[0]
+ * から計算する。
+ */
+function buildCircles(
+  geometry,
+  points
+) {
+
+  const result = [];
+
+  const definitions =
+    geometry.objects?.circles ?? [];
+
+  for (
+    const circle
+    of definitions
+  ) {
+
+    const center =
+      resolvePoint(
+        points,
+        circle.center
+      );
+
+    if (!center) {
+
+      console.warn(
+        `geometry_solver: 円 ${circle.id} の中心を解決できません。`,
+        circle
+      );
+
+      continue;
+    }
+
+    const throughIds =
+      Array.isArray(
+        circle.through_points
+      )
+        ? circle.through_points
+        : [];
+
+    const through =
+      throughIds
+        .map(
+          id =>
+            resolvePoint(
+              points,
+              id
+            )
+        )
+        .filter(Boolean);
+
+    /*
+     * JSONにradiusが直接書かれている場合は
+     * それを優先。
+     */
+    let radius =
+      evaluateCoordinate(
+        circle.radius
+      );
+
+    /*
+     * radiusがない場合、
+     * 最初の通過点から計算。
+     */
+    if (
+      !Number.isFinite(radius) &&
+      through.length > 0
+    ) {
+
+      radius =
+        distance(
+          center,
+          through[0]
+        );
+    }
+
+    if (
+      !Number.isFinite(radius)
+    ) {
+
+      console.warn(
+        `geometry_solver: 円 ${circle.id} の半径を計算できません。`,
+        circle
+      );
+
+      continue;
+    }
+
+    result.push({
+
+      id:
+        circle.id,
+
+      center:
+        center.id,
+
+      /*
+       * Drawerが使用
+       */
+      radius,
+
+      /*
+       * 通過点
+       */
+      through:
+
+        through.map(
+          point =>
+            point.id
+        ),
+
+      throughPoints:
+        through,
+
+      /*
+       * 元データ
+       */
+      source:
+        circle
+    });
+  }
+
+  return result;
+}
+
+
+/* =========================================================
+ * Triangles
+ * ======================================================= */
+
+function buildTriangles(
+  geometry,
+  points
+) {
+
+  const result = [];
+
+  const definitions =
+    geometry.objects?.triangles ?? [];
+
+  for (
+    const triangle
+    of definitions
+  ) {
+
+    const vertices =
+      Array.isArray(
+        triangle.vertices
+      )
+        ? triangle.vertices
+            .map(
+              id =>
+                resolvePoint(
+                  points,
+                  id
+                )
+            )
+            .filter(Boolean)
+        : [];
+
+    result.push({
+
+      id:
+        triangle.id,
+
+      vertices,
+
+      properties:
+        triangle.properties ?? [],
+
+      source:
+        triangle
+    });
+  }
+
+  return result;
+}
+
+
+/* =========================================================
+ * Point Resolver
+ * ======================================================= */
+
+function resolvePoint(
+  points,
+  value
+) {
+
+  if (!value) {
+    return null;
+  }
+
+  /*
+   * すでにPointオブジェクトなら
+   * そのまま返す。
+   */
+  if (
+    typeof value === 'object' &&
+    Number.isFinite(value.x) &&
+    Number.isFinite(value.y)
+  ) {
+
+    return value;
+  }
+
+  /*
+   * IDならMapから取得。
+   */
+  if (
+    typeof value === 'string'
+  ) {
+
+    return points.get(value) ?? null;
   }
 
   return null;
 }
 
-function findLine(id, geometry) {
-  return (geometry?.objects?.lines ?? []).find(l =>
-    l.id === id || l.id === `l_${id}`
-  ) ?? null;
+
+/* =========================================================
+ * Path Resolver
+ * ======================================================= */
+
+/**
+ * "geometry.coordinates.points.A"
+ *
+ * のようなパスを解決する。
+ */
+function resolvePath(
+  root,
+  path
+) {
+
+  if (
+    !root ||
+    !path
+  ) {
+    return null;
+  }
+
+  if (
+    typeof path !== 'string'
+  ) {
+    return null;
+  }
+
+  const normalized =
+    path
+      .replace(
+        /^geometry\./,
+        ''
+      );
+
+  const parts =
+    normalized.split('.');
+
+  let current =
+    root;
+
+  /*
+   * geometryから始まる場合。
+   */
+  if (
+    parts[0] === 'geometry'
+  ) {
+
+    parts.shift();
+  }
+
+  for (
+    const part
+    of parts
+  ) {
+
+    if (
+      current === null ||
+      current === undefined
+    ) {
+      return null;
+    }
+
+    current =
+      current[part];
+  }
+
+  return current ?? null;
 }
 
-function distancePointToLine(p, a, b) {
-  const v = sub(b, a);
-  const w = sub(p, a);
-  const len = Math.hypot(v.x, v.y);
 
-  return len < EPS ? distance(p, a) : Math.abs(cross(v, w)) / len;
+/* =========================================================
+ * Coordinate Evaluation
+ * ======================================================= */
+
+/**
+ * 座標式を数値化する。
+ *
+ * 対応:
+ *
+ * 0
+ * "0"
+ * "cos(38°)"
+ * "-cos(38°)"
+ * "sin(38°)"
+ * "-sin(38°)"
+ * "sqrt(2)"
+ */
+function evaluateCoordinate(
+  expression
+) {
+
+  if (
+    expression === null ||
+    expression === undefined
+  ) {
+
+    return NaN;
+  }
+
+  if (
+    typeof expression === 'number'
+  ) {
+
+    return expression;
+  }
+
+  if (
+    typeof expression !== 'string'
+  ) {
+
+    return NaN;
+  }
+
+  const value =
+    expression.trim();
+
+  if (!value) {
+    return NaN;
+  }
+
+  /*
+   * 通常の数値
+   */
+  const numeric =
+    Number(value);
+
+  if (
+    Number.isFinite(numeric)
+  ) {
+
+    return numeric;
+  }
+
+  /*
+   * cos(38°)
+   */
+  const cosMatch =
+    value.match(
+      /^(-?)cos\(\s*([-+]?\d+(?:\.\d+)?)°\s*\)$/
+    );
+
+  if (cosMatch) {
+
+    const sign =
+      cosMatch[1] === '-'
+        ? -1
+        : 1;
+
+    const angle =
+      Number(
+        cosMatch[2]
+      );
+
+    return (
+      sign *
+      Math.cos(
+        angle *
+        Math.PI /
+        180
+      )
+    );
+  }
+
+  /*
+   * sin(38°)
+   */
+  const sinMatch =
+    value.match(
+      /^(-?)sin\(\s*([-+]?\d+(?:\.\d+)?)°\s*\)$/
+    );
+
+  if (sinMatch) {
+
+    const sign =
+      sinMatch[1] === '-'
+        ? -1
+        : 1;
+
+    const angle =
+      Number(
+        sinMatch[2]
+      );
+
+    return (
+      sign *
+      Math.sin(
+        angle *
+        Math.PI /
+        180
+      )
+    );
+  }
+
+  /*
+   * sqrt(number)
+   */
+  const sqrtMatch =
+    value.match(
+      /^sqrt\(\s*([-+]?\d+(?:\.\d+)?)\s*\)$/
+    );
+
+  if (sqrtMatch) {
+
+    return Math.sqrt(
+      Number(
+        sqrtMatch[1]
+      )
+    );
+  }
+
+  /*
+   * π
+   */
+  if (
+    value === 'π' ||
+    value === 'pi'
+  ) {
+
+    return Math.PI;
+  }
+
+  /*
+   * kπ のような簡単な表現
+   */
+  const piMatch =
+    value.match(
+      /^([-+]?\d+(?:\.\d+)?)\s*(?:π|pi)$/
+    );
+
+  if (piMatch) {
+
+    return (
+      Number(
+        piMatch[1]
+      ) *
+      Math.PI
+    );
+  }
+
+  console.warn(
+    `geometry_solver: 未対応の座標式です: ${expression}`
+  );
+
+  return NaN;
+}
+
+
+/* =========================================================
+ * Geometry Utilities
+ * ======================================================= */
+
+function distance(
+  a,
+  b
+) {
+
+  if (!a || !b) {
+    return NaN;
+  }
+
+  return Math.hypot(
+    b.x - a.x,
+    b.y - a.y
+  );
+}
+
+
+/* =========================================================
+ * Validation
+ * ======================================================= */
+
+function validateGeometry(
+  geometry,
+  points
+) {
+
+  const errors = [];
+
+  const warnings = [];
+
+  /*
+   * 線分の検証
+   */
+  for (
+    const segment
+    of geometry.objects?.segments ?? []
+  ) {
+
+    const a =
+      segment.from ??
+      segment.start ??
+      segment.a;
+
+    const b =
+      segment.to ??
+      segment.end ??
+      segment.b;
+
+    if (
+      !points.has(a)
+    ) {
+
+      errors.push(
+        `線分 ${segment.id}: 点 ${a} が存在しません。`
+      );
+    }
+
+    if (
+      !points.has(b)
+    ) {
+
+      errors.push(
+        `線分 ${segment.id}: 点 ${b} が存在しません。`
+      );
+    }
+  }
+
+  /*
+   * 直線の検証
+   */
+  for (
+    const line
+    of geometry.objects?.lines ?? []
+  ) {
+
+    const through =
+      line.through ?? [];
+
+    if (
+      through.length < 2
+    ) {
+
+      errors.push(
+        `直線 ${line.id}: through が2点未満です。`
+      );
+
+      continue;
+    }
+
+    if (
+      !points.has(
+        through[0]
+      )
+    ) {
+
+      errors.push(
+        `直線 ${line.id}: 点 ${through[0]} が存在しません。`
+      );
+    }
+
+    if (
+      !points.has(
+        through[1]
+      )
+    ) {
+
+      errors.push(
+        `直線 ${line.id}: 点 ${through[1]} が存在しません。`
+      );
+    }
+  }
+
+  /*
+   * 円の検証
+   */
+  for (
+    const circle
+    of geometry.objects?.circles ?? []
+  ) {
+
+    if (
+      !points.has(
+        circle.center
+      )
+    ) {
+
+      errors.push(
+        `円 ${circle.id}: 中心 ${circle.center} が存在しません。`
+      );
+    }
+
+    for (
+      const point
+      of circle.through_points ?? []
+    ) {
+
+      if (
+        !points.has(point)
+      ) {
+
+        errors.push(
+          `円 ${circle.id}: 通過点 ${point} が存在しません。`
+        );
+      }
+    }
+  }
+
+  /*
+   * 座標点数
+   */
+  if (
+    points.size === 0
+  ) {
+
+    errors.push(
+      '座標点が1つもありません。'
+    );
+  }
+
+  /*
+   * incidence情報
+   */
+  if (
+    !Array.isArray(
+      geometry.incidence
+    )
+  ) {
+
+    warnings.push(
+      'incidence情報がありません。'
+    );
+  }
+
+  /*
+   * intersections情報
+   */
+  if (
+    !Array.isArray(
+      geometry.intersections
+    )
+  ) {
+
+    warnings.push(
+      'intersections情報がありません。'
+    );
+  }
+
+  return {
+
+    valid:
+      errors.length === 0,
+
+    errors,
+
+    warnings
+  };
+}
+
+
+/* =========================================================
+ * Generated Geometry
+ * ======================================================= */
+
+/**
+ * JSONに明示的な座標モデルがない場合の
+ * フォールバック。
+ *
+ * 現段階では「過去問復元」が主目的なので、
+ * 将来的にはここを
+ *
+ * generateGeometry()
+ *
+ * として発展させる。
+ */
+function buildGeneratedGeometry(
+  geometry,
+  generation,
+  metadata
+) {
+
+  /*
+   * 2014年の簡易フォールバック
+   */
+  if (
+    metadata.year === 2014
+  ) {
+
+    return generate2014Fallback(
+      geometry,
+      generation,
+      metadata
+    );
+  }
+
+  /*
+   * 2015年の簡易フォールバック
+   */
+  if (
+    metadata.year === 2015
+  ) {
+
+    return generate2015Fallback(
+      geometry,
+      generation,
+      metadata
+    );
+  }
+
+  /*
+   * 最低限の空Geometry
+   */
+  return {
+
+    type: 'GeometryModel',
+
+    metadata: {
+      ...metadata
+    },
+
+    source:
+      geometry,
+
+    points:
+      new Map(),
+
+    segments: [],
+
+    lines: [],
+
+    circles: [],
+
+    triangles: [],
+
+    constraints: {
+      valid: true,
+      errors: [],
+      warnings: [
+        '明示的な座標モデルがないため、Geometryを生成できませんでした。'
+      ]
+    }
+  };
+}
+
+
+/* =========================================================
+ * 2014 Fallback
+ * ======================================================= */
+
+function generate2014Fallback(
+  geometry,
+  generation,
+  metadata
+) {
+
+  /*
+   * 正規化された単位円モデル。
+   *
+   * 実際の2014年JSONに座標が存在する場合は
+   * buildExplicitGeometry()が使用されるため、
+   * 通常ここには来ない。
+   */
+
+  const points =
+    new Map();
+
+  const definitions = {
+
+    O: [0, 0],
+
+    A: [0, 1],
+
+    B: [
+      -Math.cos(
+        6 *
+        Math.PI /
+        180
+      ),
+      -Math.sin(
+        6 *
+        Math.PI /
+        180
+      )
+    ],
+
+    C: [
+      -Math.cos(
+        38 *
+        Math.PI /
+        180
+      ),
+      -Math.sin(
+        38 *
+        Math.PI /
+        180
+      )
+    ],
+
+    D: [
+      Math.cos(
+        38 *
+        Math.PI /
+        180
+      ),
+      -Math.sin(
+        38 *
+        Math.PI /
+        180
+      )
+    ],
+
+    E: [
+      Math.cos(
+        70 *
+        Math.PI /
+        180
+      ),
+      -Math.sin(
+        70 *
+        Math.PI /
+        180
+      )
+    ]
+  };
+
+  for (
+    const [id, coordinate]
+    of Object.entries(
+      definitions
+    )
+  ) {
+
+    points.set(
+      id,
+      {
+        id,
+        x: coordinate[0],
+        y: coordinate[1]
+      }
+    );
+  }
+
+  /*
+   * F = AC ∩ BD
+   * G = AE ∩ BD
+   */
+  const F =
+    lineIntersection(
+      points.get('A'),
+      points.get('C'),
+      points.get('B'),
+      points.get('D')
+    );
+
+  const G =
+    lineIntersection(
+      points.get('A'),
+      points.get('E'),
+      points.get('B'),
+      points.get('D')
+    );
+
+  if (F) {
+
+    points.set(
+      'F',
+      {
+        id: 'F',
+        x: F.x,
+        y: F.y,
+        role: 'intersection',
+        definition: 'AC∩BD'
+      }
+    );
+  }
+
+  if (G) {
+
+    points.set(
+      'G',
+      {
+        id: 'G',
+        x: G.x,
+        y: G.y,
+        role: 'intersection',
+        definition: 'AE∩BD'
+      }
+    );
+  }
+
+  const segments =
+    makeSegments(
+      [
+        ['AB', 'A', 'B'],
+        ['AC', 'A', 'C'],
+        ['AD', 'A', 'D'],
+        ['AE', 'A', 'E'],
+        ['BC', 'B', 'C'],
+        ['BD', 'B', 'D'],
+        ['CD', 'C', 'D'],
+        ['CE', 'C', 'E']
+      ],
+      points
+    );
+
+  const lines =
+    makeLines(
+      [
+        ['l_BD', 'B', 'D'],
+        ['l_CE', 'C', 'E'],
+        ['l_AE', 'A', 'E']
+      ],
+      points
+    );
+
+  return {
+
+    type: 'GeometryModel',
+
+    metadata: {
+      ...metadata
+    },
+
+    source:
+      geometry,
+
+    points,
+
+    segments,
+
+    lines,
+
+    circles: [
+      {
+        id: 'O1',
+        center: 'O',
+        radius: 1,
+        through: [
+          'A',
+          'B',
+          'C',
+          'D',
+          'E'
+        ]
+      }
+    ],
+
+    triangles: [],
+
+    constraints: {
+      valid: true,
+      errors: [],
+      warnings: []
+    }
+  };
+}
+
+
+/* =========================================================
+ * 2015 Fallback
+ * ======================================================= */
+
+function generate2015Fallback(
+  geometry,
+  generation,
+  metadata
+) {
+
+  /*
+   * 2015年については
+   * 実座標モデルが追加された時点で
+   * Explicit Geometryへ移行する。
+   */
+
+  return {
+
+    type: 'GeometryModel',
+
+    metadata: {
+      ...metadata
+    },
+
+    source:
+      geometry,
+
+    points:
+      new Map(),
+
+    segments: [],
+
+    lines: [],
+
+    circles: [],
+
+    triangles: [],
+
+    constraints: {
+
+      valid: true,
+
+      errors: [],
+
+      warnings: [
+        '2015年の座標モデルが未設定です。'
+      ]
+    }
+  };
+}
+
+
+/* =========================================================
+ * Helper: makeSegments
+ * ======================================================= */
+
+function makeSegments(
+  definitions,
+  points
+) {
+
+  const result = [];
+
+  for (
+    const [
+      id,
+      aId,
+      bId
+    ]
+    of definitions
+  ) {
+
+    const a =
+      points.get(aId);
+
+    const b =
+      points.get(bId);
+
+    if (!a || !b) {
+      continue;
+    }
+
+    result.push({
+
+      id,
+
+      a,
+
+      b,
+
+      start:
+        a,
+
+      end:
+        b
+    });
+  }
+
+  return result;
+}
+
+
+/* =========================================================
+ * Helper: makeLines
+ * ======================================================= */
+
+function makeLines(
+  definitions,
+  points
+) {
+
+  const result = [];
+
+  for (
+    const [
+      id,
+      aId,
+      bId
+    ]
+    of definitions
+  ) {
+
+    const a =
+      points.get(aId);
+
+    const b =
+      points.get(bId);
+
+    if (!a || !b) {
+      continue;
+    }
+
+    result.push({
+
+      id,
+
+      a,
+
+      b,
+
+      start:
+        a,
+
+      end:
+        b,
+
+      through: [
+        a,
+        b
+      ]
+    });
+  }
+
+  return result;
+}
+
+
+/* =========================================================
+ * Line Intersection
+ * ======================================================= */
+
+function lineIntersection(
+  a,
+  b,
+  c,
+  d
+) {
+
+  if (
+    !a ||
+    !b ||
+    !c ||
+    !d
+  ) {
+
+    return null;
+  }
+
+  const x1 = a.x;
+  const y1 = a.y;
+
+  const x2 = b.x;
+  const y2 = b.y;
+
+  const x3 = c.x;
+  const y3 = c.y;
+
+  const x4 = d.x;
+  const y4 = d.y;
+
+  const denominator =
+    (
+      x1 - x2
+    ) *
+    (
+      y3 - y4
+    ) -
+    (
+      y1 - y2
+    ) *
+    (
+      x3 - x4
+    );
+
+  if (
+    Math.abs(
+      denominator
+    ) < 1e-12
+  ) {
+
+    return null;
+  }
+
+  const px =
+    (
+      (
+        x1 * y2 -
+        y1 * x2
+      ) *
+      (
+        x3 - x4
+      ) -
+      (
+        x1 - x2
+      ) *
+      (
+        x3 * y4 -
+        y3 * x4
+      )
+    ) /
+    denominator;
+
+  const py =
+    (
+      (
+        x1 * y2 -
+        y1 * x2
+      ) *
+      (
+        y3 - y4
+      ) -
+      (
+        y1 - y2
+      ) *
+      (
+        x3 * y4 -
+        y3 * x4
+      )
+    ) /
+    denominator;
+
+  return {
+    x: px,
+    y: py
+  };
 }

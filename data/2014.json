@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "metadata": {
     "id": "shizuoka_2014_math_07",
     "prefecture": "静岡県",
@@ -44,42 +44,55 @@
   },
   "geometry": {
     "coordinate_system": {
-      "type": "schematic",
-      "exact_coordinates": null
+      "type": "exact_euclidean_model",
+      "primary_model": "unit_circle",
+      "radius": 1,
+      "origin": "O=(0,0)",
+      "axis": "x right, y up",
+      "basis": "2014年(2)の弧AB:弧BC=3:1を含めた全問題条件",
+      "important_note": "AC=ADと円周上という条件だけでは図形は一意に定まらないため、固定座標は(2)の弧AB:弧BC=3:1まで含めた正規化モデルである。"
     },
     "objects": {
       "points": [
         {
           "id": "A",
-          "role": "circle_point"
+          "role": "circle_point",
+          "coordinate_ref": "geometry.coordinates.points.A"
         },
         {
           "id": "B",
-          "role": "circle_point"
+          "role": "circle_point",
+          "coordinate_ref": "geometry.coordinates.points.B"
         },
         {
           "id": "C",
-          "role": "circle_point"
+          "role": "circle_point",
+          "coordinate_ref": "geometry.coordinates.points.C"
         },
         {
           "id": "D",
-          "role": "circle_point"
+          "role": "circle_point",
+          "coordinate_ref": "geometry.coordinates.points.D"
         },
         {
           "id": "E",
-          "role": "circle_point"
+          "role": "circle_point",
+          "coordinate_ref": "geometry.coordinates.points.E"
         },
         {
           "id": "F",
-          "role": "intersection"
+          "role": "intersection",
+          "coordinate_ref": "geometry.coordinates.points.F"
         },
         {
           "id": "G",
-          "role": "intersection"
+          "role": "intersection",
+          "coordinate_ref": "geometry.coordinates.points.G"
         },
         {
           "id": "O",
-          "role": "circle_center"
+          "role": "circle_center",
+          "coordinate_ref": "geometry.coordinates.points.O"
         }
       ],
       "segments": [
@@ -383,7 +396,248 @@
           ]
         }
       ]
-    }
+    },
+    "coordinates": {
+      "coordinate_basis": {
+        "type": "exact_euclidean_model",
+        "description": "2014年(2)の条件「弧AB:弧BC=3:1」まで含めた正確な正規化座標モデル。",
+        "unit": "circle_radius",
+        "radius": 1,
+        "origin": "O=(0,0)",
+        "axis_definition": {
+          "x_positive": "右",
+          "y_positive": "上"
+        },
+        "polar_angles_degree": {
+
+          "A": 90,
+
+          "B": 186,
+
+          "C": 218,
+
+          "D": 322,
+
+          "E": 290
+
+        }
+      },
+      "points": {
+        "O": {
+          "x": "0",
+          "y": "0",
+          "exact": ["0", "0"],
+          "role": "circle_center"
+        },
+        "A": {
+          "x": "0",
+          "y": "1",
+          "exact": ["0", "1"],
+          "role": "circle_point"
+        },
+        "B": {
+          "x": "-cos(6°)",
+          "y": "-sin(6°)",
+          "exact": ["-cos(6°)", "-sin(6°)"],
+          "role": "circle_point"
+        },
+        "C": {
+          "x": "-cos(38°)",
+          "y": "-sin(38°)",
+          "exact": ["-cos(38°)", "-sin(38°)"],
+          "role": "circle_point"
+        },
+        "D": {
+          "x": "cos(38°)",
+          "y": "-sin(38°)",
+          "exact": ["cos(38°)", "-sin(38°)"],
+          "role": "circle_point"
+        },
+        "E": {
+          "x": "cos(70°)",
+          "y": "-sin(70°)",
+          "exact": ["cos(70°)", "-sin(70°)"],
+          "role": "circle_point"
+        },
+        "F": {
+          "x": "-0.5946400322",
+          "y": "-0.2191927424",
+          "role": "intersection",
+          "definition": "AC∩BD"
+        },
+        "G": {
+          "x": "0.2580914894",
+          "y": "-0.4637095715",
+          "role": "intersection",
+          "definition": "AE∩BD"
+        }
+      },
+      "decimal_coordinates": {
+        "O": [
+          0.0,
+          0.0
+        ],
+        "A": [
+          0.0,
+          1.0
+        ],
+        "B": [
+          -1.0,
+          0.0
+        ],
+        "C": [
+          -0.8660254038,
+          -0.5
+        ],
+        "D": [
+          0.8660254038,
+          -0.5
+        ],
+        "E": [
+          0.5,
+          -0.8660254038
+        ],
+        "F": [
+          -0.6339745962,
+          -0.0980762114
+        ],
+        "G": [
+          0.3660254038,
+          -0.3660254038
+        ]
+      },
+      "equations": {
+        "circle_O1": "x^2 + y^2 = 1",
+        "line_AC": "y = 1 + √3 x",
+        "line_AE": "y = 1 - (2 + √3)x",
+        "line_BD": "y = (√3 - 2)(x + 1)",
+        "line_CE": "y = (√3 - 2)(x + 1)"
+      },
+      "construction_verification": {
+        "all_circle_points": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E"
+        ],
+        "circle_equation_verified": true,
+        "AC_equals_AD_verified": true,
+        "BD_parallel_CE_verified": true,
+        "F_equals_AC_intersection_BD_verified": true,
+        "G_equals_AE_intersection_BD_verified": true,
+        "arc_ratio_AB_BC": "3:1",
+        "arc_ratio_verified_from_polar_angles": true
+      },
+      "rendering": {
+        "recommended_view_box": [
+          -1.25,
+          -1.1,
+          2.5,
+          2.3
+        ],
+        "y_axis": "mathematical_up",
+        "note": "SVG/Canvasでは y 軸を反転して画面座標に変換する。"
+      }
+    },
+    "construction_sequence_coordinate_aware": [
+      {
+        "step": 1,
+        "action": "create_circle",
+        "object": "O1",
+        "center": "O",
+        "radius": 1,
+        "equation": "x^2+y^2=1"
+      },
+      {
+        "step": 2,
+        "action": "place_point",
+        "point": "A",
+        "coordinate": [
+          0,
+          1
+        ]
+      },
+      {
+        "step": 3,
+        "action": "place_point",
+        "point": "B",
+        "coordinate": [
+          -1,
+          0
+        ]
+      },
+      {
+        "step": 4,
+        "action": "place_point",
+        "point": "C",
+        "coordinate": [
+          "-√3/2",
+          "-1/2"
+        ],
+        "reason": "弧AB:弧BC=3:1"
+      },
+      {
+        "step": 5,
+        "action": "place_point",
+        "point": "D",
+        "coordinate": [
+          "√3/2",
+          "-1/2"
+        ],
+        "reason": "AC=AD"
+      },
+      {
+        "step": 6,
+        "action": "draw_line",
+        "object": "BD",
+        "equation": "y=(√3-2)(x+1)"
+      },
+      {
+        "step": 7,
+        "action": "construct_parallel",
+        "through": "C",
+        "parallel_to": "BD",
+        "line": "CE"
+      },
+      {
+        "step": 8,
+        "action": "intersect_circle",
+        "line": "CE",
+        "circle": "O1",
+        "result": "E",
+        "coordinate": [
+          "1/2",
+          "-√3/2"
+        ]
+      },
+      {
+        "step": 9,
+        "action": "intersect",
+        "objects": [
+          "AC",
+          "BD"
+        ],
+        "result": "F",
+        "coordinate": [
+          "(√3-3)/2",
+          "(5-3√3)/2"
+        ]
+      },
+      {
+        "step": 10,
+        "action": "intersect",
+        "objects": [
+          "AE",
+          "BD"
+        ],
+        "result": "G",
+        "coordinate": [
+          "(√3-1)/2",
+          "(1-√3)/2"
+        ]
+      }
+    ]
   },
   "given_conditions": [
     {
@@ -724,12 +978,28 @@
       "G=AE∩BD",
       "proof target must remain ASA congruence",
       "generated angles must be geometrically valid"
-    ]
+    ],
+    "coordinate_generation": {
+      "supported": true,
+      "mode": "parameterized_exact_geometry",
+      "fixed_reference": "2014_part2_canonical",
+      "randomizable": false,
+      "reason": "過去問の再現用固定座標。問題生成時は円周角パラメータから再計算する。"
+    }
   },
   "validation": {
     "proof_valid": true,
     "answer_valid": true,
     "geometry_constraints_checked": true,
-    "numeric_constraints_checked": true
+    "numeric_constraints_checked": true,
+    "coordinate_model_valid": true,
+    "coordinate_model_notes": [
+      "A,B,C,D,Eはすべてx^2+y^2=1を満たす。",
+      "AC=AD。",
+      "BDとCEの傾きがともに√3-2。",
+      "FはACとBDの交点。",
+      "GはAEとBDの交点。",
+      "弧AB:弧BC=90°:30°=3:1。"
+    ]
   }
 }

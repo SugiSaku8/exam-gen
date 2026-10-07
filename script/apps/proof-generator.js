@@ -26,7 +26,6 @@ const app = {
             年度
             <select id="proof-year">
               <option value="2014">2014</option>
-              <option value="2015">2015</option>
             </select>
           </label>
 
@@ -316,6 +315,26 @@ const app = {
         .proof-main {
           grid-template-columns: 1fr;
         }
+      }
+      button{
+      width: 85%;
+      height: 60px;
+      margin: 0 auto;
+      background: #8bc6c7;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+      transition: 0.3s;
+      border: 2px solid #8bc6c7;
+      display: block;
+      height: auto;
+      padding: 15px 10px 10px;
+      border-radius: 100px;
+      }
+      button:hover {
+          transition: 0.3s;
+          background: #fff;
+          color: #8bc6c7;
       }
     `;
 

@@ -1,8 +1,7 @@
 import { loadYear } from './json_loader.js';
 
 import {
-  analyzeProblem,
-  normalizeProblem
+  analyzeProblem
 } from './json_analyzer.js';
 
 import { CanvasManager } from './canvas_manager.js';
@@ -11,69 +10,80 @@ import { Drawer } from './drawer.js';
 
 
 /**
- * 静岡県入試証明ジェネレーター
+ * 証明問題ジェネレーター本体
  *
- * 役割：
+ * 役割:
  * - JSONの読み込み
- * - JSONの正規化
- * - 問題の解析
- * - Canvasの初期化
- * - 図形の描画
- * - 現在選択されている小問の管理
+ * - JSONの解析
+ * - CanvasManagerの初期化
+ * - Drawerの初期化
+ * - GeometryModelの描画
  *
- * 個々の処理は各モジュールに委譲する。
+ * 幾何計算そのものは geometry_solver.js、
+ * 描画そのものは drawer.js が担当する。
  */
 export class ProofGenerator {
 
   constructor(options = {}) {
-    this.root = options.root ?? null;
+    this.root =
+      options.root ?? null;
 
-    // 問題データ
-    this.data = null;
+    this.data =
+      null;
 
-    // 解析結果
-    this.analysis = null;
+    this.analysis =
+      null;
 
-    // Canvas関連
-    this.canvasManager = null;
-    this.drawer = null;
+    this.canvasManager =
+      null;
 
-    // 現在の状態
-    this.currentYear = null;
-    this.currentSubproblem = null;
+    this.drawer =
+      null;
+
+    this.currentYear =
+      null;
+
+    this.currentSubproblem =
+      null;
   }
 
 
   /**
    * 年度の問題を読み込む
-   *
-   * @param {number|string} year
-   * @returns {Promise<object>}
    */
   async load(year) {
 
-    if (year === undefined || year === null) {
-      throw new Error('年度が指定されていません。');
+    const data =
+      await loadYear(year);
+
+    /*
+     * analyzeProblem() 内で
+     * normalizeProblem() → geometry solver
+     * まで行う。
+     */
+    this.analysis =
+      analyzeProblem(data);
+
+    this.data =
+      this.analysis.source ??
+      data;
+
+    this.currentYear =
+      year;
+
+    this.currentSubproblem =
+      null;
+
+    /*
+     * すでにCanvasが存在する場合、
+     * 問題を読み替えてそのまま再描画できる。
+     */
+    if (
+      this.drawer &&
+      this.analysis?.geometry
+    ) {
+      this.draw();
     }
-
-    // JSON読み込み
-    let data = await loadYear(year);
-
-    // JSONの正規化
-    if (typeof normalizeProblem === 'function') {
-      data = normalizeProblem(data);
-    }
-
-    // 問題解析
-    this.analysis = analyzeProblem(data);
-
-    // 元データを保持
-    this.data = data;
-
-    this.currentYear = year;
-
-    // 小問選択状態をリセット
-    this.currentSubproblem = null;
 
     return this.data;
   }
@@ -81,10 +91,6 @@ export class ProofGenerator {
 
   /**
    * Canvasを初期化する
-   *
-   * @param {HTMLElement} container
-   * @param {number} width
-   * @param {number} height
    */
   initializeCanvas(
     container,
@@ -94,15 +100,17 @@ export class ProofGenerator {
 
     if (!container) {
       throw new Error(
-        'Canvasの配置先containerが指定されていません。'
+        'Canvasのコンテナが指定されていません。'
       );
     }
 
-    // 既存のCanvasを破棄
-    this.canvasManager = null;
-    this.drawer = null;
+    /*
+     * 既存Canvasを破棄
+     */
+    if (this.canvasManager) {
+      this.canvasManager.destroy();
+    }
 
-    // Canvas管理
     this.canvasManager =
       new CanvasManager(container);
 
@@ -111,62 +119,86 @@ export class ProofGenerator {
       height
     );
 
-    // 描画担当
+    /*
+     * DrawerにはContextではなく
+     * CanvasManagerそのものを渡す。
+     */
     this.drawer =
-
       new Drawer(
-
         this.canvasManager
-
       );
 
-    return this.canvasManager;
+    /*
+     * 問題がすでに読み込まれていれば
+     * 即座に描画。
+     */
+    if (this.analysis) {
+      this.draw();
+    }
   }
 
 
   /**
-   * 現在の問題を描画する
+   * 現在のGeometryModelを描画する
    */
   draw() {
-
-    if (!this.data) {
-      throw new Error(
-        '問題データが読み込まれていません。'
-      );
+    if (!this.drawer) {
+      console.warn('Drawerが初期化されていません。');
+      return;
     }
 
-    if (!this.drawer) {
-      throw new Error(
-        'Canvasが初期化されていません。'
+    if (!this.analysis) {
+      console.warn('問題が解析されていません。');
+      return;
+    }
+
+    const geometryData =
+      this.analysis.geometry;
+
+    if (!geometryData) {
+      console.warn(
+        'analysis.geometry が存在しません。',
+        this.analysis
       );
+      return;
     }
 
     /*
-     * Drawerには解析済みのGeometryModelを渡す。
+     * json_analyzer.js の現在の構造:
      *
-     * json_analyzer
-     *     ↓
-     * analysis.geometry.model
-     *     ↓
-     * drawer
+     * geometry: {
+     *   source: ...,
+     *   model: {
+     *     points: ...,
+     *     segments: ...,
+     *     lines: ...,
+     *     circles: ...
+     *   }
+     * }
+     *
+     * ただし、将来的にgeometryそのものが
+     * GeometryModelになる可能性も考慮する。
      */
     const geometry =
-      this.analysis?.geometry;
+      geometryData.model ??
+      geometryData;
 
     if (!geometry) {
-      throw new Error(
-        '図形データが解析されていません。'
+      console.warn(
+        'GeometryModelが取得できません。',
+        geometryData
       );
+      return;
     }
 
-    this.drawer.drawGeometry(geometry);
-
-    return geometry;
+    this.drawer.drawGeometry(
+      geometry
+    );
   }
 
 
   /**
-   * 年度を取得する
+   * 現在の年度
    */
   getYear() {
     return this.currentYear;
@@ -174,7 +206,7 @@ export class ProofGenerator {
 
 
   /**
-   * 読み込まれている問題データを取得する
+   * 生JSONデータ
    */
   getData() {
     return this.data;
@@ -182,7 +214,7 @@ export class ProofGenerator {
 
 
   /**
-   * 解析結果を取得する
+   * 解析結果
    */
   getAnalysis() {
     return this.analysis;
@@ -190,28 +222,38 @@ export class ProofGenerator {
 
 
   /**
-   * 小問一覧を取得する
+   * GeometryModelを取得
    */
-  getSubproblems() {
-
-    return this.data
-      ?.problem
-      ?.subproblems
-      ?? [];
+  getGeometry() {
+    return this.analysis?.geometry?.model ?? null;
   }
 
 
   /**
-   * 小問を選択する
-   *
-   * @param {string|number} id
-   * @returns {object|null}
+   * 小問一覧
+   */
+  getSubproblems() {
+
+    return (
+      this.analysis
+        ?.problem
+        ?.subproblems
+      ?? []
+    );
+  }
+
+
+  /**
+   * 小問を選択
    */
   selectSubproblem(id) {
 
     const subproblem =
       this.getSubproblems()
-        .find(problem => problem.id === id);
+        .find(
+          problem =>
+            problem.id === id
+        );
 
     this.currentSubproblem =
       subproblem ?? null;
@@ -221,7 +263,7 @@ export class ProofGenerator {
 
 
   /**
-   * 現在選択されている小問を取得する
+   * 現在選択中の小問
    */
   getCurrentSubproblem() {
     return this.currentSubproblem;
@@ -229,54 +271,63 @@ export class ProofGenerator {
 
 
   /**
-   * 証明問題の情報を取得する
+   * 証明情報
    */
   getCurrentProof() {
 
-    return this.analysis?.proof
-      ?? this.data?.proof
-      ?? null;
+    return (
+      this.analysis
+        ?.proof
+      ?? null
+    );
   }
 
 
   /**
-   * 与えられた条件を取得する
+   * 仮定
    */
   getCurrentConditions() {
 
-    return this.analysis?.conditions
-      ?? this.data?.given_conditions
-      ?? [];
+    return (
+      this.analysis
+        ?.givenConditions
+      ?? []
+    );
   }
 
 
   /**
-   * 導出された事実を取得する
+   * 導出事実
    */
   getCurrentDerivedFacts() {
 
-    return this.analysis?.facts
-      ?? this.data?.derived_facts
-      ?? [];
+    return (
+      this.analysis
+        ?.derivedFacts
+      ?? []
+    );
   }
 
 
   /**
-   * 後続問題を取得する
+   * 追問
    */
   getCurrentFollowUp() {
 
-    return this.analysis?.followUp
-      ?? this.data?.follow_up?.problems
-      ?? [];
+    return (
+      this.analysis
+        ?.followUp
+        ?.problems
+      ?? []
+    );
   }
 
 
   /**
-   * 現在の問題が読み込まれているか
+   * 問題が読み込まれているか
    */
   isLoaded() {
-    return this.data !== null;
+    return this.analysis !== null;
   }
 
 
@@ -284,23 +335,39 @@ export class ProofGenerator {
    * Canvasが初期化されているか
    */
   isCanvasInitialized() {
-    return this.canvasManager !== null &&
-           this.drawer !== null;
+
+    return (
+      this.canvasManager !== null &&
+      this.canvasManager.isInitialized()
+    );
   }
 
 
   /**
-   * 現在の状態をリセットする
+   * 状態を初期化
    */
   reset() {
 
-    this.data = null;
-    this.analysis = null;
+    if (this.canvasManager) {
+      this.canvasManager.destroy();
+    }
 
-    this.canvasManager = null;
-    this.drawer = null;
+    this.data =
+      null;
 
-    this.currentYear = null;
-    this.currentSubproblem = null;
+    this.analysis =
+      null;
+
+    this.canvasManager =
+      null;
+
+    this.drawer =
+      null;
+
+    this.currentYear =
+      null;
+
+    this.currentSubproblem =
+      null;
   }
 }

@@ -1,187 +1,22 @@
-/**
- * JSON Analyzer
- *
- * 入試問題JSONをアプリ内部モデルへ変換する。
- * geometry_solver により、描画用の実座標もここで生成する。
- */
+import {
+  buildGeometryModel
+} from './geometry/geometry_solver.js';
 
-import { buildGeometryModel } from "./geometry/geometry_solver.js";
 
-export function analyzeProblem(data) {
-  if (!data || typeof data !== "object") {
-    throw new Error("問題JSONが不正です。");
-  }
-
-  const metadata = analyzeMetadata(data.metadata);
-  const geometry = analyzeGeometry(
-    data.geometry,
-    data.generation,
-    metadata
-  );
-
-  return {
-    raw: data,
-    metadata,
-    problem: analyzeProblemInfo(data.problem),
-    geometry,
-    conditions: analyzeConditions(data.given_conditions),
-    facts: analyzeFacts(data.derived_facts),
-    proof: analyzeProof(data.proof),
-    followUp: analyzeFollowUp(data.follow_up),
-    analysis: data.analysis ?? {},
-    generation: data.generation ?? {},
-    validation: data.validation ?? {}
-  };
-}
-
-function analyzeMetadata(metadata = {}) {
-  return {
-    id: metadata.id ?? "",
-    prefecture: metadata.prefecture ?? "",
-    examType: metadata.exam_type ?? "",
-    subject: metadata.subject ?? "",
-    year: metadata.year ?? null,
-    problemNumber: metadata.problem_number ?? "",
-    points: metadata.points ?? 0,
-    tags: metadata.tags ?? [],
-    source: metadata.source ?? {}
-  };
-}
-
-function analyzeProblemInfo(problem = {}) {
-  return {
-    section: problem.section ?? "",
-    subproblems: problem.subproblems ?? []
-  };
-}
-
-function analyzeGeometry(geometry = {}, generation = {}, metadata = {}) {
-  const objects = geometry.objects ?? {};
-
-  const source = {
-    coordinateSystem: geometry.coordinate_system ?? {},
-    objects: {
-      points: objects.points ?? [],
-      segments: objects.segments ?? [],
-      lines: objects.lines ?? [],
-      circles: objects.circles ?? [],
-      triangles: objects.triangles ?? []
-    },
-    incidence: geometry.incidence ?? [],
-    intersections: geometry.intersections ?? [],
-    relationships: geometry.relationships ?? [],
-    constructionSequence: geometry.construction_sequence ?? [],
-    display: geometry.display ?? {}
-  };
-
-  const model = buildGeometryModel(source, generation, metadata);
-
-  return {
-    ...source,
-    model,
-    pointIds: new Set((objects.points ?? []).map(p => p.id))
-  };
-}
-
-function analyzeConditions(conditions = []) {
-  return conditions.map(condition => ({
-    ...condition,
-    displayText:
-      condition.display_text ??
-      formatCondition(condition)
-  }));
-}
-
-function analyzeFacts(facts = []) {
-  const map = new Map();
-
-  for (const fact of facts) {
-    map.set(fact.id, {
-      ...fact,
-      dependencies: fact.derived_from ?? []
-    });
-  }
-
-  return {
-    list: facts,
-    map
-  };
-}
-
-function analyzeProof(proof = {}) {
-  const solution = proof.selected_solution ?? {};
-
-  return {
-    problemId: proof.problem_id ?? "",
-    target: proof.target ?? {},
-    targetDecomposition: proof.target_decomposition ?? {},
-    strategy: solution.strategy ?? "",
-    steps: solution.steps ?? [],
-    answerGeneration: proof.answer_generation ?? {}
-  };
-}
-
-function analyzeFollowUp(followUp = {}) {
-  return {
-    exists: Boolean(followUp.exists),
-    problems: followUp.problems ?? []
-  };
-}
-
-function formatCondition(condition) {
-  const type = condition.type;
-  const objects = condition.objects ?? [];
-
-  switch (type) {
-    case "concyclic":
-      return `${objects.join("，")}は同一円周上`;
-    case "equal_length":
-      return objects.join("＝");
-    case "parallel":
-      return `${objects[0]}∥${objects[1]}`;
-    case "intersection":
-      return `${objects.join("∩")} = ${condition.result ?? ""}`;
-    default:
-      return objects.join("，");
-  }
-}
-
-export function isKnownProofStep(step, analyzed) {
-  if (!step) return false;
-
-  return (step.input ?? []).every(id => {
-    if (id.startsWith("C")) {
-      return analyzed.conditions.some(c => c.id === id);
-    }
-
-    if (id.startsWith("F")) {
-      return analyzed.facts.map.has(id);
-    }
-
-    return id === "PROOF_CONCLUSION";
-  });
-}
-
-export function canDeriveFact(factId, availableIds, analyzed) {
-  if (availableIds.has(factId)) return true;
-
-  const fact = analyzed.facts.map.get(factId);
-  if (!fact) return false;
-
-  return fact.dependencies.every(dep =>
-    canDeriveFact(dep, availableIds, analyzed)
-  );
-}
+/* =========================================================
+ * normalizeProblem
+ * =======================================================*/
 
 /**
- * 問題JSONをジェネレーター内部で扱いやすい形に正規化する。
+ * 問題JSONを内部標準形式へ正規化する。
  *
- * normalizeProblem()
- *     ↓
- * analyzeProblem()
+ * 役割：
+ * - 欠落している配列・オブジェクトを補完
+ * - IDを文字列へ統一
+ * - geometry内の参照を正規化
+ * - proof stepの基本構造を統一
  *
- * ここでは問題の意味を解析しない。
- * あくまで「データの形を揃える」ことだけを担当する。
+ * 問題の「意味」の解析はここでは行わない。
  *
  * @param {object} input
  * @returns {object}
@@ -194,50 +29,52 @@ export function normalizeProblem(input) {
     );
   }
 
-  /*
-   * 元JSONを直接書き換えない。
-   *
-   * JSON.parse()したデータをそのまま渡す場合でも、
-   * analyzer内部で予期せぬ変更が起きないようにする。
-   */
-  const data = structuredClone(input);
+  const data =
+    typeof structuredClone === 'function'
+      ? structuredClone(input)
+      : JSON.parse(JSON.stringify(input));
 
 
-  /*
-   * --------------------------------------------------
+  /* -------------------------------------------------------
    * metadata
-   * --------------------------------------------------
-   */
+   * -----------------------------------------------------*/
 
   data.metadata ??= {};
 
-  if (data.metadata.year == null && data.year != null) {
+  if (
+    data.metadata.year == null &&
+    data.year != null
+  ) {
     data.metadata.year = data.year;
   }
 
-  if (data.metadata.problem == null && data.problem_number != null) {
-    data.metadata.problem = data.problem_number;
+  if (
+    data.metadata.problem == null &&
+    data.problem_number != null
+  ) {
+    data.metadata.problem =
+      data.problem_number;
   }
 
-  data.metadata.tags ??= [];
+  if (
+    !Array.isArray(data.metadata.tags)
+  ) {
+    data.metadata.tags = [];
+  }
 
 
-  /*
-   * --------------------------------------------------
+  /* -------------------------------------------------------
    * problem
-   * --------------------------------------------------
-   */
+   * -----------------------------------------------------*/
 
   data.problem ??= {};
 
-  data.problem.subproblems ??= [];
+  if (
+    !Array.isArray(data.problem.subproblems)
+  ) {
+    data.problem.subproblems = [];
+  }
 
-  /*
-   * 小問IDを保証する。
-   *
-   * JSONによっては id が無い可能性があるため、
-   * 順番から自動生成する。
-   */
   data.problem.subproblems =
     data.problem.subproblems.map(
       (subproblem, index) => {
@@ -246,29 +83,23 @@ export function normalizeProblem(input) {
           ...subproblem
         };
 
-        if (
-          normalized.id === undefined ||
-          normalized.id === null
-        ) {
-          normalized.id = `P${index + 1}`;
-        }
+        normalized.id ??=
+          `P${index + 1}`;
 
-        if (normalized.number == null) {
-          normalized.number = index + 1;
-        }
+        normalized.number ??=
+          index + 1;
 
-        normalized.type ??= 'unknown';
+        normalized.type ??=
+          'unknown';
 
         return normalized;
       }
     );
 
 
-  /*
-   * --------------------------------------------------
+  /* -------------------------------------------------------
    * geometry
-   * --------------------------------------------------
-   */
+   * -----------------------------------------------------*/
 
   data.geometry ??= {};
 
@@ -289,73 +120,24 @@ export function normalizeProblem(input) {
   data.geometry.display ??= {};
 
 
-  /*
-   * --------------------------------------------------
-   * given_conditions
-   * --------------------------------------------------
-   *
-   * 与えられた条件は配列として統一する。
-   */
+  /* -------------------------------------------------------
+   * conditions
+   * -----------------------------------------------------*/
 
-  if (!Array.isArray(data.given_conditions)) {
+  data.given_conditions =
+    normalizeArray(
+      data.given_conditions
+    );
 
-    if (
-      data.given_conditions &&
-      typeof data.given_conditions === 'object'
-    ) {
-      data.given_conditions =
-        Object.entries(data.given_conditions)
-          .map(([id, condition]) => ({
-            id,
-            ...(
-              typeof condition === 'object'
-                ? condition
-                : {
-                    statement: String(condition)
-                  }
-            )
-          }));
-    } else {
-      data.given_conditions = [];
-    }
-  }
+  data.derived_facts =
+    normalizeArray(
+      data.derived_facts
+    );
 
 
-  /*
-   * --------------------------------------------------
-   * derived_facts
-   * --------------------------------------------------
-   */
-
-  if (!Array.isArray(data.derived_facts)) {
-
-    if (
-      data.derived_facts &&
-      typeof data.derived_facts === 'object'
-    ) {
-      data.derived_facts =
-        Object.entries(data.derived_facts)
-          .map(([id, fact]) => ({
-            id,
-            ...(
-              typeof fact === 'object'
-                ? fact
-                : {
-                    statement: String(fact)
-                  }
-            )
-          }));
-    } else {
-      data.derived_facts = [];
-    }
-  }
-
-
-  /*
-   * --------------------------------------------------
+  /* -------------------------------------------------------
    * proof
-   * --------------------------------------------------
-   */
+   * -----------------------------------------------------*/
 
   data.proof ??= {};
 
@@ -365,100 +147,13 @@ export function normalizeProblem(input) {
 
   data.proof.selected_solution ??= {};
 
-  data.proof.selected_solution.steps ??= [];
-
-
-  /*
-   * --------------------------------------------------
-   * follow_up
-   * --------------------------------------------------
-   */
-
-  data.follow_up ??= {};
-
-  data.follow_up.problems ??= [];
-
-
-  /*
-   * --------------------------------------------------
-   * analysis
-   * --------------------------------------------------
-   */
-
-  data.analysis ??= {};
-
-  data.analysis.proof_pattern ??= [];
-
-
-  /*
-   * --------------------------------------------------
-   * generation
-   * --------------------------------------------------
-   */
-
-  data.generation ??= {};
-
-  data.generation.can_generate_problem ??= false;
-  data.generation.can_generate_answer ??= false;
-
-  data.generation.randomizable ??= {};
-
-
-  /*
-   * --------------------------------------------------
-   * validation
-   * --------------------------------------------------
-   */
-
-  data.validation ??= {};
-
-  data.validation.errors ??= [];
-  data.validation.warnings ??= [];
-
-
-  /*
-   * --------------------------------------------------
-   * IDの正規化
-   * --------------------------------------------------
-   *
-   * geometry内で参照されるIDが
-   * 数値などになっていても文字列として扱う。
-   */
-
-  normalizeIds(data.geometry.points, 'id');
-  normalizeIds(data.geometry.segments, 'id');
-  normalizeIds(data.geometry.lines, 'id');
-  normalizeIds(data.geometry.circles, 'id');
-  normalizeIds(data.geometry.triangles, 'id');
-
-  normalizeIds(
-    data.geometry.intersections,
-    'id'
-  );
-
-
-  /*
-   * --------------------------------------------------
-   * geometryの参照関係
-   * --------------------------------------------------
-   *
-   * 2014/2015 JSONでは
-   *
-   *   l_BD
-   *   BD
-   *
-   * のような表記揺れが存在するため、
-   * 参照用のIDを正規化する。
-   */
-
-  normalizeGeometryReferences(data.geometry);
-
-
-  /*
-   * --------------------------------------------------
-   * proof steps
-   * --------------------------------------------------
-   */
+  if (
+    !Array.isArray(
+      data.proof.selected_solution.steps
+    )
+  ) {
+    data.proof.selected_solution.steps = [];
+  }
 
   data.proof.selected_solution.steps =
     data.proof.selected_solution.steps.map(
@@ -468,14 +163,11 @@ export function normalizeProblem(input) {
           ...step
         };
 
-        if (
-          normalized.id === undefined ||
-          normalized.id === null
-        ) {
-          normalized.id = `S${String(index + 1).padStart(2, '0')}`;
-        }
+        normalized.id ??=
+          `S${String(index + 1).padStart(2, '0')}`;
 
-        normalized.order ??= index + 1;
+        normalized.order ??=
+          index + 1;
 
         normalized.requires ??= [];
         normalized.outputs ??= [];
@@ -485,20 +177,421 @@ export function normalizeProblem(input) {
     );
 
 
-  /*
-   * --------------------------------------------------
-   * 完成
-   * --------------------------------------------------
-   */
+  /* -------------------------------------------------------
+   * follow up
+   * -----------------------------------------------------*/
+
+  data.follow_up ??= {};
+
+  if (
+    !Array.isArray(data.follow_up.problems)
+  ) {
+    data.follow_up.problems = [];
+  }
+
+
+  /* -------------------------------------------------------
+   * analysis
+   * -----------------------------------------------------*/
+
+  data.analysis ??= {};
+
+  if (
+    !Array.isArray(
+      data.analysis.proof_pattern
+    )
+  ) {
+    data.analysis.proof_pattern = [];
+  }
+
+
+  /* -------------------------------------------------------
+   * generation
+   * -----------------------------------------------------*/
+
+  data.generation ??= {};
+
+  data.generation.can_generate_problem ??=
+    false;
+
+  data.generation.can_generate_answer ??=
+    false;
+
+  data.generation.randomizable ??= {};
+
+
+  /* -------------------------------------------------------
+   * validation
+   * -----------------------------------------------------*/
+
+  data.validation ??= {};
+
+  if (
+    !Array.isArray(data.validation.errors)
+  ) {
+    data.validation.errors = [];
+  }
+
+  if (
+    !Array.isArray(data.validation.warnings)
+  ) {
+    data.validation.warnings = [];
+  }
+
+
+  /* -------------------------------------------------------
+   * ID
+   * -----------------------------------------------------*/
+
+  normalizeIds(
+    data.geometry.points
+  );
+
+  normalizeIds(
+    data.geometry.segments
+  );
+
+  normalizeIds(
+    data.geometry.lines
+  );
+
+  normalizeIds(
+    data.geometry.circles
+  );
+
+  normalizeIds(
+    data.geometry.triangles
+  );
+
+  normalizeIds(
+    data.geometry.intersections
+  );
+
+
+  /* -------------------------------------------------------
+   * geometry references
+   * -----------------------------------------------------*/
+
+  normalizeGeometryReferences(
+    data.geometry
+  );
+
 
   return data;
 }
 
 
+/* =========================================================
+ * analyzeProblem
+ * =======================================================*/
+
 /**
- * 配列内オブジェクトのIDを文字列化する。
+ * 問題JSONを解析し、
+ * UI・生成ロジックが利用するAnalysisを作る。
+ *
+ * @param {object} input
+ * @returns {object}
  */
-function normalizeIds(array, key) {
+export function analyzeProblem(input) {
+
+  const data =
+    normalizeProblem(input);
+
+
+  const metadata =
+    data.metadata ?? {};
+
+  const problem =
+    data.problem ?? {};
+
+
+  /* -------------------------------------------------------
+   * Geometry
+   * -----------------------------------------------------*/
+
+  const geometry =
+    analyzeGeometry(data);
+
+
+  /* -------------------------------------------------------
+   * UIから扱う基本情報
+   * -----------------------------------------------------*/
+
+  const year =
+    metadata.year ?? null;
+
+  const section =
+    metadata.section ??
+    metadata.subject ??
+    '';
+
+  const points =
+    Number.isFinite(
+      Number(metadata.points)
+    )
+      ? Number(metadata.points)
+      : 0;
+
+  const tags =
+    Array.isArray(metadata.tags)
+      ? metadata.tags
+      : [];
+
+
+  /* -------------------------------------------------------
+   * Conditions
+   * -----------------------------------------------------*/
+
+  const givenConditions =
+    Array.isArray(data.given_conditions)
+      ? data.given_conditions
+      : [];
+
+  const derivedFacts =
+    Array.isArray(data.derived_facts)
+      ? data.derived_facts
+      : [];
+
+
+  /* -------------------------------------------------------
+   * Proof
+   * -----------------------------------------------------*/
+
+  const proof =
+    analyzeProof(
+      data.proof,
+      givenConditions,
+      derivedFacts
+    );
+
+
+  /* -------------------------------------------------------
+   * Follow-up
+   * -----------------------------------------------------*/
+
+  const followUp =
+    data.follow_up ?? {
+      problems: []
+    };
+
+
+  /* -------------------------------------------------------
+   * Generation
+   * -----------------------------------------------------*/
+
+  const generation =
+    data.generation ?? {};
+
+
+  /* -------------------------------------------------------
+   * Validation
+   * -----------------------------------------------------*/
+
+  const validation =
+    data.validation ?? {};
+
+
+  /* -------------------------------------------------------
+   * Analysis
+   * -----------------------------------------------------*/
+
+  const analysisInfo = {
+    ...(data.analysis ?? {})
+  };
+
+
+  /*
+   * UI / Generatorが利用する統一形式
+   */
+  return {
+
+    year,
+
+    section,
+
+    points,
+
+    tags,
+
+    problem,
+
+    geometry,
+
+    givenConditions,
+
+    derivedFacts,
+
+    proof,
+
+    followUp,
+
+    analysis:
+      analysisInfo,
+
+    generation,
+
+    validation
+  };
+}
+
+
+/* =========================================================
+ * analyzeGeometry
+ * =======================================================*/
+
+/**
+ * geometryを解析する。
+ *
+ * geometry_solverに実際の座標計算を委譲する。
+ */
+function analyzeGeometry(data) {
+
+  const source =
+    data.geometry ?? {};
+
+  const generation =
+    data.generation ?? {};
+
+  const metadata =
+    data.metadata ?? {};
+
+
+  const model =
+    buildGeometryModel(
+      source,
+      generation,
+      metadata
+    );
+
+
+  return {
+
+    source,
+
+    model
+  };
+}
+
+
+/* =========================================================
+ * analyzeProof
+ * =======================================================*/
+
+/**
+ * 証明情報を解析する。
+ *
+ * 現段階ではJSONに記録されている証明情報を
+ * 安全な内部形式へまとめる。
+ */
+function analyzeProof(
+  proof,
+  givenConditions,
+  derivedFacts
+) {
+
+  if (!proof || typeof proof !== 'object') {
+    return null;
+  }
+
+
+  const target =
+    proof.target ?? null;
+
+
+  const requiredConditions =
+    Array.isArray(
+      proof.required_conditions
+    )
+      ? proof.required_conditions
+      : [];
+
+
+  const selectedSolution =
+    proof.selected_solution ?? {};
+
+
+  const steps =
+    Array.isArray(
+      selectedSolution.steps
+    )
+      ? selectedSolution.steps
+      : [];
+
+
+  return {
+
+    ...proof,
+
+    target,
+
+    requiredConditions,
+
+    selectedSolution: {
+
+      ...selectedSolution,
+
+      steps
+    },
+
+    /*
+     * 証明解析時に参照できるように
+     * 条件・導出事実を紐付けておく。
+     */
+    availableConditions:
+      givenConditions,
+
+    availableFacts:
+      derivedFacts
+  };
+}
+
+
+/* =========================================================
+ * normalize helpers
+ * =======================================================*/
+
+/**
+ * 配列形式を保証する。
+ */
+function normalizeArray(value) {
+
+  if (Array.isArray(value)) {
+    return value;
+  }
+
+  if (
+    value &&
+    typeof value === 'object'
+  ) {
+
+    return Object.entries(value)
+      .map(([id, item]) => {
+
+        if (
+          item &&
+          typeof item === 'object'
+        ) {
+          return {
+            id,
+            ...item
+          };
+        }
+
+        return {
+          id,
+          statement: String(item)
+        };
+      });
+  }
+
+  return [];
+}
+
+
+/**
+ * IDを文字列へ統一する。
+ */
+function normalizeIds(array) {
 
   if (!Array.isArray(array)) {
     return;
@@ -506,15 +599,19 @@ function normalizeIds(array, key) {
 
   for (const item of array) {
 
-    if (!item || typeof item !== 'object') {
+    if (
+      !item ||
+      typeof item !== 'object'
+    ) {
       continue;
     }
 
     if (
-      item[key] !== undefined &&
-      item[key] !== null
+      item.id !== undefined &&
+      item.id !== null
     ) {
-      item[key] = String(item[key]);
+      item.id =
+        String(item.id);
     }
   }
 }
@@ -522,84 +619,113 @@ function normalizeIds(array, key) {
 
 /**
  * geometry内の参照IDを正規化する。
- *
- * l_BD と BD のような表記揺れについて、
- * 実体として存在するIDを優先する。
  */
-function normalizeGeometryReferences(geometry) {
+function normalizeGeometryReferences(
+  geometry
+) {
 
-  const lineIds = new Set(
-    Array.isArray(geometry.lines)
-      ? geometry.lines
-          .map(line => line?.id)
-          .filter(Boolean)
-          .map(String)
-      : []
-  );
+  const lineIds =
+    new Set(
+      Array.isArray(geometry.lines)
+        ? geometry.lines
+            .map(line => line?.id)
+            .filter(Boolean)
+            .map(String)
+        : []
+    );
 
-  const normalizeReference = value => {
 
-    if (
-      value === undefined ||
-      value === null
-    ) {
-      return value;
-    }
+  const normalizeLineReference =
+    value => {
 
-    const id = String(value);
+      if (
+        value === undefined ||
+        value === null
+      ) {
+        return value;
+      }
 
-    if (lineIds.has(id)) {
+      const id =
+        String(value);
+
+      /*
+       * 実在するIDを優先
+       */
+      if (lineIds.has(id)) {
+        return id;
+      }
+
+      /*
+       * BD → l_BD
+       */
+      const prefixed =
+        `l_${id}`;
+
+      if (lineIds.has(prefixed)) {
+        return prefixed;
+      }
+
       return id;
-    }
-
-    const prefixed = `l_${id}`;
-
-    if (lineIds.has(prefixed)) {
-      return prefixed;
-    }
-
-    return id;
-  };
+    };
 
 
-  /*
-   * intersections
-   */
+  /* intersections */
 
-  if (Array.isArray(geometry.intersections)) {
+  if (
+    Array.isArray(
+      geometry.intersections
+    )
+  ) {
 
-    for (const intersection of geometry.intersections) {
+    for (
+      const intersection
+      of geometry.intersections
+    ) {
 
       if (!intersection) {
         continue;
       }
 
-      if (intersection.line1 != null) {
+      if (
+        intersection.line1 != null
+      ) {
         intersection.line1 =
-          normalizeReference(intersection.line1);
+          normalizeLineReference(
+            intersection.line1
+          );
       }
 
-      if (intersection.line2 != null) {
+      if (
+        intersection.line2 != null
+      ) {
         intersection.line2 =
-          normalizeReference(intersection.line2);
+          normalizeLineReference(
+            intersection.line2
+          );
       }
     }
   }
 
 
-  /*
-   * lines
-   */
+  /* lines */
 
-  if (Array.isArray(geometry.lines)) {
+  if (
+    Array.isArray(geometry.lines)
+  ) {
 
-    for (const line of geometry.lines) {
+    for (
+      const line
+      of geometry.lines
+    ) {
 
       if (!line) {
         continue;
       }
 
-      if (Array.isArray(line.through)) {
+      if (
+        Array.isArray(line.through)
+      ) {
+
         line.through =
           line.through.map(String);
       }
@@ -607,33 +733,147 @@ function normalizeGeometryReferences(geometry) {
   }
 
 
-  /*
-   * relationships
-   */
+  /* relationships */
 
-  if (Array.isArray(geometry.relationships)) {
+  if (
+    Array.isArray(
+      geometry.relationships
+    )
+  ) {
 
-    for (const relationship of geometry.relationships) {
+    for (
+      const relationship
+      of geometry.relationships
+    ) {
 
       if (!relationship) {
         continue;
       }
 
-      if (Array.isArray(relationship.objects)) {
+      if (
+        Array.isArray(
+          relationship.objects
+        )
+      ) {
 
         relationship.objects =
           relationship.objects.map(
-            normalizeReference
+            value =>
+              normalizeLineReference(value)
           );
       }
 
-      if (Array.isArray(relationship.lines)) {
+      if (
+        Array.isArray(
+          relationship.lines
+        )
+      ) {
 
         relationship.lines =
           relationship.lines.map(
-            normalizeReference
+            value =>
+              normalizeLineReference(value)
           );
       }
     }
   }
+}
+
+
+/* =========================================================
+ * Proof utility functions
+ * =======================================================*/
+
+/**
+ * 証明ステップが既知のものか判定する。
+ */
+export function isKnownProofStep(
+  step,
+  analyzed
+) {
+
+  if (!step || !analyzed) {
+    return false;
+  }
+
+  const facts =
+    analyzed.derivedFacts ?? [];
+
+  const conditions =
+    analyzed.givenConditions ?? [];
+
+  const availableIds =
+    new Set([
+      ...conditions.map(
+        item => item?.id
+      ),
+      ...facts.map(
+        item => item?.id
+      )
+    ]);
+
+  const requires =
+    Array.isArray(step.requires)
+      ? step.requires
+      : [];
+
+  return requires.every(
+    id => availableIds.has(id)
+  );
+}
+
+
+/**
+ * factIdが現在利用可能な事実か判定する。
+ */
+export function canDeriveFact(
+  factId,
+  availableIds,
+  analyzed
+) {
+
+  if (
+    !factId ||
+    !analyzed
+  ) {
+    return false;
+  }
+
+  const facts =
+    analyzed.derivedFacts ?? [];
+
+  const fact =
+    facts.find(
+      item => item?.id === factId
+    );
+
+  if (!fact) {
+    return false;
+  }
+
+  const available =
+    availableIds instanceof Set
+      ? availableIds
+      : new Set(
+          Array.isArray(availableIds)
+            ? availableIds
+            : []
+        );
+
+
+  /*
+   * requiresが無い事実は、
+   * JSON上では導出可能とみなす。
+   */
+  if (
+    !Array.isArray(fact.requires) ||
+    fact.requires.length === 0
+  ) {
+    return true;
+  }
+
+
+  return fact.requires.every(
+    id => available.has(id)
+  );
 }
