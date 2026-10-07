@@ -122,54 +122,102 @@ const app = {
   },
 
   renderInfo(root, generator) {
+
     const analysis =
-      generator.analysis;
+      generator.analysis ?? {};
 
     const info =
       root.querySelector('#proof-info');
 
     const proof =
-      analysis.proof;
+      analysis.proof ?? null;
 
+
+    /*
+     * tagsは必ず配列として扱う
+     */
+    const tags =
+      Array.isArray(analysis.tags)
+        ? analysis.tags
+        : [];
+
+
+    /*
+     * givenConditionsも必ず配列として扱う
+     */
+    const givenConditions =
+      Array.isArray(analysis.givenConditions)
+        ? analysis.givenConditions
+        : [];
+
+
+    /*
+     * 問題情報
+     */
     info.innerHTML = `
       <div class="problem-meta">
+
         <strong>
-          ${analysis.year}年度
-          ${analysis.section}
+          ${analysis.year ?? ''}
+          ${analysis.section ?? ''}
         </strong>
 
         <span>
-          ${analysis.points}点
+          ${analysis.points ?? 0}点
         </span>
 
-        <span>
-          ${analysis.tags.join(' / ')}
-        </span>
+        ${
+          tags.length > 0
+            ? `
+              <span>
+                ${tags.join(' / ')}
+              </span>
+            `
+            : ''
+        }
+
       </div>
 
       ${
         proof
           ? `
             <div class="proof-target">
+
               <strong>証明目標：</strong>
+
               ${proof.target?.statement ?? ''}
+
             </div>
           `
           : ''
       }
     `;
 
+
+    /*
+     * 問題・仮定
+     */
     const problem =
       root.querySelector('#proof-problem');
 
+
     const conditions =
-      analysis.givenConditions
-        .map(condition =>
-          `<li>${condition.display_text ?? condition.type}</li>`
-        )
+      givenConditions
+        .map(condition => {
+
+          const text =
+            condition.display_text ??
+            condition.statement ??
+            condition.type ??
+            '';
+
+          return `<li>${text}</li>`;
+        })
         .join('');
 
+
     problem.innerHTML = `
+
       <h3>仮定</h3>
 
       <ul>
@@ -189,12 +237,14 @@ const app = {
               合同・相似条件：
               ${
                 proof.target_decomposition
-                  ?.japanese_criterion ?? ''
+                  ?.japanese_criterion
+                  ?? ''
               }
             </p>
           `
           : ''
       }
+
     `;
   },
 

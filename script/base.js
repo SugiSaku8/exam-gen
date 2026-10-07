@@ -1,32 +1,19 @@
 import * as coreConfig from './core/config.js';
-import * as coreLang from './core/lang.js';
-import * as coreSecurity from './core/security.js';
+//import * as coreLang from './core/lang.js';
+//import * as coreSecurity from './core/security.js';
 import * as coreUtils from './core/utils.js';
-import * as asterbase from './core/asterbase.js';
-import * as sandbox from './core/sandbox/sandbox.js';
+//import * as asterbase from './core/asterbase.js';
+//import * as sandbox from './core/sandbox/sandbox.js';
 import { versionManager } from './core/version.js';
 //
 
 window.coreConfig = coreConfig;
-window.coreLang = coreLang;
-window.coreSecurity = coreSecurity;
+//window.coreLang = coreLang;
+//window.coreSecurity = coreSecurity;
 window.coreUtils = coreUtils;
 window.versionManager = versionManager;
-window.asterbase = asterbase;
-window.sandbox = sandbox;
-
-function applyLangToDOM() {
-  const { t } = window.coreLang;
-  document.querySelectorAll('[data-lang-key]').forEach(el => {
-    const key = el.getAttribute('data-lang-key');
-    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-      el.placeholder = t(key);
-    } else {
-      el.textContent = t(key);
-    }
-  });
-}
-window.applyLangToDOM = applyLangToDOM;
+//window.asterbase = asterbase;
+//window.sandbox = sandbox;
 
 // Deep-Base-Shell: 全アプリの初期化・表示制御ハブ
 
@@ -82,7 +69,6 @@ class DeepShell {
     this._initVersionCommands();
 
     window.ds = this; // コマンド用
-    applyLangToDOM();
   }
 
   // バージョン管理コマンドを初期化
