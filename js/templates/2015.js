@@ -1,0 +1,1020 @@
+export const BASE_2015 = {
+  "schema_version": "1.1.0",
+  "metadata": {
+    "id": "shizuoka_2015_math_06",
+    "prefecture": "静岡県",
+    "exam_type": "公立高校入試",
+    "subject": "数学",
+    "year": 2015,
+    "problem_number": "6",
+    "points": 9,
+    "source": {
+      "type": "past_exam",
+      "provider": "静岡県教育委員会提供情報をもとに掲載された過去問",
+      "problem_url": "https://resemom.jp/feature/public-highschool-exam/shizuoka/2015/math/question06.html",
+      "archive_url": "https://resemom.jp/feature/public-highschool-exam/shizuoka/2015/"
+    },
+    "notes": [
+      "2015年度静岡県公立高校入試・数学大問6。",
+      "（1）は△FBD∽△ECGの証明。",
+      "（2）はADを延長して円Oとの交点をHとし、∠CDH=56°、円Oの半径9cmから弧CHの長さを求める。"
+    ]
+  },
+  "problem": {
+    "type": "geometry_proof",
+    "statement": {
+      "raw": "図6において、3点A,B,Cは円Oの円周上の点であり、BCは円Oの直径である。BC上にBA=BDとなる点Dをとり、点Cを通りDAに平行な直線と円Oとの交点をEとする。また、BEとAD、ACとの交点をそれぞれF、Gとする。このとき、次の（1）、（2）の問いに答えなさい。",
+      "conditions": [
+        "A,B,Cは円Oの円周上",
+        "BCは円Oの直径",
+        "DはBC上",
+        "BA=BD",
+        "Cを通りDAに平行な直線と円Oとのもう一つの交点がE",
+        "F=BE∩AD",
+        "G=BE∩AC"
+      ]
+    },
+    "parts": [
+      {
+        "id": "P1",
+        "number": 1,
+        "type": "proof",
+        "points": 5,
+        "question": "△FBD∽△ECGであることを証明しなさい。",
+        "target": {
+          "relation": "similarity",
+          "triangles": [
+            "FBD",
+            "ECG"
+          ],
+          "criterion": "AA"
+        }
+      },
+      {
+        "id": "P2",
+        "number": 2,
+        "type": "arc_length",
+        "points": 4,
+        "question": "ADを延長し、円Oとの交点をHとする。∠CDH=56°、円Oの半径が9cmのとき、弧CHの長さを求めなさい。",
+        "target": {
+          "quantity": "arc_length",
+          "arc": "CH",
+          "unit": "cm",
+          "answer": "17π/5"
+        }
+      }
+    ]
+  },
+  "geometry": {
+    "coordinate_system": {
+      "type": "exact_euclidean_model",
+      "primary_model": "unit_circle",
+      "radius": 1,
+      "origin": "O=(0,0)",
+      "axis": "x right, y up",
+      "purpose": "図形検証・自動作図用の正規化座標",
+      "coordinate_basis": "2015_part2_constrained_canonical",
+      "note": "（2）の∠CDH=56°まで反映した基準配置。実際の出題図のピクセル座標そのものではなく、数学的条件を満たす正規化モデル。"
+    },
+    "polar_angles_degree": {
+      "B": 180,
+      "C": 0,
+      "A": 136,
+      "E": 68,
+      "H": 292
+    },
+    "objects": {
+      "points": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G",
+        "H",
+        "O"
+      ],
+      "segments": [
+        "AB",
+        "BC",
+        "CD",
+        "BD",
+        "AD",
+        "AE",
+        "CE",
+        "BE",
+        "AC",
+        "AF",
+        "DF",
+        "AG",
+        "CG",
+        "AH",
+        "DH",
+        "CH"
+      ],
+      "lines": [
+        "AD",
+        "CE",
+        "BE",
+        "AC"
+      ],
+      "circles": [
+        "O1"
+      ],
+      "triangles": [
+        "ABD",
+        "FBD",
+        "ECG",
+        "ABC",
+        "ACD"
+      ]
+    },
+    "incidence": [
+      {
+        "point": "D",
+        "on": "BC"
+      },
+      {
+        "point": "F",
+        "on": "AD"
+      },
+      {
+        "point": "F",
+        "on": "BE"
+      },
+      {
+        "point": "G",
+        "on": "AC"
+      },
+      {
+        "point": "G",
+        "on": "BE"
+      },
+      {
+        "point": "H",
+        "on": "AD"
+      },
+      {
+        "point": "A",
+        "on": "O1"
+      },
+      {
+        "point": "B",
+        "on": "O1"
+      },
+      {
+        "point": "C",
+        "on": "O1"
+      },
+      {
+        "point": "E",
+        "on": "O1"
+      },
+      {
+        "point": "H",
+        "on": "O1"
+      }
+    ],
+    "intersections": [
+      {
+        "point": "F",
+        "lines": [
+          "AD",
+          "BE"
+        ]
+      },
+      {
+        "point": "G",
+        "lines": [
+          "AC",
+          "BE"
+        ]
+      },
+      {
+        "point": "E",
+        "lines": [
+          "CE",
+          "O1"
+        ]
+      },
+      {
+        "point": "H",
+        "lines": [
+          "AD",
+          "O1"
+        ]
+      }
+    ],
+    "relationships": [
+      {
+        "type": "diameter",
+        "segment": "BC",
+        "circle": "O1"
+      },
+      {
+        "type": "equal_length",
+        "segments": [
+          "BA",
+          "BD"
+        ]
+      },
+      {
+        "type": "parallel",
+        "lines": [
+          "CE",
+          "AD"
+        ]
+      },
+      {
+        "type": "collinear",
+        "points": [
+          "B",
+          "D",
+          "C"
+        ]
+      },
+      {
+        "type": "collinear",
+        "points": [
+          "A",
+          "F",
+          "D",
+          "H"
+        ]
+      },
+      {
+        "type": "collinear",
+        "points": [
+          "B",
+          "F",
+          "G",
+          "E"
+        ]
+      },
+      {
+        "type": "collinear",
+        "points": [
+          "A",
+          "G",
+          "C"
+        ]
+      },
+      {
+        "type": "concyclic",
+        "points": [
+          "A",
+          "B",
+          "C",
+          "E",
+          "H"
+        ],
+        "circle": "O1"
+      }
+    ],
+    "construction_sequence": [
+      {
+        "step": 1,
+        "operation": "create_circle",
+        "id": "O1",
+        "center": "O",
+        "radius": 1
+      },
+      {
+        "step": 2,
+        "operation": "create_diameter",
+        "from": "B",
+        "to": "C",
+        "circle": "O1"
+      },
+      {
+        "step": 3,
+        "operation": "place_point_on_circle",
+        "point": "A",
+        "angle_degree": 136
+      },
+      {
+        "step": 4,
+        "operation": "create_point_on_segment_by_length",
+        "point": "D",
+        "segment": "BC",
+        "condition": "BD=BA"
+      },
+      {
+        "step": 5,
+        "operation": "create_parallel_line",
+        "through": "C",
+        "parallel_to": "AD",
+        "line": "CE"
+      },
+      {
+        "step": 6,
+        "operation": "intersect_line_circle",
+        "line": "CE",
+        "circle": "O1",
+        "exclude": "C",
+        "result": "E"
+      },
+      {
+        "step": 7,
+        "operation": "intersect_lines",
+        "lines": [
+          "BE",
+          "AD"
+        ],
+        "result": "F"
+      },
+      {
+        "step": 8,
+        "operation": "intersect_lines",
+        "lines": [
+          "BE",
+          "AC"
+        ],
+        "result": "G"
+      },
+      {
+        "step": 9,
+        "operation": "extend_line_to_circle",
+        "line": "AD",
+        "from": "D",
+        "result": "H"
+      }
+    ],
+    "display": {
+      "visible_points": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G",
+        "H",
+        "O"
+      ],
+      "visible_segments": [
+        "AB",
+        "BC",
+        "BD",
+        "AD",
+        "CE",
+        "BE",
+        "AC"
+      ],
+      "visible_circle": "O1",
+      "right_angle_marks": [
+        {
+          "angle": "CEG",
+          "value": 90
+        },
+        {
+          "angle": "DFB",
+          "value": 90
+        }
+      ],
+      "equal_marks": [
+        {
+          "segments": [
+            "BA",
+            "BD"
+          ],
+          "label": "equal"
+        }
+      ],
+      "parallel_marks": [
+        {
+          "lines": [
+            "CE",
+            "AD"
+          ],
+          "label": "parallel"
+        }
+      ]
+    },
+    "coordinates": {
+      "points": {
+        "O": {
+          "x": 0,
+          "y": 0,
+          "exact": [
+            "0",
+            "0"
+          ],
+          "role": "circle_center"
+        },
+        "B": {
+          "x": -1,
+          "y": 0,
+          "exact": [
+            "-1",
+            "0"
+          ],
+          "role": "circle_point",
+          "polar_angle_degree": 180
+        },
+        "C": {
+          "x": 1,
+          "y": 0,
+          "exact": [
+            "1",
+            "0"
+          ],
+          "role": "circle_point",
+          "polar_angle_degree": 0
+        },
+        "A": {
+          "x": -0.7193398003386512,
+          "y": 0.6946583704589973,
+          "exact": [
+            "-cos(44°)",
+            "sin(44°)"
+          ],
+          "role": "circle_point",
+          "polar_angle_degree": 136
+        },
+        "D": {
+          "x": -0.25078681316817625,
+          "y": 0,
+          "exact": [
+            "-1 + 2sin(22°)",
+            "0"
+          ],
+          "role": "point_on_segment",
+          "definition": "D∈BC and BD=BA"
+        },
+        "E": {
+          "x": 0.374606593415912,
+          "y": 0.9271838545667874,
+          "exact": [
+            "cos(68°)",
+            "sin(68°)"
+          ],
+          "role": "circle_point",
+          "polar_angle_degree": 68,
+          "definition": "second intersection of circle O1 and line through C parallel to AD"
+        },
+        "F": {
+          "x": -0.4850633109102424,
+          "y": 0.3473291852294986,
+          "role": "intersection",
+          "definition": "AD∩BE",
+          "coordinate_type": "derived_numeric",
+          "precision_digits": 15
+        },
+        "G": {
+          "x": -0.25078681316817625,
+          "y": 0.5053506776416089,
+          "role": "intersection",
+          "definition": "AC∩BE",
+          "coordinate_type": "derived_numeric",
+          "precision_digits": 15
+        },
+        "H": {
+          "x": 0.3746065934159119,
+          "y": -0.9271838545667874,
+          "exact": [
+            "cos(292°)",
+            "sin(292°)"
+          ],
+          "role": "circle_point",
+          "polar_angle_degree": 292,
+          "definition": "second intersection of AD and circle O1"
+        }
+      },
+      "circle": {
+        "id": "O1",
+        "center": "O",
+        "radius": 1,
+        "equation": "x²+y²=1"
+      },
+      "verification_reference": {
+        "BA_equals_BD": true,
+        "BC_is_diameter": true,
+        "CE_parallel_AD": true,
+        "angle_CDH_degree": 56,
+        "angle_DAC_degree": 34,
+        "central_angle_COH_degree": 68
+      }
+    }
+  },
+  "variables": {
+    "R": {
+      "symbol": "R",
+      "meaning": "円Oの半径",
+      "value_in_part2": 9,
+      "unit": "cm"
+    },
+    "theta_COH": {
+      "symbol": "θ",
+      "meaning": "中心角∠COH",
+      "value": 68,
+      "unit": "degree"
+    }
+  },
+  "given_conditions": [
+    {
+      "id": "C01",
+      "type": "concyclic",
+      "objects": [
+        "A",
+        "B",
+        "C"
+      ],
+      "statement": "A,B,Cは円Oの円周上"
+    },
+    {
+      "id": "C02",
+      "type": "diameter",
+      "objects": [
+        "B",
+        "C"
+      ],
+      "statement": "BCは円Oの直径"
+    },
+    {
+      "id": "C03",
+      "type": "point_on_segment",
+      "objects": [
+        "D",
+        "BC"
+      ],
+      "statement": "DはBC上"
+    },
+    {
+      "id": "C04",
+      "type": "equal_length",
+      "objects": [
+        "BA",
+        "BD"
+      ],
+      "statement": "BA=BD"
+    },
+    {
+      "id": "C05",
+      "type": "parallel",
+      "objects": [
+        "CE",
+        "AD"
+      ],
+      "statement": "CE∥AD"
+    },
+    {
+      "id": "C06",
+      "type": "intersection",
+      "objects": [
+        "F",
+        "BE",
+        "AD"
+      ],
+      "statement": "F=BE∩AD"
+    },
+    {
+      "id": "C07",
+      "type": "intersection",
+      "objects": [
+        "G",
+        "BE",
+        "AC"
+      ],
+      "statement": "G=BE∩AC"
+    },
+    {
+      "id": "C08",
+      "type": "circle_intersection",
+      "objects": [
+        "E",
+        "CE",
+        "O1"
+      ],
+      "statement": "Cを通るADとの平行線と円Oのもう一つの交点がE"
+    },
+    {
+      "id": "C09",
+      "type": "extension_intersection",
+      "objects": [
+        "H",
+        "AD",
+        "O1"
+      ],
+      "statement": "ADを延長し、円Oとの交点をHとする"
+    },
+    {
+      "id": "C10",
+      "type": "angle",
+      "objects": [
+        "C",
+        "D",
+        "H"
+      ],
+      "value": 56,
+      "unit": "degree",
+      "used_in": [
+        "P2"
+      ]
+    },
+    {
+      "id": "C11",
+      "type": "radius",
+      "object": "O1",
+      "value": 9,
+      "unit": "cm",
+      "used_in": [
+        "P2"
+      ]
+    }
+  ],
+  "derived_facts": [
+    {
+      "id": "F01",
+      "statement": "∠CEG=90°",
+      "reason": "BCが直径なので∠BEC=90°。GはBE上にある。",
+      "theorem": "angle_in_semicircle"
+    },
+    {
+      "id": "F02",
+      "statement": "∠DFB=90°",
+      "reason": "CE∥ADかつBCが直径より、∠CEB=90°に対応してAD⊥BE。",
+      "theorem": "parallel_line_and_right_angle"
+    },
+    {
+      "id": "F03",
+      "statement": "∠ABF=∠FBD",
+      "reason": "BA=BDの二等辺三角形ABDで、BF⊥AD。頂角Bから底辺ADへの垂線BFは角の二等分線。",
+      "theorem": "isosceles_triangle_altitude_bisects_vertex_angle"
+    },
+    {
+      "id": "F04",
+      "statement": "∠ABF=∠GCE",
+      "reason": "F,GはBE上、GはAC上なので∠ABF=∠ABE、∠GCE=∠ACE。いずれも円Oで弧AEに対する円周角。",
+      "theorem": "inscribed_angle_same_arc"
+    },
+    {
+      "id": "F05",
+      "statement": "∠FBD=∠ECG",
+      "reason": "F03,F04より∠FBD=∠ABF=∠GCE=∠ECG。",
+      "theorem": "angle_transitivity"
+    },
+    {
+      "id": "F06",
+      "statement": "△FBD∽△ECG",
+      "reason": "∠DFB=∠CEG=90°、∠FBD=∠ECG。",
+      "theorem": "AA_similarity"
+    },
+    {
+      "id": "F07",
+      "statement": "∠DAC=34°",
+      "reason": "（2）の角条件と円周角・三角形の角関係から導出。",
+      "theorem": "cyclic_angle_relations",
+      "used_in": [
+        "P2"
+      ]
+    },
+    {
+      "id": "F08",
+      "statement": "∠COH=68°",
+      "reason": "∠DAC=34°および円周角の関係から中心角はその2倍。",
+      "theorem": "central_angle_twice_inscribed_angle",
+      "used_in": [
+        "P2"
+      ]
+    },
+    {
+      "id": "F09",
+      "statement": "弧CHの中心角は68°",
+      "reason": "弧CHに対する中心角∠COH=68°。",
+      "theorem": "arc_central_angle",
+      "used_in": [
+        "P2"
+      ]
+    }
+  ],
+  "theorem_library": [
+    {
+      "id": "T01",
+      "name": "円周角の定理",
+      "key": "inscribed_angle"
+    },
+    {
+      "id": "T02",
+      "name": "同じ弧に対する円周角",
+      "key": "inscribed_angle_same_arc"
+    },
+    {
+      "id": "T03",
+      "name": "直径に対する円周角",
+      "key": "angle_in_semicircle"
+    },
+    {
+      "id": "T04",
+      "name": "二等辺三角形の底角",
+      "key": "isosceles_base_angles"
+    },
+    {
+      "id": "T05",
+      "name": "二等辺三角形の頂角二等分線",
+      "key": "isosceles_triangle_altitude_bisects_vertex_angle"
+    },
+    {
+      "id": "T06",
+      "name": "平行線の同位角・錯角",
+      "key": "parallel_angle"
+    },
+    {
+      "id": "T07",
+      "name": "二角相等による相似",
+      "key": "AA_similarity"
+    },
+    {
+      "id": "T08",
+      "name": "中心角と円周角",
+      "key": "central_angle_twice_inscribed_angle"
+    },
+    {
+      "id": "T09",
+      "name": "弧長公式",
+      "key": "arc_length"
+    }
+  ],
+  "proof": {
+    "P1": {
+      "target": "△FBD∽△ECG",
+      "method": "AA",
+      "proof_graph": {
+        "nodes": [
+          "BC is diameter",
+          "∠CEG=90°",
+          "CE∥AD",
+          "∠DFB=90°",
+          "BA=BD",
+          "△ABD is isosceles",
+          "BF⊥AD",
+          "∠ABF=∠FBD",
+          "same arc AE",
+          "∠ABF=∠GCE",
+          "∠FBD=∠ECG",
+          "AA similarity"
+        ],
+        "edges": [
+          [
+            "BC is diameter",
+            "∠CEG=90°"
+          ],
+          [
+            "CE∥AD",
+            "∠DFB=90°"
+          ],
+          [
+            "BA=BD",
+            "△ABD is isosceles"
+          ],
+          [
+            "BF⊥AD",
+            "∠ABF=∠FBD"
+          ],
+          [
+            "same arc AE",
+            "∠ABF=∠GCE"
+          ],
+          [
+            "∠ABF=∠FBD",
+            "∠ABF=∠GCE",
+            "∠FBD=∠ECG"
+          ],
+          [
+            "∠DFB=90°",
+            "∠CEG=90°",
+            "AA similarity"
+          ],
+          [
+            "∠FBD=∠ECG",
+            "AA similarity"
+          ]
+        ]
+      },
+      "solution_steps": [
+        {
+          "id": "S01",
+          "statement": "△FBDと△ECGにおいて、BCは円Oの直径だから、∠CEG=90°。"
+        },
+        {
+          "id": "S02",
+          "statement": "CE∥ADだから、∠DFB=90°。"
+        },
+        {
+          "id": "S03",
+          "statement": "BA=BDより△ABDは二等辺三角形であり、BF⊥ADだから、∠ABF=∠FBD。"
+        },
+        {
+          "id": "S04",
+          "statement": "F、GはBE上、GはAC上にあり、∠ABF=∠ABE、∠GCE=∠ACE。これらはともに弧AEに対する円周角なので、∠ABF=∠GCE。"
+        },
+        {
+          "id": "S05",
+          "statement": "S03、S04より、∠FBD=∠ECG。"
+        },
+        {
+          "id": "S06",
+          "statement": "したがって、∠DFB=∠CEG、∠FBD=∠ECGより、2組の角がそれぞれ等しい。"
+        },
+        {
+          "id": "S07",
+          "statement": "よって、△FBD∽△ECG。"
+        }
+      ]
+    },
+    "P2": {
+      "target": "弧CHの長さ",
+      "solution_chain": [
+        "∠CDH=56°",
+        "∠DAC=34°",
+        "∠COH=68°",
+        "弧CHに対応する中心角=68°",
+        "弧長 = 2πR×68/360",
+        "R=9",
+        "弧CH = 17π/5 cm"
+      ],
+      "answer": "17π/5 cm"
+    }
+  },
+  "follow_up": {
+    "P2": {
+      "type": "arc_length",
+      "givens": {
+        "angle_CDH": 56,
+        "radius": 9
+      },
+      "derived": {
+        "angle_DAC": 34,
+        "angle_COH": 68
+      },
+      "formula": "L=2πR×θ/360",
+      "substitution": "L=2π×9×68/360",
+      "answer": "17π/5"
+    }
+  },
+  "question_generation": {
+    "can_generate_problem": true,
+    "can_generate_answer": true,
+    "template_id": "SHIZUOKA_DIAMETER_ISOSCELES_AA_001",
+    "problem_type": "circle_diameter_isosceles_parallel_similarity",
+    "generation_parameters": {
+      "radius": {
+        "type": "positive_number",
+        "randomizable": true
+      },
+      "angle_CDH": {
+        "type": "integer_degree",
+        "allowed_values": [
+          50,
+          52,
+          54,
+          56,
+          58,
+          60
+        ],
+        "randomizable": true
+      },
+      "point_labels": {
+        "randomizable": true
+      },
+      "orientation": {
+        "randomizable": true
+      }
+    },
+    "constraints": [
+      "BC must remain a diameter",
+      "D must lie on segment BC",
+      "BA=BD",
+      "CE∥AD",
+      "E must be the second intersection of CE and circle O",
+      "F=BE∩AD",
+      "G=BE∩AC",
+      "P1 target must remain AA similarity",
+      "P2 central angle must be derivable from the generated angle"
+    ]
+  },
+  "answer_generation": {
+    "P1": {
+      "format": "proof",
+      "required_theorems": [
+        "angle_in_semicircle",
+        "parallel_angle",
+        "isosceles_triangle_altitude_bisects_vertex_angle",
+        "inscribed_angle_same_arc",
+        "AA_similarity"
+      ],
+      "sentence_templates": [
+        "BCは円Oの直径だから、∠CEG=90°。",
+        "CE∥ADだから、∠DFB=90°。",
+        "BA=BDより△ABDは二等辺三角形であり、BF⊥ADだから、∠ABF=∠FBD。",
+        "同じ弧AEに対する円周角だから、∠ABF=∠GCE。",
+        "よって∠FBD=∠ECG。",
+        "したがって、2組の角がそれぞれ等しいので、△FBD∽△ECG。"
+      ]
+    },
+    "P2": {
+      "format": "calculation",
+      "formula": "2πR×θ/360",
+      "unit": "cm"
+    }
+  },
+  "validation": {
+    "geometry": {
+      "required": [
+        "A,B,C,E,H lie on O1",
+        "BC is diameter",
+        "BA=BD",
+        "CE∥AD",
+        "F=AD∩BE",
+        "G=AC∩BE",
+        "H=AD∩O1"
+      ],
+      "coordinate_model_valid": true,
+      "checks": {
+        "BA_equals_BD": {
+          "expected": true,
+          "tolerance": 1e-12
+        },
+        "BC_diameter": {
+          "expected": true,
+          "tolerance": 1e-12
+        },
+        "CE_parallel_AD": {
+          "expected": true,
+          "tolerance": 1e-12
+        },
+        "angle_CDH": {
+          "expected": 56,
+          "tolerance_degree": 1e-10
+        },
+        "angle_DAC": {
+          "expected": 34,
+          "tolerance_degree": 1e-10
+        },
+        "angle_COH": {
+          "expected": 68,
+          "tolerance_degree": 1e-10
+        }
+      }
+    },
+    "proof": {
+      "P1": {
+        "target_is_reachable": true,
+        "method": "AA",
+        "circular_reasoning": false
+      },
+      "P2": {
+        "answer_verified": true,
+        "answer": "17π/5"
+      }
+    },
+    "answer": {
+      "P2": {
+        "calculation": "2π×9×68/360=17π/5",
+        "verified": true
+      }
+    }
+  },
+  "difficulty": {
+    "overall": "medium",
+    "proof": "medium",
+    "calculation": "medium",
+    "proof_skills": [
+      "円周角",
+      "直径に対する円周角",
+      "二等辺三角形",
+      "平行線と角",
+      "相似条件"
+    ]
+  },
+  "generation": {
+    "source_template": "SHIZUOKA_DIAMETER_ISOSCELES_AA_001",
+    "generation_mode": "rule_based",
+    "uses_llm": false,
+    "coordinate_generation": {
+      "method": "constraint_based",
+      "fixed_reference": "2015_part2_constrained_canonical",
+      "randomizable": true
+    },
+    "proof_generation": {
+      "method": "proof_graph_traversal",
+      "randomizable": true
+    }
+  },
+  "source_analysis": {
+    "structural_pattern": {
+      "circle": "diameter",
+      "isosceles": "BA=BD",
+      "parallel": "CE∥AD",
+      "intersection": [
+        "F=BE∩AD",
+        "G=BE∩AC"
+      ],
+      "proof_target": "similarity",
+      "similarity_criterion": "AA",
+      "follow_up": "arc_length"
+    },
+    "important_generation_observation": "2015年型では、証明の核は「直径による90°」「二等辺三角形ABDの角の二等分」「同じ弧AEに対する円周角」の3系列をAA相似へ収束させること。"
+  }
+};

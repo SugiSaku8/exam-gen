@@ -1,0 +1,1140 @@
+{
+  "schema_version": "1.1.0",
+  "metadata": {
+    "id": "shizuoka_2016_math_07",
+    "prefecture": "静岡県",
+    "exam_type": "公立高校入試",
+    "subject": "数学",
+    "year": 2016,
+    "problem_number": "7",
+    "points": 9,
+    "source": {
+      "type": "past_exam",
+      "provider": "静岡県教育委員会提供情報をもとに掲載された過去問",
+      "problem_url": "https://resemom.jp/feature/public-highschool-exam/shizuoka/2016/math/question06.html",
+      "archive_url": "https://resemom.jp/feature/public-highschool-exam/shizuoka/2016/"
+    },
+    "notes": [
+      "2016年度静岡県公立高校入試・数学大問7。",
+      "（1）はBF=ECの証明。",
+      "（2）は弧AD:弧DC=1:2、∠FHC=65°から∠FDCを求める。"
+    ]
+  },
+  "problem": {
+    "type": "geometry_proof",
+    "statement": {
+      "raw": "図5において、4点A,B,C,Dは円Oの円周上の点であり、AD∥BCである。点Dを通りACに平行な直線とBCとの交点をEとし、BE上に∠ACD=∠BDFとなる点Fをとる。また、ACとDB、DFとの交点をそれぞれG、Hとする。このとき、次の（1）、（2）の問いに答えなさい。",
+      "conditions": [
+        "A,B,C,Dは円Oの円周上",
+        "AD∥BC",
+        "Dを通りACに平行な直線とBCとの交点がE",
+        "FはBE上で∠ACD=∠BDF",
+        "G=AC∩DB",
+        "H=AC∩DF"
+      ]
+    },
+    "parts": [
+      {
+        "id": "P1",
+        "number": 1,
+        "type": "proof",
+        "points": 5,
+        "question": "BF=ECであることを証明しなさい。",
+        "target": {
+          "relation": "equal_length",
+          "segments": [
+            "BF",
+            "EC"
+          ]
+        }
+      },
+      {
+        "id": "P2",
+        "number": 2,
+        "type": "angle",
+        "points": 4,
+        "question": "弧AD:弧DC=1:2、∠FHC=65°のとき、∠FDCの大きさを求めなさい。",
+        "target": {
+          "quantity": "angle",
+          "angle": "FDC",
+          "unit": "degree",
+          "answer": 42
+        }
+      }
+    ]
+  },
+  "geometry": {
+    "coordinate_system": {
+      "type": "exact_euclidean_model",
+      "primary_model": "unit_circle",
+      "radius": 1,
+      "origin": "O=(0,0)",
+      "axis": "x right, y up",
+      "purpose": "図形検証・自動作図用の正規化座標",
+      "coordinate_basis": "2016_part2_arc_ratio_angle_canonical",
+      "note": "実際の出題図のピクセル座標ではなく、出題条件と（2）の数値条件を同時に満たす正規化モデル。"
+    },
+    "polar_angles_degree": {
+      "A": 90,
+      "D": 44,
+      "C": 312,
+      "B": 182
+    },
+    "objects": {
+      "points": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G",
+        "H",
+        "O"
+      ],
+      "segments": [
+        "AB",
+        "AD",
+        "DC",
+        "CB",
+        "BD",
+        "AC",
+        "DE",
+        "CE",
+        "BE",
+        "BF",
+        "DF",
+        "DG",
+        "GE",
+        "AG",
+        "GC",
+        "DH",
+        "HC",
+        "FC"
+      ],
+      "lines": [
+        "AD",
+        "BC",
+        "DE",
+        "AC",
+        "BE",
+        "DB",
+        "DF",
+        "AB",
+        "DC"
+      ],
+      "circles": [
+        "O1"
+      ],
+      "triangles": [
+        "ABD",
+        "ACD",
+        "ABC",
+        "DBE",
+        "DHC"
+      ]
+    },
+    "incidence": [
+      {
+        "point": "A",
+        "on": "O1"
+      },
+      {
+        "point": "B",
+        "on": "O1"
+      },
+      {
+        "point": "C",
+        "on": "O1"
+      },
+      {
+        "point": "D",
+        "on": "O1"
+      },
+      {
+        "point": "E",
+        "on": "BC"
+      },
+      {
+        "point": "F",
+        "on": "BE"
+      },
+      {
+        "point": "G",
+        "on": "DB"
+      },
+      {
+        "point": "G",
+        "on": "AC"
+      },
+      {
+        "point": "H",
+        "on": "DF"
+      },
+      {
+        "point": "H",
+        "on": "AC"
+      }
+    ],
+    "intersections": [
+      {
+        "point": "E",
+        "lines": [
+          "DE",
+          "BC"
+        ]
+      },
+      {
+        "point": "F",
+        "lines": [
+          "DF",
+          "BE"
+        ]
+      },
+      {
+        "point": "G",
+        "lines": [
+          "DB",
+          "AC"
+        ]
+      },
+      {
+        "point": "H",
+        "lines": [
+          "DF",
+          "AC"
+        ]
+      }
+    ],
+    "relationships": [
+      {
+        "type": "concyclic",
+        "points": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "circle": "O1"
+      },
+      {
+        "type": "parallel",
+        "lines": [
+          "AD",
+          "BC"
+        ]
+      },
+      {
+        "type": "parallel",
+        "lines": [
+          "DE",
+          "AC"
+        ]
+      },
+      {
+        "type": "parallel",
+        "lines": [
+          "DF",
+          "AB"
+        ],
+        "derived": true
+      },
+      {
+        "type": "collinear",
+        "points": [
+          "B",
+          "F",
+          "E",
+          "C"
+        ]
+      },
+      {
+        "type": "collinear",
+        "points": [
+          "D",
+          "F",
+          "H"
+        ]
+      },
+      {
+        "type": "collinear",
+        "points": [
+          "A",
+          "H",
+          "C"
+        ]
+      },
+      {
+        "type": "collinear",
+        "points": [
+          "D",
+          "G",
+          "B"
+        ]
+      },
+      {
+        "type": "angle_equal",
+        "angles": [
+          "ACD",
+          "BDF"
+        ],
+        "value": 23
+      },
+      {
+        "type": "angle_equal",
+        "angles": [
+          "FHC",
+          "BAC"
+        ],
+        "value": 65
+      }
+    ],
+    "construction_sequence": [
+      {
+        "step": 1,
+        "operation": "create_circle",
+        "id": "O1",
+        "center": "O",
+        "radius": 1
+      },
+      {
+        "step": 2,
+        "operation": "place_four_concyclic_points",
+        "points": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ]
+      },
+      {
+        "step": 3,
+        "operation": "enforce_parallel_chords",
+        "lines": [
+          "AD",
+          "BC"
+        ]
+      },
+      {
+        "step": 4,
+        "operation": "create_parallel_line",
+        "through": "D",
+        "parallel_to": "AC",
+        "line": "DE"
+      },
+      {
+        "step": 5,
+        "operation": "intersect_lines",
+        "lines": [
+          "DE",
+          "BC"
+        ],
+        "result": "E"
+      },
+      {
+        "step": 6,
+        "operation": "place_point_by_angle_condition",
+        "point": "F",
+        "line": "BE",
+        "condition": "∠BDF=∠ACD"
+      },
+      {
+        "step": 7,
+        "operation": "intersect_lines",
+        "lines": [
+          "DB",
+          "AC"
+        ],
+        "result": "G"
+      },
+      {
+        "step": 8,
+        "operation": "intersect_lines",
+        "lines": [
+          "DF",
+          "AC"
+        ],
+        "result": "H"
+      }
+    ],
+    "display": {
+      "visible_points": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G",
+        "H",
+        "O"
+      ],
+      "visible_segments": [
+        "AB",
+        "AD",
+        "BC",
+        "DC",
+        "AC",
+        "BD",
+        "DE",
+        "BE",
+        "DF"
+      ],
+      "visible_circle": "O1",
+      "parallel_marks": [
+        {
+          "lines": [
+            "AD",
+            "BC"
+          ],
+          "label": "parallel"
+        },
+        {
+          "lines": [
+            "DE",
+            "AC"
+          ],
+          "label": "parallel"
+        }
+      ],
+      "angle_marks": [
+        {
+          "angles": [
+            "ACD",
+            "BDF"
+          ],
+          "label": "equal"
+        },
+        {
+          "angles": [
+            "FHC"
+          ],
+          "value": 65,
+          "part": "P2"
+        }
+      ]
+    },
+    "coordinates": {
+      "points": {
+        "O": {
+          "x": 0,
+          "y": 0,
+          "exact": [
+            "0",
+            "0"
+          ],
+          "role": "circle_center"
+        },
+        "A": {
+          "x": 0.0,
+          "y": 1.0,
+          "role": "circle_point",
+          "exact": [
+            "0",
+            "1"
+          ],
+          "polar_angle_degree": 90
+        },
+        "B": {
+          "x": -0.999390827019096,
+          "y": -0.034899496702501,
+          "role": "circle_point",
+          "exact": [
+            "cos(182°)",
+            "sin(182°)"
+          ],
+          "polar_angle_degree": 182
+        },
+        "C": {
+          "x": 0.669130606358858,
+          "y": -0.743144825477394,
+          "role": "circle_point",
+          "exact": [
+            "cos(312°)",
+            "sin(312°)"
+          ],
+          "polar_angle_degree": 312
+        },
+        "D": {
+          "x": 0.719339800338651,
+          "y": 0.694658370458997,
+          "role": "circle_point",
+          "exact": [
+            "cos(44°)",
+            "sin(44°)"
+          ],
+          "polar_angle_degree": 44
+        },
+        "E": {
+          "x": 1.388470406697509,
+          "y": -1.048486455018397,
+          "role": "line_intersection",
+          "definition": "second construction point: DE∥AC and E∈BC"
+        },
+        "F": {
+          "x": -0.280051026680445,
+          "y": -0.340241126243504,
+          "role": "line_intersection",
+          "definition": "F=BE∩(line through D parallel to AB); equivalent to ∠BDF=∠ACD"
+        },
+        "G": {
+          "x": 0.201574643443366,
+          "y": 0.474880100646134,
+          "role": "intersection",
+          "definition": "G=DB∩AC"
+        },
+        "H": {
+          "x": 0.288478330065078,
+          "y": 0.248488256946337,
+          "role": "intersection",
+          "definition": "H=DF∩AC"
+        }
+      },
+      "circle": {
+        "id": "O1",
+        "center": "O",
+        "radius": 1,
+        "equation": "x²+y²=1"
+      },
+      "arc_data_degree": {
+        "AD": 46,
+        "DC": 92,
+        "CB": 130,
+        "BA": 92
+      },
+      "verification_reference": {
+        "AD_parallel_BC": true,
+        "DE_parallel_AC": true,
+        "angle_ACD_equals_BDF_degree": 22.99999999999998,
+        "BF_equals_EC": true,
+        "FHC_degree": 65.0,
+        "FDC_degree": 42.0
+      }
+    }
+  },
+  "variables": {
+    "x": {
+      "symbol": "x",
+      "meaning": "∠ACD（=∠BDF）",
+      "value_in_part2": 23,
+      "unit": "degree"
+    },
+    "arc_AD": {
+      "symbol": "a",
+      "meaning": "弧ADの大きさ",
+      "value_in_part2": 46,
+      "unit": "degree"
+    },
+    "arc_DC": {
+      "symbol": "2a",
+      "meaning": "弧DCの大きさ",
+      "value_in_part2": 92,
+      "unit": "degree"
+    }
+  },
+  "given_conditions": [
+    {
+      "id": "C01",
+      "type": "concyclic",
+      "objects": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "statement": "A,B,C,Dは円Oの円周上"
+    },
+    {
+      "id": "C02",
+      "type": "parallel",
+      "objects": [
+        "AD",
+        "BC"
+      ],
+      "statement": "AD∥BC"
+    },
+    {
+      "id": "C03",
+      "type": "parallel",
+      "objects": [
+        "DE",
+        "AC"
+      ],
+      "statement": "Dを通りACに平行な直線とBCとの交点がE"
+    },
+    {
+      "id": "C04",
+      "type": "collinear",
+      "objects": [
+        "B",
+        "F",
+        "E"
+      ],
+      "statement": "FはBE上"
+    },
+    {
+      "id": "C05",
+      "type": "angle_equal",
+      "objects": [
+        "ACD",
+        "BDF"
+      ],
+      "statement": "∠ACD=∠BDF"
+    },
+    {
+      "id": "C06",
+      "type": "intersection",
+      "objects": [
+        "G",
+        "DB",
+        "AC"
+      ],
+      "statement": "G=DB∩AC"
+    },
+    {
+      "id": "C07",
+      "type": "intersection",
+      "objects": [
+        "H",
+        "DF",
+        "AC"
+      ],
+      "statement": "H=DF∩AC"
+    },
+    {
+      "id": "C08",
+      "type": "arc_ratio",
+      "objects": [
+        "AD",
+        "DC"
+      ],
+      "ratio": [
+        1,
+        2
+      ],
+      "used_in": [
+        "P2"
+      ]
+    },
+    {
+      "id": "C09",
+      "type": "angle",
+      "objects": [
+        "F",
+        "H",
+        "C"
+      ],
+      "value": 65,
+      "unit": "degree",
+      "used_in": [
+        "P2"
+      ]
+    }
+  ],
+  "derived_facts": [
+    {
+      "id": "F01",
+      "statement": "∠ACD=∠ABD",
+      "reason": "同じ弧ADに対する円周角",
+      "theorem": "inscribed_angle_same_arc"
+    },
+    {
+      "id": "F02",
+      "statement": "DF∥AB",
+      "reason": "∠BDF=∠ACD=∠ABDであり、DBを横切る2直線の錯角が等しい",
+      "theorem": "converse_parallel_angle"
+    },
+    {
+      "id": "F03",
+      "statement": "AD∥BF",
+      "reason": "AD∥BC、かつB,F,E,Cが一直線上",
+      "theorem": "parallel_transitivity"
+    },
+    {
+      "id": "F04",
+      "statement": "AB∥DFかつAD∥BFなので四辺形ABFDは平行四辺形",
+      "reason": "2組の対辺がそれぞれ平行",
+      "theorem": "parallelogram_definition"
+    },
+    {
+      "id": "F05",
+      "statement": "BF=AD",
+      "reason": "平行四辺形ABFDの向かい合う辺は等しい",
+      "theorem": "parallelogram_opposite_sides"
+    },
+    {
+      "id": "F06",
+      "statement": "AD∥CE",
+      "reason": "AD∥BC、C,EはBC上",
+      "theorem": "parallel_transitivity"
+    },
+    {
+      "id": "F07",
+      "statement": "AC∥DE",
+      "reason": "EはDを通りACに平行な直線上",
+      "theorem": "given_parallel"
+    },
+    {
+      "id": "F08",
+      "statement": "四辺形ADECは平行四辺形",
+      "reason": "AD∥CEかつAC∥DE",
+      "theorem": "parallelogram_definition"
+    },
+    {
+      "id": "F09",
+      "statement": "AD=EC",
+      "reason": "平行四辺形ADECの向かい合う辺は等しい",
+      "theorem": "parallelogram_opposite_sides"
+    },
+    {
+      "id": "F10",
+      "statement": "BF=EC",
+      "reason": "F05,F09よりBF=AD=EC",
+      "theorem": "equal_length_transitivity"
+    },
+    {
+      "id": "F11",
+      "statement": "∠FHC=∠BAC",
+      "reason": "DF∥AB、HはDFとACの交点",
+      "theorem": "parallel_angle"
+    },
+    {
+      "id": "F12",
+      "statement": "∠BAC=65°",
+      "reason": "F11および∠FHC=65°",
+      "theorem": "angle_transitivity"
+    },
+    {
+      "id": "F13",
+      "statement": "∠ACD=x、∠DAC=2x",
+      "reason": "弧AD:弧DC=1:2と円周角の定理",
+      "theorem": "arc_ratio_to_inscribed_angles"
+    },
+    {
+      "id": "F14",
+      "statement": "∠ABC=3x",
+      "reason": "∠ABCが対する弧ADCは弧AD+弧DC=2xの弧度に対応し、円周角はその半分",
+      "theorem": "inscribed_angle"
+    },
+    {
+      "id": "F15",
+      "statement": "∠ACB=2x",
+      "reason": "∠ACBが対する弧ABと、AD∥BCから弧AB=弧DC=4x",
+      "theorem": "parallel_chords_equal_arcs"
+    },
+    {
+      "id": "F16",
+      "statement": "x=23°",
+      "reason": "△ABCの内角の和より65+3x+2x=180",
+      "theorem": "triangle_angle_sum"
+    },
+    {
+      "id": "F17",
+      "statement": "∠DCH=23°",
+      "reason": "HはAC上なので∠DCH=∠DCA=x",
+      "theorem": "collinear_angle"
+    },
+    {
+      "id": "F18",
+      "statement": "∠FHC=∠FDC+∠DCH",
+      "reason": "△DHCにおけるHの外角",
+      "theorem": "exterior_angle_theorem"
+    },
+    {
+      "id": "F19",
+      "statement": "∠FDC=42°",
+      "reason": "65=∠FDC+23",
+      "theorem": "angle_calculation"
+    }
+  ],
+  "theorem_library": [
+    {
+      "id": "T01",
+      "name": "同じ弧に対する円周角",
+      "key": "inscribed_angle_same_arc"
+    },
+    {
+      "id": "T02",
+      "name": "平行線の錯角",
+      "key": "parallel_angle"
+    },
+    {
+      "id": "T03",
+      "name": "平行線の逆",
+      "key": "converse_parallel_angle"
+    },
+    {
+      "id": "T04",
+      "name": "平行四辺形の定義",
+      "key": "parallelogram_definition"
+    },
+    {
+      "id": "T05",
+      "name": "平行四辺形の向かい合う辺",
+      "key": "parallelogram_opposite_sides"
+    },
+    {
+      "id": "T06",
+      "name": "円周角の定理",
+      "key": "inscribed_angle"
+    },
+    {
+      "id": "T07",
+      "name": "平行な弦がつくる等しい弧",
+      "key": "parallel_chords_equal_arcs"
+    },
+    {
+      "id": "T08",
+      "name": "三角形の内角の和",
+      "key": "triangle_angle_sum"
+    },
+    {
+      "id": "T09",
+      "name": "外角定理",
+      "key": "exterior_angle_theorem"
+    },
+    {
+      "id": "T10",
+      "name": "角の等式の推移",
+      "key": "angle_transitivity"
+    }
+  ],
+  "proof": {
+    "P1": {
+      "target": "BF=EC",
+      "method": "parallelism_to_parallelograms",
+      "proof_graph": {
+        "nodes": [
+          "∠BDF=∠ACD",
+          "∠ACD=∠ABD",
+          "DF∥AB",
+          "AD∥BF",
+          "AB∥DF and AD∥BF",
+          "ABFD is parallelogram",
+          "BF=AD",
+          "AD∥CE",
+          "AC∥DE",
+          "ADEC is parallelogram",
+          "AD=EC",
+          "BF=EC"
+        ],
+        "edges": [
+          [
+            "∠BDF=∠ACD",
+            "∠ACD=∠ABD",
+            "DF∥AB"
+          ],
+          [
+            "AD∥BC",
+            "B,F,E,C are collinear",
+            "AD∥BF"
+          ],
+          [
+            "DF∥AB",
+            "AD∥BF",
+            "ABFD is parallelogram"
+          ],
+          [
+            "ABFD is parallelogram",
+            "BF=AD"
+          ],
+          [
+            "AD∥BC",
+            "C,E on BC",
+            "AD∥CE"
+          ],
+          [
+            "AC∥DE",
+            "AD∥CE",
+            "ADEC is parallelogram"
+          ],
+          [
+            "ADEC is parallelogram",
+            "AD=EC"
+          ],
+          [
+            "BF=AD",
+            "AD=EC",
+            "BF=EC"
+          ]
+        ]
+      },
+      "solution_steps": [
+        {
+          "id": "S01",
+          "statement": "△?ではなく、まず∠BDFに注目する。∠BDF=∠ACD。"
+        },
+        {
+          "id": "S02",
+          "statement": "また、∠ACDと∠ABDは同じ弧ADに対する円周角なので、∠ACD=∠ABD。"
+        },
+        {
+          "id": "S03",
+          "statement": "したがって∠BDF=∠ABDであり、錯角が等しいのでDF∥AB。"
+        },
+        {
+          "id": "S04",
+          "statement": "AD∥BCで、B,F,E,Cは一直線上にあるから、AD∥BF。"
+        },
+        {
+          "id": "S05",
+          "statement": "よって四辺形ABFDは2組の対辺がそれぞれ平行なので平行四辺形。したがってBF=AD。"
+        },
+        {
+          "id": "S06",
+          "statement": "また、AD∥BCでC,EはBC上にあり、DE∥ACだから、四辺形ADECは平行四辺形。"
+        },
+        {
+          "id": "S07",
+          "statement": "したがってAD=EC。"
+        },
+        {
+          "id": "S08",
+          "statement": "以上よりBF=AD=ECなので、BF=EC。"
+        }
+      ]
+    },
+    "P2": {
+      "target": "∠FDC",
+      "solution_chain": [
+        "DF∥AB",
+        "∠FHC=∠BAC=65°",
+        "弧AD:弧DC=1:2",
+        "∠ACD=x, ∠DAC=2x",
+        "AD∥BCから弧AB=弧DC",
+        "∠ABC=3x",
+        "∠ACB=2x",
+        "△ABCの内角の和: 65+3x+2x=180",
+        "x=23°",
+        "HはAC上なので∠DCH=23°",
+        "∠FHCは△DHCの外角",
+        "65=∠FDC+23",
+        "∠FDC=42°"
+      ],
+      "answer": 42
+    }
+  },
+  "follow_up": {
+    "P2": {
+      "type": "angle",
+      "givens": {
+        "arc_AD_to_DC": "1:2",
+        "angle_FHC": 65
+      },
+      "derived": {
+        "angle_ACD": 23,
+        "angle_DAC": 46,
+        "angle_ABC": 69,
+        "angle_ACB": 46,
+        "angle_DCH": 23
+      },
+      "formula": "∠FDC=65−23",
+      "answer": 42
+    }
+  },
+  "question_generation": {
+    "can_generate_problem": true,
+    "can_generate_answer": true,
+    "template_id": "SHIZUOKA_CIRCLE_PARALLEL_PARALLELOGRAM_LENGTH_001",
+    "problem_type": "cyclic_parallel_chords_parallelogram_equal_length",
+    "generation_parameters": {
+      "arc_AD_to_DC": {
+        "type": "positive_integer_ratio",
+        "default": [
+          1,
+          2
+        ],
+        "randomizable": true
+      },
+      "angle_FHC": {
+        "type": "integer_degree",
+        "default": 65,
+        "allowed_values": [
+          55,
+          60,
+          65,
+          70,
+          75
+        ],
+        "randomizable": true
+      },
+      "point_labels": {
+        "randomizable": true
+      },
+      "orientation": {
+        "randomizable": true
+      }
+    },
+    "constraints": [
+      "A,B,C,D must be concyclic",
+      "AD∥BC",
+      "DE∥AC",
+      "E=DE∩BC",
+      "F must lie on BE",
+      "F must satisfy ∠BDF=∠ACD",
+      "G=DB∩AC",
+      "H=DF∩AC",
+      "P1 must reduce to BF=AD=EC",
+      "P2 must yield a valid triangle-angle equation"
+    ]
+  },
+  "answer_generation": {
+    "P1": {
+      "format": "proof",
+      "required_theorems": [
+        "inscribed_angle_same_arc",
+        "converse_parallel_angle",
+        "parallelogram_definition",
+        "parallelogram_opposite_sides",
+        "equal_length_transitivity"
+      ],
+      "sentence_templates": [
+        "∠ACDと∠ABDは同じ弧ADに対する円周角なので、∠ACD=∠ABD。",
+        "したがって∠BDF=∠ABDであり、錯角が等しいのでDF∥AB。",
+        "AD∥BC、B,F,E,Cは一直線上だから、AD∥BF。",
+        "よって四辺形ABFDは平行四辺形であり、BF=AD。",
+        "また、AD∥CE、AC∥DEより四辺形ADECは平行四辺形なので、AD=EC。",
+        "したがってBF=EC。"
+      ]
+    },
+    "P2": {
+      "format": "calculation",
+      "variable_template": "∠ACD=x",
+      "equations": [
+        "∠BAC=65°",
+        "∠ABC=3x",
+        "∠ACB=2x",
+        "65+3x+2x=180",
+        "x=23",
+        "∠FDC=65−23=42"
+      ],
+      "answer": 42
+    }
+  },
+  "validation": {
+    "geometry": {
+      "required": [
+        "A,B,C,D lie on O1",
+        "AD∥BC",
+        "DE∥AC",
+        "E∈BC",
+        "F∈BC",
+        "DF∥AB",
+        "G=DB∩AC",
+        "H=DF∩AC"
+      ],
+      "coordinate_model_valid": true,
+      "checks": {
+        "AD_parallel_BC": {
+          "expected": true,
+          "actual": true
+        },
+        "DE_parallel_AC": {
+          "expected": true,
+          "actual": true
+        },
+        "E_on_BC": {
+          "expected": true,
+          "actual": true
+        },
+        "F_on_BC": {
+          "expected": true,
+          "actual": true
+        },
+        "DF_parallel_AB": {
+          "expected": true,
+          "actual": true
+        },
+        "angle_ACD_equals_BDF": {
+          "expected": 23,
+          "actual": 22.99999999999998,
+          "tolerance_degree": 1e-10
+        },
+        "BF_equals_EC": {
+          "expected": true,
+          "actual": true,
+          "tolerance": 1e-12
+        },
+        "FHC": {
+          "expected": 65,
+          "actual": 65.0,
+          "tolerance_degree": 1e-10
+        },
+        "FDC": {
+          "expected": 42,
+          "actual": 42.0,
+          "tolerance_degree": 1e-10
+        }
+      }
+    },
+    "proof": {
+      "P1": {
+        "target_is_reachable": true,
+        "method": "parallelism_to_parallelograms",
+        "circular_reasoning": false
+      },
+      "P2": {
+        "answer_verified": true,
+        "answer": 42
+      }
+    },
+    "answer": {
+      "P1": {
+        "target": "BF=EC",
+        "verified": true
+      },
+      "P2": {
+        "calculation": "65−23=42",
+        "verified": true
+      }
+    }
+  },
+  "difficulty": {
+    "overall": "medium",
+    "proof": "medium",
+    "calculation": "medium",
+    "proof_skills": [
+      "円周角",
+      "平行線と角",
+      "平行四辺形",
+      "線分の等量",
+      "弧の比と円周角",
+      "三角形の内角の和",
+      "外角"
+    ]
+  },
+  "generation": {
+    "source_template": "SHIZUOKA_CIRCLE_PARALLEL_PARALLELOGRAM_LENGTH_001",
+    "generation_mode": "rule_based",
+    "uses_llm": false,
+    "coordinate_generation": {
+      "method": "constraint_based",
+      "fixed_reference": "2016_part2_arc_ratio_angle_canonical",
+      "randomizable": true
+    },
+    "proof_generation": {
+      "method": "proof_graph_traversal",
+      "randomizable": true
+    }
+  },
+  "source_analysis": {
+    "structural_pattern": {
+      "circle": "four_concyclic_points",
+      "parallel": [
+        "AD∥BC",
+        "DE∥AC"
+      ],
+      "derived_parallel": "DF∥AB",
+      "construction": [
+        "E=DE∩BC",
+        "F=BE∩DF",
+        "G=DB∩AC",
+        "H=DF∩AC"
+      ],
+      "proof_target": "BF=EC",
+      "proof_core": "2つの平行四辺形ABFDとADECを構成し、BF=AD=ECへ収束",
+      "follow_up": "angle calculation"
+    },
+    "important_generation_observation": "2016年型では、与えられた角条件からDF∥ABを導き、ABFDとADECという2つの平行四辺形を構成することで、証明を長さの連鎖BF=AD=ECへ変換できる。（2）では、弧比→円周角→三角形ABCの内角の和→外角という一連の規則で42°を生成できる。"
+  }
+}
