@@ -39,7 +39,7 @@
 
               <div class="filter-grid">
                 <label><span>証明の種類</span><select id="filter-proof"><option value="all">指定なし</option><option value="congruence">合同</option><option value="similarity">相似</option><option value="equal_length">長さの等式</option></select></label>
-                <label><span>証明基準</span><select id="filter-method"><option value="all">指定なし</option><option value="ASA">1組の辺と、その両端の角がそれぞれ等しい</option><option value="AA">2組の角がそれぞれ等しい</option><option value="parallelism_to_parallelogram">平行四辺形</option></select></label>
+                <label><span>証明基準</span><select id="filter-method"><option value="all">指定なし</option><option value="ASA">1組の辺とその両端の角がそれぞれ等しい</option><option value="AA">2組の角がそれぞれ等しい</option><option value="parallelism_to_parallelogram">平行四辺形</option></select></label>
                 <fieldset class="feature-filter"><legend>図形条件 <small>複数選択可</small></legend><div class="feature-options">
 <label><input type="checkbox" name="feature-filter" value="circle">円</label>
 <label><input type="checkbox" name="feature-filter" value="diameter">直径</label>
@@ -78,7 +78,10 @@
                 <p class="save-hint">PC保存は問題データ全体をJSONで保存します。ブラウザ保存では同じデータをローカルストレージとCookieの両方に保存し、ロード時はローカルストレージを優先します。</p>
                 <div id="storage-result" class="storage-result"></div>
               </div>
-              <button id="generate-button" class="primary-button" type="button">類題を生成</button>
+              <div class="setup-actions">
+                <button id="generate-button" class="primary-button" type="button">類題を生成</button>
+                <button id="pdf-export" class="secondary-button export-button" type="button">PDFとして書き出す</button>
+              </div>
             </div>
           </div>
         </section>
@@ -87,7 +90,7 @@
           <div class="avatar">証</div>
           <div class="message-stack wide-stack">
             <div class="message-name">証明ジェネレーター</div>
-            <div class="bubble problem-bubble">
+            <div id="problem-bubble" class="bubble problem-bubble">
               <div id="problem-info" class="problem-info"></div>
               <div id="template-badge" class="template-badge"></div>
               <div class="figure-label">図</div>
@@ -116,6 +119,18 @@
           <div class="message-stack">
             <div class="message-name">証明ジェネレーター</div>
             <div id="proof-result" class="bubble proof-result">証明を入力すると、ここに判定が表示されます。</div>
+          </div>
+        </section>
+
+        <section class="answer-section">
+          <button id="show-answer" class="answer-toggle" type="button" aria-expanded="false">
+            <span class="answer-mark">✓</span>
+            <span>答えを見る</span>
+            <span class="answer-chevron">⌄</span>
+          </button>
+          <div id="answer-panel" class="answer-panel hidden">
+            <div class="answer-panel-title">解答</div>
+            <div id="answer-content"></div>
           </div>
         </section>
       </div>

@@ -112,6 +112,120 @@ function setMode(mode) {
   }
 }
 
+
+function getProofSteps(data) {
+  const proof = data?.proof;
+  if (!proof) return [];
+  const selected = proof.selected_solution?.steps;
+  if (Array.isArray(selected)) return selected;
+  const candidates = [proof.P1, proof.P2];
+  for (const item of candidates) {
+    if (Array.isArray(item?.solution_steps)) return item.solution_steps.map((x, i) => ({ id: x.id ?? `S${i + 1}`, statement: x.statement ?? x, reason: x.reason ?? '' }));
+  }
+  return [];
+}
+
+function getProofTarget(data) {
+  const proof = data?.proof;
+  return proof?.target?.statement
+    ?? proof?.target
+    ?? proof?.P1?.target
+    ?? '';
+}
+
+function getProofMethod(data) {
+  const proof = data?.proof;
+  return proof?.target_decomposition?.japanese_criterion
+    ?? proof?.target_decomposition?.criterion
+    ?? proof?.P1?.method
+    ?? '';
+}
+
+function getFollowupAnswer(data) {
+  const follow = data?.follow_up;
+  if (!follow) return null;
+  const candidates = [];
+  if (Array.isArray(follow.problems)) candidates.push(...follow.problems);
+  for (const value of Object.values(follow)) {
+    if (value && typeof value === 'object' && !Array.isArray(value)) candidates.push(value);
+  }
+  for (const item of candidates) {
+    const answer = item?.answer ?? item?.target?.answer ?? item?.derived?.answer;
+    if (answer !== undefined && answer !== null && answer !== '') {
+      return { prompt: item.prompt ?? item.question ?? item.target?.object ?? '追問', answer, unit: item.unit ?? item.target?.unit ?? '' };
+    }
+  }
+  return null;
+}
+
+function renderAnswer(data) {
+  const content = $('#answer-content');
+  if (!content) return;
+  const steps = getProofSteps(data);
+  const target = getProofTarget(data);
+  const method = getProofMethod(data);
+  const follow = getFollowupAnswer(data);
+  const parts = [];
+
+  if (target) parts.push(`<div><strong>証明すること：</strong>${escapeHtml(target)}</div>`);
+  if (method) parts.push(`<div><strong>証明の基準：</strong>${escapeHtml(method)}</div>`);
+  if (steps.length) {
+    parts.push('<div class="answer-steps">');
+    for (const [i, step] of steps.entries()) {
+      const statement = step?.statement ?? '';
+      const reason = step?.reason ?? '';
+      parts.push(`<div class="answer-step"><strong>${i + 1}.</strong> ${escapeHtml(statement)}${reason ? `<br><span class="muted">理由：${escapeHtml(reason)}</span>` : ''}</div>`);
+    }
+    parts.push('</div>');
+  }
+  if (target) parts.push(`<div class="answer-final">したがって、${escapeHtml(target)}。</div>`);
+  if (follow) {
+    parts.push(`<div class="answer-followup"><div class="answer-followup-title">追問の答え</div><div>${escapeHtml(follow.prompt)}</div><div class="answer-final">答え：${escapeHtml(follow.answer)}${escapeHtml(follow.unit)}</div></div>`);
+  }
+  content.innerHTML = parts.join('') || '<div>この問題の解答データはありません。</div>';
+}
+
+function setAnswerVisible(visible) {
+  const panel = $('#answer-panel');
+  const button = $('#show-answer');
+  if (!panel || !button) return;
+  panel.classList.toggle('hidden', !visible);
+  button.setAttribute('aria-expanded', String(visible));
+}
+
+function answerHtmlForPrint(data) {
+  const steps = getProofSteps(data);
+  const target = getProofTarget(data);
+  const method = getProofMethod(data);
+  const follow = getFollowupAnswer(data);
+  const stepHtml = steps.map((step, i) => `<div class="print-step"><strong>${i + 1}.</strong> ${escapeHtml(step?.statement ?? '')}${step?.reason ? `<br><span>理由：${escapeHtml(step.reason)}</span>` : ''}</div>`).join('');
+  const followHtml = follow ? `<div class="print-follow"><h3>追問の答え</h3><p>${escapeHtml(follow.prompt)}</p><p><strong>答え：${escapeHtml(follow.answer)}${escapeHtml(follow.unit)}</strong></p></div>` : '';
+  return `<h2>解答</h2>${target ? `<p><strong>証明すること：</strong>${escapeHtml(target)}</p>` : ''}${method ? `<p><strong>証明の基準：</strong>${escapeHtml(method)}</p>` : ''}${stepHtml}${target ? `<div class="print-final">したがって、${escapeHtml(target)}。</div>` : ''}${followHtml}`;
+}
+
+function exportPdf() {
+  if (!generator.data) throw new Error('書き出す問題がありません。');
+  const data = generator.data;
+  const meta = data.metadata ?? {};
+  const title = `${meta.prefecture ?? '静岡県'} ${meta.year ?? ''}年度 数学 証明問題`;
+  const canvas = document.querySelector('#canvas-container canvas');
+  const image = canvas ? canvas.toDataURL('image/png') : '';
+  const conditions = (data.given_conditions ?? []).map(x => `<li>${escapeHtml(typeof x === 'string' ? x : x.statement ?? '')}</li>`).join('');
+  const subproblems = (data.problem?.subproblems ?? data.problem?.parts ?? []).map(x => `<p><strong>（${escapeHtml(x.id ?? x.number ?? '')}）</strong> ${escapeHtml(x.prompt ?? x.question ?? '')}</p>`).join('');
+  const followups = data.follow_up?.problems ?? Object.values(data.follow_up ?? {}).filter(x => x?.question || x?.prompt);
+  const followHtml = followups.length && $('#show-followup')?.checked ? `<section><h3>追問</h3>${followups.map(x => `<p>${escapeHtml(x.prompt ?? x.question ?? '')}</p>`).join('')}</section>` : '';
+  const win = window.open('', '_blank', 'noopener,noreferrer');
+  if (!win) throw new Error('PDF書き出し用のウィンドウを開けませんでした。ポップアップを許可してください。');
+  win.document.write(`<!doctype html><html lang="ja"><head><meta charset="utf-8"><title>${escapeHtml(title)}</title><style>
+    @page{size:A4;margin:15mm 16mm}*{box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;color:#111;font-size:11pt;line-height:1.65;margin:0}h1{font-size:18pt;margin:0 0 3mm}h2{font-size:15pt;border-bottom:1px solid #aaa;padding-bottom:2mm;margin:0 0 5mm}h3{font-size:12pt;margin:6mm 0 2mm}.meta{color:#555;font-size:9pt;margin-bottom:4mm}.badge{display:inline-block;border:1px solid #bbb;border-radius:99px;padding:1mm 3mm;font-size:8pt;margin-bottom:4mm}.figure{border:1px solid #ddd;border-radius:3mm;padding:3mm;text-align:center;margin:3mm 0 6mm}.figure img{max-width:100%;max-height:100mm}.conditions{margin:2mm 0 4mm}.question{margin-top:4mm}.print-step{padding:3mm 0;border-bottom:1px solid #eee}.print-step span{color:#555}.print-final{margin-top:5mm;padding:4mm;border:1px solid #aaa;border-radius:2mm;font-weight:bold}.print-follow{margin-top:8mm;padding-top:4mm;border-top:1.5px solid #999}.page{min-height:267mm}.page-break{page-break-before:always}.small{color:#666;font-size:9pt}@media print{button{display:none!important}}
+  </style></head><body>
+  <section class="page"><h1>${escapeHtml(title)}</h1><div class="meta">入試対策証明ジェネレーター　／　${escapeHtml(meta.problem_number ?? '')}</div><div class="badge">問題</div><div class="figure">${image ? `<img src="${image}" alt="問題図">` : '<div>図なし</div>'}</div><section class="question"><h3>問題</h3>${subproblems}</section><section><h3>与えられている条件</h3><ul class="conditions">${conditions}</ul></section>${followHtml}</section>
+  <section class="page page-break">${answerHtmlForPrint(data)}</section>
+  </body></html>`);
+  win.document.close();
+  setTimeout(() => { win.focus(); win.print(); }, 350);
+}
+
 function renderProblem(data) {
   const meta = data.metadata ?? {};
   const problemInfo = $('#problem-info');
@@ -151,6 +265,8 @@ function renderProblem(data) {
     result.textContent = '証明を入力すると、ここに判定が表示されます。';
   }
   if (proofAnswer) proofAnswer.value = '';
+  renderAnswer(data);
+  setAnswerVisible(false);
 }
 
 function escapeHtml(value) {
@@ -196,6 +312,9 @@ $('#new-chat')?.addEventListener('click', () => { setMode('generated'); if (proo
 $('#mobile-menu')?.addEventListener('click', () => document.body.classList.toggle('sidebar-open'));
 generateButton?.addEventListener('click', refresh);
 $('#show-followup')?.addEventListener('change', () => { if (generator.data) renderProblem(generator.data); });
+
+$('#show-answer')?.addEventListener('click', () => setAnswerVisible($('#answer-panel')?.classList.contains('hidden')));
+$('#pdf-export')?.addEventListener('click', () => { try { exportPdf(); } catch (error) { showStorageMessage(error.message, true); } });
 
 $('#check-proof')?.addEventListener('click', () => {
   const checked = checkProof(generator.data, proofAnswer.value);

@@ -132,19 +132,97 @@ export class Drawer {
     }
 
     // 点とラベル
+    // ラベルは固定位置に置かず、点の周囲の候補位置から
+    // 「線・他のラベルと重なりにくい場所」を自動選択する。
+    const placedLabels = [];
+    const labelCandidates = [
+      { x: 9, y: -10 }, { x: 9, y: 16 },
+      { x: -9, y: -10 }, { x: -9, y: 16 },
+      { x: 12, y: 4 }, { x: -12, y: 4 },
+      { x: 0, y: -18 }, { x: 0, y: 24 },
+      { x: 16, y: -18 }, { x: -16, y: -18 },
+      { x: 16, y: 24 }, { x: -16, y: 24 }
+    ];
+
+    const screenSegments = g.segments
+      .filter(s => s.a && s.b)
+      .map(s => ({ a: screen(s.a), b: screen(s.b) }));
+    const screenLines = g.lines
+      .filter(l => l.a && l.b)
+      .map(l => ({ a: screen(l.a), b: screen(l.b) }));
+
+    const pointToSegmentDistance = (p, a, b) => {
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const len2 = dx * dx + dy * dy;
+      if (len2 < 1e-9) return Math.hypot(p.x - a.x, p.y - a.y);
+      const t = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2));
+      const qx = a.x + t * dx;
+      const qy = a.y + t * dy;
+      return Math.hypot(p.x - qx, p.y - qy);
+    };
+
+    const pointToLineDistance = (p, a, b) => {
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const len = Math.hypot(dx, dy);
+      if (len < 1e-9) return Infinity;
+      return Math.abs(dy * p.x - dx * p.y + b.x * a.y - b.y * a.x) / len;
+    };
+
+    const labelBox = (text, x, y) => {
+      const m = this.ctx.measureText(text);
+      return { left: x - 2, right: x + m.width + 2, top: y - 17, bottom: y + 4 };
+    };
+
+    const boxesOverlap = (a, b) =>
+      a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+
+    const chooseLabelPosition = (p, q, label) => {
+      const candidates = labelCandidates.map(offset => ({
+        x: q.x + offset.x,
+        y: q.y + offset.y
+      }));
+
+      let best = null;
+      let bestScore = -Infinity;
+      for (const candidate of candidates) {
+        const box = labelBox(label, candidate.x, candidate.y);
+        if (box.left < 4 || box.right > width - 4 || box.top < 4 || box.bottom > height - 4) continue;
+
+        const center = { x: (box.left + box.right) / 2, y: (box.top + box.bottom) / 2 };
+        let minLineDistance = Infinity;
+        for (const line of screenLines) minLineDistance = Math.min(minLineDistance, pointToLineDistance(center, line.a, line.b));
+        for (const segment of screenSegments) minLineDistance = Math.min(minLineDistance, pointToSegmentDistance(center, segment.a, segment.b));
+
+        let labelPenalty = 0;
+        for (const other of placedLabels) {
+          if (boxesOverlap(box, other)) labelPenalty += 100;
+        }
+
+        const pointDistance = Math.hypot(candidate.x - q.x, candidate.y - q.y);
+        const score = Math.min(minLineDistance, 24) * 5 - labelPenalty - pointDistance * 0.15;
+        if (score > bestScore) {
+          bestScore = score;
+          best = { x: candidate.x, y: candidate.y, box };
+        }
+      }
+
+      return best ?? { x: q.x + 7, y: q.y - 7, box: labelBox(label, q.x + 7, q.y - 7) };
+    };
+
     for (const p of points) {
       const q = screen(p);
       this.ctx.beginPath();
       this.ctx.arc(q.x, q.y, 4, 0, Math.PI * 2);
       this.ctx.fill();
 
-      const offset = p.label_offset ?? { x: 7, y: -7 };
-      const ox = Number.isFinite(Number(offset.x)) ? Number(offset.x) : 7;
-      const oy = Number.isFinite(Number(offset.y)) ? Number(offset.y) : -7;
       const label = String(p.label ?? p.id ?? '').trim();
-      if (label && label !== 'undefined' && label !== 'null') {
-        this.ctx.fillText(label, q.x + ox, q.y + oy);
-      }
+      if (!label || label === 'undefined' || label === 'null') continue;
+
+      const chosen = chooseLabelPosition(p, q, label);
+      placedLabels.push(chosen.box);
+      this.ctx.fillText(label, chosen.x, chosen.y);
     }
 
     this.ctx.restore();
