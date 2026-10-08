@@ -1,4 +1,4 @@
-import { logger } from './js/logger.js';
+import { logger } from './logger.js';
 import { ProofGenerator } from './js/generator.js';
 import { checkProof } from './js/proof_checker.js';
 import { generateAutoProblem, getTemplateInfo } from './js/problem_generator.js';

@@ -68,6 +68,137 @@ function angleABC(a, b, c) {
   return deg(Math.atan2(cr, dot));
 }
 
+
+/* =========================================================
+ * 数値答案の複雑さ制御
+ *
+ * 許可する形:
+ *   整数
+ *   分数
+ *   √n を分子にもつ分数（分母は整数、分母に根号を残さない）
+ *
+ * 小数の近似値や、複数の根号・根号の中に分数が入る形は
+ * 入試問題の数値答案として採用しない。
+ * ========================================================= */
+
+function gcdInt(a, b) {
+  a = Math.abs(Math.trunc(a));
+  b = Math.abs(Math.trunc(b));
+  while (b !== 0) {
+    const t = a % b;
+    a = b;
+    b = t;
+  }
+  return a || 1;
+}
+
+function isPerfectSquareInt(n) {
+  if (!Number.isInteger(n) || n < 0) return false;
+  const r = Math.round(Math.sqrt(n));
+  return r * r === n;
+}
+
+function simplifyFraction(n, d) {
+  if (!Number.isInteger(n) || !Number.isInteger(d) || d === 0) return null;
+  if (d < 0) { n = -n; d = -d; }
+  const g = gcdInt(n, d);
+  return { n: n / g, d: d / g };
+}
+
+function rationalApprox(value, maxDenominator = 24, tolerance = 1e-8) {
+  if (!Number.isFinite(value)) return null;
+  for (let d = 1; d <= maxDenominator; d++) {
+    const n = Math.round(value * d);
+    if (Math.abs(value - n / d) <= tolerance) {
+      return simplifyFraction(n, d);
+    }
+  }
+  return null;
+}
+
+/**
+ * 数値を「整数 / 分数 / √n分数」のいずれかに分類する。
+ * 係数としてπを伴う場合は coefficient に対して判定する。
+ */
+function classifySimpleNumber(value, options = {}) {
+  const maxDenominator = options.maxDenominator ?? 24;
+  const maxRadicand = options.maxRadicand ?? 100;
+  const tolerance = options.tolerance ?? 1e-8;
+  const rational = rationalApprox(value, maxDenominator, tolerance);
+
+  if (rational) {
+    return {
+      type: rational.d === 1 ? 'integer' : 'fraction',
+      numerator: rational.n,
+      denominator: rational.d,
+      radicand: null
+    };
+  }
+
+  // value = √n / d を探索する。
+  for (let d = 1; d <= maxDenominator; d++) {
+    const n = value * d;
+    const n2 = n * n;
+    const roundedN2 = Math.round(n2);
+    if (
+      roundedN2 >= 1 &&
+      roundedN2 <= maxRadicand &&
+      !isPerfectSquareInt(roundedN2) &&
+      Math.abs(n2 - roundedN2) <= tolerance
+    ) {
+      return {
+        type: 'sqrt_fraction',
+        numerator: 1,
+        denominator: d,
+        radicand: roundedN2
+      };
+    }
+  }
+
+  return null;
+}
+
+function formatSimpleNumber(value, options = {}) {
+  const classified = classifySimpleNumber(value, options);
+  if (!classified) return null;
+
+  const sign = value < 0 ? '-' : '';
+  if (classified.type === 'integer') return `${classified.numerator}`;
+  if (classified.type === 'fraction') {
+    return `${classified.numerator}/${classified.denominator}`;
+  }
+  return `${sign}√${classified.radicand}/${classified.denominator}`;
+}
+
+function formatPiMultiple(coefficient) {
+  const formatted = formatSimpleNumber(coefficient);
+  if (!formatted) return null;
+  if (formatted === '0') return '0';
+  if (formatted === '1') return 'π';
+  if (formatted === '-1') return '-π';
+  if (formatted.includes('/')) {
+    const [n, d] = formatted.split('/');
+    return `${n}π/${d}`;
+  }
+  return `${formatted}π`;
+}
+
+function assertSimpleNumericAnswer(value, context = '') {
+  if (!classifySimpleNumber(value)) {
+    throw new Error(
+      `${context}の数値答案が許容形式ではありません: ${value}`
+    );
+  }
+}
+
+function assertSimplePiAnswer(coefficient, context = '') {
+  if (!formatPiMultiple(coefficient)) {
+    throw new Error(
+      `${context}のπを含む数値答案が許容形式ではありません: ${coefficient}π`
+    );
+  }
+}
+
 function round(value, digits = 4) {
   return Number(value.toFixed(digits));
 }
@@ -142,7 +273,7 @@ function copyGeneratedMetadata(data, year, parameters) {
  * ========================================================= */
 function build2015(options, random) {
   const theta = options.theta ?? choice(random, [112, 120, 128, 136, 144, 152, 160]);
-  const scale = options.scale ?? choice(random, [0.88, 1, 1.12, 1.24]);
+  const scale = options.scale ?? choice(random, [1, 2 / 3, 4 / 3]);
   const radius = 9 * scale;
   const R = 1;
   const O = { x: 0, y: 0 };
@@ -174,7 +305,9 @@ function build2015(options, random) {
   const angleCDH = angleABC(C, D, H);
   const chordArcAngle = angleABC(C, D, H) * 2;
   const arcLength = 2 * Math.PI * radius * (chordArcAngle / 360);
-  const answer = `${round(arcLength / Math.PI, 4).toString()}π`;
+  const answerCoefficient = arcLength / Math.PI;
+  assertSimplePiAnswer(answerCoefficient, '2015型・弧CHの長さ');
+  const answer = formatPiMultiple(answerCoefficient);
 
   const data = clone(BASE_2015);
   copyGeneratedMetadata(data, 2015, { theta, scale, angleCDH: round(angleCDH, 2), radius, seed: options.seed ?? null });
@@ -266,11 +399,24 @@ function solveEqualDistancePoint(B, C, E) {
   return add(B, mul(v, s));
 }
 
+function formatGeneratedLength(value, exactText = null) {
+  if (exactText) return exactText;
+  const simple = formatSimpleNumber(value);
+  return simple ?? round(value, 2).toString();
+}
+
 function build2017(options, random) {
-  const halfArc = options.halfArc ?? choice(random, [42, 50, 58, 66, 74]);
-  const bAngle = options.bAngle ?? choice(random, [210, 235, 260, 285]);
-  const ratio = options.ratio ?? choice(random, [[2, 3], [3, 4], [4, 5], [3, 5]]);
-  const scale = options.scale ?? choice(random, [0.9, 1, 1.15, 1.3]);
+  const simpleShapes = [
+    { halfArc: 60, bAngle: 240, ratio: [1, 1], scale: 2, scaleText: '2' },
+    { halfArc: 60, bAngle: 300, ratio: [1, 2], scale: Math.sqrt(3), scaleText: '√3' },
+    { halfArc: 90, bAngle: 270, ratio: [1, 1], scale: Math.sqrt(2), scaleText: '√2' }
+  ];
+  const selectedShape = choice(random, simpleShapes);
+  const halfArc = options.halfArc ?? selectedShape.halfArc;
+  const bAngle = options.bAngle ?? selectedShape.bAngle;
+  const ratio = options.ratio ?? selectedShape.ratio;
+  const scale = options.scale ?? selectedShape.scale;
+  const scaleText = options.scaleText ?? selectedShape.scaleText;
   const R = scale;
   const A = pointOnCircle(0, R);
   const D = pointOnCircle(halfArc, R);
@@ -286,6 +432,8 @@ function build2017(options, random) {
   const areaCDE = Math.abs(cross(sub(C, D), sub(E, D))) / 2;
   const areaDGE = Math.abs(cross(sub(G, D), sub(E, D))) / 2;
   const areaRatio = areaCDE / areaDGE;
+  assertSimpleNumericAnswer(areaRatio, '2017型・面積比');
+  const areaRatioAnswer = formatSimpleNumber(areaRatio);
   const O = circumcenter(A, C, D);
   const pts = {
     O: pointRecord('O', O, 'circle_center'), A: pointRecord('A', A, 'circle_point'),
@@ -295,16 +443,26 @@ function build2017(options, random) {
   };
   const geometry = makeGeometry(BASE_2017, pts, dist(O, A));
   const data = clone(BASE_2017);
-  copyGeneratedMetadata(data, 2017, { halfArc, bAngle, ratio, scale, seed: options.seed ?? null });
+  copyGeneratedMetadata(data, 2017, { halfArc, bAngle, ratio, scale, scaleText, seed: options.seed ?? null });
   data.geometryModel = geometry;
   data.geometry = geometry;
-  data.problem.parts[1].question = `AD=${round(AD, 2)}cm、AE=${round(AE, 2)}cm、EC=${round(EC, 2)}cmのとき、△CDEの面積は△DGEの面積の何倍か答えなさい。`;
-  data.problem.parts[1].target.answer = round(areaRatio, 4).toString();
-  data.follow_up.P2.answer = round(areaRatio, 4).toString();
+  let adText = formatGeneratedLength(AD);
+  let aeText = formatGeneratedLength(AE);
+  let ecText = formatGeneratedLength(EC);
+  if (halfArc === 60 && bAngle === 240 && ratio[0] === 1 && ratio[1] === 1 && Math.abs(scale - 2) < 1e-8) {
+    adText = '2'; aeText = '√3'; ecText = '√3';
+  } else if (halfArc === 60 && bAngle === 300 && ratio[0] === 1 && ratio[1] === 2 && Math.abs(scale - Math.sqrt(3)) < 1e-8) {
+    adText = '√3'; aeText = '1'; ecText = '2';
+  } else if (halfArc === 90 && bAngle === 270 && ratio[0] === 1 && ratio[1] === 1 && Math.abs(scale - Math.sqrt(2)) < 1e-8) {
+    adText = '2'; aeText = '√2'; ecText = '√2';
+  }
+  data.problem.parts[1].question = `AD=${adText}cm、AE=${aeText}cm、EC=${ecText}cmのとき、△CDEの面積は△DGEの面積の何倍か答えなさい。`;
+  data.problem.parts[1].target.answer = areaRatioAnswer;
+  data.follow_up.P2.answer = areaRatioAnswer;
   data.follow_up.P2.givens = { AD: round(AD, 4), AE: round(AE, 4), EC: round(EC, 4) };
   data.variables.AG.value = String(round(AG, 4));
   data.variables.DG.value = String(round(DG, 4));
-  data.generation.parameters.derived = { AD: round(AD, 4), AE: round(AE, 4), EC: round(EC, 4), AG: round(AG, 4), DG: round(DG, 4), areaRatio: round(areaRatio, 4) };
+  data.generation.parameters.derived = { AD: round(AD, 4), AE: round(AE, 4), EC: round(EC, 4), AG: round(AG, 4), DG: round(DG, 4), areaRatio: areaRatioAnswer };
   return data;
 }
 
