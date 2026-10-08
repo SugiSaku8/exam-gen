@@ -1,13 +1,49 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>静岡県入試証明ジェネレーター</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>入試対策証明ジェネレーター</title>
+  <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
-    <div id="app-root"></div>
-    <script type="module" src="./script/base.js"></script>
-    <script type="module" src="./script/apps/proof-generator.js"></script>
+  <main id="app-root" class="app">
+    <h1>入試対策証明ジェネレーター</h1>
+    <section class="controls">
+      <label>モード
+        <select id="mode">
+          <option value="generated">類題生成</option>
+          <option value="past">過去問</option>
+        </select>
+      </label>
+      <label>テンプレート
+        <select id="template">
+          <option value="SHIZUOKA_CIRCLE_ISOSCELES_PARALLEL_ASA_001">2014 円・二等辺・平行・ASA</option>
+        </select>
+      </label>
+      <label>Seed <input id="seed" type="number" placeholder="random"></label>
+      <label>年度
+        <select id="year">
+          <option value="2014">2014</option>
+          <option value="2015">2015</option>
+        </select>
+      </label>
+      <button id="generate-button">問題を表示</button>
+    </section>
+    <section><div id="problem-info"></div></section>
+    <section><div id="canvas-container"></div></section>
+    <section>
+      <h2>条件</h2>
+      <ul id="conditions"></ul>
+      <div id="problem-text"></div>
+    </section>
+    <section>
+      <h2>証明を入力</h2>
+      <textarea id="proof-answer" rows="12" placeholder="例：AC=AD：仮定より"></textarea>
+      <button id="check-proof">証明をチェック</button>
+      <div id="proof-result" class="proof-result"></div>
+    </section>
+  </main>
+  <script type="module" src="./main.js"></script>
 </body>
 </html>
