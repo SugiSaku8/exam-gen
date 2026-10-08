@@ -7,43 +7,120 @@
   <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
-  <main id="app-root" class="app">
-    <h1>入試対策証明ジェネレーター</h1>
-    <section class="controls">
-      <label>モード
-        <select id="mode">
-          <option value="generated">類題生成</option>
-          <option value="past">過去問</option>
-        </select>
-      </label>
-      <label>テンプレート
-        <select id="template">
-          <option value="SHIZUOKA_CIRCLE_ISOSCELES_PARALLEL_ASA_001">2014 円・二等辺・平行・ASA</option>
-        </select>
-      </label>
-      <label>Seed <input id="seed" type="number" placeholder="random"></label>
-      <label>年度
-        <select id="year">
-          <option value="2014">2014</option>
-          <option value="2015">2015</option>
-        </select>
-      </label>
-      <button id="generate-button">問題を表示</button>
-    </section>
-    <section><div id="problem-info"></div></section>
-    <section><div id="canvas-container"></div></section>
-    <section>
-      <h2>条件</h2>
-      <ul id="conditions"></ul>
-      <div id="problem-text"></div>
-    </section>
-    <section>
-      <h2>証明を入力</h2>
-      <textarea id="proof-answer" rows="12" placeholder="例：AC=AD：仮定より"></textarea>
-      <button id="check-proof">証明をチェック</button>
-      <div id="proof-result" class="proof-result"></div>
-    </section>
-  </main>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <button id="new-chat" class="new-chat">＋ 新しい問題</button>
+      <div class="sidebar-label">問題モード</div>
+      <button class="sidebar-item active" data-mode="generated">✦ 類題を生成</button>
+      <button class="sidebar-item" data-mode="past">▣ 過去問を見る</button>
+      <div class="sidebar-label">自動選択対象</div>
+      <div class="year-list"><span>円</span><span>相似</span><span>合同</span><span>平行</span><span>面積</span></div>
+      <div class="sidebar-footer">ルールベース生成<br>LLM・機械学習なし</div>
+    </aside>
+
+    <main id="app-root" class="chat-app">
+      <header class="topbar">
+        <button id="mobile-menu" class="icon-button">☰</button>
+        <div>
+          <h1>入試対策証明ジェネレーター</h1>
+          <p>静岡県公立高校入試・図形の証明演習</p>
+        </div>
+        <div class="status-dot" title="ルールベース"></div>
+      </header>
+
+      <div id="chat-thread" class="chat-thread">
+        <section class="message-row assistant-message">
+          <div class="avatar">証</div>
+          <div class="message-stack setup-stack">
+            <div class="message-name">証明ジェネレーター</div>
+            <div class="bubble setup-bubble">
+              <p class="message-title">どんな類題にしますか？</p>
+              <p class="muted">証明形式・図形条件・難易度を選ぶと、対応する数学的構造を自動判定して類題を生成します。年度を選ぶ必要はありません。</p>
+
+              <div class="filter-grid">
+                <label><span>証明の種類</span><select id="filter-proof"><option value="all">指定なし</option><option value="congruence">合同</option><option value="similarity">相似</option><option value="equal_length">長さの等式</option></select></label>
+                <label><span>証明基準</span><select id="filter-method"><option value="all">指定なし</option><option value="ASA">1組の辺と、その両端の角がそれぞれ等しい</option><option value="AA">2組の角がそれぞれ等しい</option><option value="parallelism_to_parallelogram">平行四辺形</option></select></label>
+                <fieldset class="feature-filter"><legend>図形条件 <small>複数選択可</small></legend><div class="feature-options">
+<label><input type="checkbox" name="feature-filter" value="circle">円</label>
+<label><input type="checkbox" name="feature-filter" value="diameter">直径</label>
+<label><input type="checkbox" name="feature-filter" value="isosceles">二等辺</label>
+<label><input type="checkbox" name="feature-filter" value="parallel">平行線</label>
+<label><input type="checkbox" name="feature-filter" value="angle_bisector">角の二等分線</label>
+<label><input type="checkbox" name="feature-filter" value="area_ratio">面積比</label>
+<label><input type="checkbox" name="feature-filter" value="parallelogram">平行四辺形</label>
+</div></fieldset>
+                <label><span>難易度</span><select id="filter-difficulty"><option value="all">指定なし</option><option value="3">★★★</option><option value="4">★★★★</option><option value="5">★★★★★</option></select></label>
+                <label><span>Seed</span><input id="seed" type="number" placeholder="自動"></label>
+              </div>
+
+              <div class="option-row">
+                <label class="check-option"><input id="show-followup" type="checkbox" checked> 証明後の追問も表示</label>
+                <label class="check-option"><input id="rotate-figure" type="checkbox" checked> 図をランダム配置</label>
+              </div>
+
+              <div class="save-panel">
+                <div class="save-title">問題を保存・ロード</div>
+                <div class="save-name-row">
+                  <label for="save-name">名前</label>
+                  <input id="save-name" type="text" placeholder="例：円と平行線_練習1" maxlength="80">
+                </div>
+                <div class="save-button-row">
+                  <button id="save-pc" type="button" class="secondary-button">PCに保存</button>
+                  <button id="load-pc" type="button" class="secondary-button">PCからロード</button>
+                  <input id="load-file" type="file" accept="application/json,.json" hidden>
+                </div>
+                <div class="save-button-row">
+                  <button id="save-browser" type="button" class="secondary-button">ブラウザに保存</button>
+                  <select id="browser-saves" class="cookie-select"><option value="">保存済み問題を選択</option></select>
+                  <button id="load-browser" type="button" class="secondary-button">ロード</button>
+                  <button id="delete-browser" type="button" class="secondary-button danger-button">削除</button>
+                </div>
+                <p class="save-hint">PC保存は問題データ全体をJSONで保存します。ブラウザ保存では同じデータをローカルストレージとCookieの両方に保存し、ロード時はローカルストレージを優先します。</p>
+                <div id="storage-result" class="storage-result"></div>
+              </div>
+              <button id="generate-button" class="primary-button" type="button">類題を生成</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="message-row assistant-message">
+          <div class="avatar">証</div>
+          <div class="message-stack wide-stack">
+            <div class="message-name">証明ジェネレーター</div>
+            <div class="bubble problem-bubble">
+              <div id="problem-info" class="problem-info"></div>
+              <div id="template-badge" class="template-badge"></div>
+              <div class="figure-label">図</div>
+              <div id="canvas-container" class="canvas-container"></div>
+              <div class="question-block"><div class="figure-label">問題</div><div id="problem-text"></div></div>
+              <div class="conditions-block"><div class="figure-label">与えられている条件</div><ul id="conditions"></ul></div>
+              <div id="followup-block" class="followup-block hidden"><div class="figure-label">追問</div><div id="followup-text"></div></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="message-row user-message">
+          <div class="message-stack answer-stack">
+            <div class="message-name">あなた</div>
+            <div class="bubble user-bubble">
+              <label class="answer-label" for="proof-answer">証明を書いてください</label>
+              <textarea id="proof-answer" rows="9" placeholder="AC=AD：仮定より\n∠ACB=∠ADG：同じ弧ABに対する円周角だから\n…"></textarea>
+              <div class="composer-row"><span class="composer-hint">日本語の定型的な証明表現を解析します</span><button id="check-proof" class="send-button" type="button">↑</button></div>
+            </div>
+          </div>
+          <div class="avatar user-avatar">私</div>
+        </section>
+
+        <section class="message-row assistant-message result-row">
+          <div class="avatar">証</div>
+          <div class="message-stack">
+            <div class="message-name">証明ジェネレーター</div>
+            <div id="proof-result" class="bubble proof-result">証明を入力すると、ここに判定が表示されます。</div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
   <script type="module" src="./main.js"></script>
 </body>
 </html>
