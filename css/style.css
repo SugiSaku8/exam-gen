@@ -36,3 +36,34 @@
 .answer-followup{margin-top:16px;padding-top:12px;border-top:2px solid #ddd}
 .answer-followup-title{font-weight:700;margin-bottom:6px}
 @media(max-width:800px){.answer-section{padding:0;margin-bottom:50px}.setup-actions{flex-direction:column;align-items:stretch}.setup-actions button{width:100%}}
+
+
+/* =========================================================
+   PDF / 印刷
+   ポップアップを使わず、現在のページを直接印刷する。
+   ========================================================= */
+#pdf-print-sheet{display:none}
+
+@media print{
+  body > *:not(#pdf-print-sheet){display:none !important}
+  #pdf-print-sheet{display:block !important}
+  #pdf-print-sheet *{box-sizing:border-box}
+  #pdf-print-sheet{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;color:#111;font-size:11pt;line-height:1.65}
+  #pdf-print-sheet h1{font-size:18pt;margin:0 0 3mm}
+  #pdf-print-sheet h2{font-size:15pt;border-bottom:1px solid #aaa;padding-bottom:2mm;margin:0 0 5mm}
+  #pdf-print-sheet h3{font-size:12pt;margin:6mm 0 2mm}
+  #pdf-print-sheet .meta{color:#555;font-size:9pt;margin-bottom:4mm}
+  #pdf-print-sheet .badge{display:inline-block;border:1px solid #bbb;border-radius:99px;padding:1mm 3mm;font-size:8pt;margin-bottom:4mm}
+  #pdf-print-sheet .figure{border:1px solid #ddd;border-radius:3mm;padding:3mm;text-align:center;margin:3mm 0 6mm}
+  #pdf-print-sheet .figure img{display:block;max-width:100%;max-height:100mm;margin:0 auto}
+  #pdf-print-sheet .conditions{margin:2mm 0 4mm}
+  #pdf-print-sheet .question{margin-top:4mm}
+  #pdf-print-sheet .print-step{padding:3mm 0;border-bottom:1px solid #eee}
+  #pdf-print-sheet .print-step span{color:#555}
+  #pdf-print-sheet .print-final{margin-top:5mm;padding:4mm;border:1px solid #aaa;border-radius:2mm;font-weight:bold}
+  #pdf-print-sheet .print-follow{margin-top:8mm;padding-top:4mm;border-top:1.5px solid #999}
+  #pdf-print-sheet .pdf-print-page{min-height:267mm;page-break-after:always}
+  #pdf-print-sheet .pdf-print-page:last-child{page-break-after:auto}
+  #pdf-print-sheet .pdf-print-answer{break-before:page;page-break-before:always}
+  @page{size:A4;margin:15mm 16mm}
+}

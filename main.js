@@ -118,9 +118,26 @@ function getProofSteps(data) {
   if (!proof) return [];
   const selected = proof.selected_solution?.steps;
   if (Array.isArray(selected)) return selected;
+  // 生成問題は proof.steps、過去問JSONは selected_solution.steps / P1.solution_steps など、
+  // 複数の証明データ形式を持ち得る。優先順位を明示して、
+  // 「結論だけ」の表示にならないよう、必ず証明の中間過程を拾う。
+  if (Array.isArray(proof.steps)) {
+    return proof.steps.map((x, i) => ({
+      id: x?.id ?? `S${i + 1}`,
+      statement: x?.statement ?? x,
+      reason: x?.reason ?? ''
+    }));
+  }
+
   const candidates = [proof.P1, proof.P2];
   for (const item of candidates) {
-    if (Array.isArray(item?.solution_steps)) return item.solution_steps.map((x, i) => ({ id: x.id ?? `S${i + 1}`, statement: x.statement ?? x, reason: x.reason ?? '' }));
+    if (Array.isArray(item?.solution_steps)) {
+      return item.solution_steps.map((x, i) => ({
+        id: x?.id ?? `S${i + 1}`,
+        statement: x?.statement ?? x,
+        reason: x?.reason ?? ''
+      }));
+    }
   }
   return [];
 }
@@ -133,12 +150,37 @@ function getProofTarget(data) {
     ?? '';
 }
 
+function japaneseProofCriterion(value) {
+  if (!value) return '';
+
+  const normalized = String(value).trim();
+
+  const labels = {
+    AA: '2組の角がそれぞれ等しい',
+    AA_similarity: '2組の角がそれぞれ等しい',
+    ASA: '1組の辺とその両端の角がそれぞれ等しい',
+    SAS: '2組の辺とその間の角がそれぞれ等しい',
+    SSS: '3組の辺がそれぞれ等しい',
+    parallelism_to_parallelogram: '平行四辺形の性質を利用する',
+    parallelism_to_parallelograms: '平行四辺形の性質を利用する',
+    constraint_based: '図形の条件と性質を利用する',
+    proof_graph_traversal: '図形の性質を順に用いる'
+  };
+
+  return labels[normalized] ?? normalized;
+}
+
 function getProofMethod(data) {
   const proof = data?.proof;
-  return proof?.target_decomposition?.japanese_criterion
+  const criterion = proof?.target_decomposition?.japanese_criterion
     ?? proof?.target_decomposition?.criterion
+    ?? proof?.target_decomposition?.similarity_criterion
+    ?? proof?.criterion
+    ?? proof?.similarity_criterion
     ?? proof?.P1?.method
     ?? '';
+
+  return japaneseProofCriterion(criterion);
 }
 
 function getFollowupAnswer(data) {
@@ -205,25 +247,61 @@ function answerHtmlForPrint(data) {
 
 function exportPdf() {
   if (!generator.data) throw new Error('書き出す問題がありません。');
+
   const data = generator.data;
   const meta = data.metadata ?? {};
   const title = `${meta.prefecture ?? '静岡県'} ${meta.year ?? ''}年度 数学 証明問題`;
   const canvas = document.querySelector('#canvas-container canvas');
   const image = canvas ? canvas.toDataURL('image/png') : '';
-  const conditions = (data.given_conditions ?? []).map(x => `<li>${escapeHtml(typeof x === 'string' ? x : x.statement ?? '')}</li>`).join('');
-  const subproblems = (data.problem?.subproblems ?? data.problem?.parts ?? []).map(x => `<p><strong>（${escapeHtml(x.id ?? x.number ?? '')}）</strong> ${escapeHtml(x.prompt ?? x.question ?? '')}</p>`).join('');
-  const followups = data.follow_up?.problems ?? Object.values(data.follow_up ?? {}).filter(x => x?.question || x?.prompt);
-  const followHtml = followups.length && $('#show-followup')?.checked ? `<section><h3>追問</h3>${followups.map(x => `<p>${escapeHtml(x.prompt ?? x.question ?? '')}</p>`).join('')}</section>` : '';
-  const win = window.open('', '_blank', 'noopener,noreferrer');
-  if (!win) throw new Error('PDF書き出し用のウィンドウを開けませんでした。ポップアップを許可してください。');
-  win.document.write(`<!doctype html><html lang="ja"><head><meta charset="utf-8"><title>${escapeHtml(title)}</title><style>
-    @page{size:A4;margin:15mm 16mm}*{box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;color:#111;font-size:11pt;line-height:1.65;margin:0}h1{font-size:18pt;margin:0 0 3mm}h2{font-size:15pt;border-bottom:1px solid #aaa;padding-bottom:2mm;margin:0 0 5mm}h3{font-size:12pt;margin:6mm 0 2mm}.meta{color:#555;font-size:9pt;margin-bottom:4mm}.badge{display:inline-block;border:1px solid #bbb;border-radius:99px;padding:1mm 3mm;font-size:8pt;margin-bottom:4mm}.figure{border:1px solid #ddd;border-radius:3mm;padding:3mm;text-align:center;margin:3mm 0 6mm}.figure img{max-width:100%;max-height:100mm}.conditions{margin:2mm 0 4mm}.question{margin-top:4mm}.print-step{padding:3mm 0;border-bottom:1px solid #eee}.print-step span{color:#555}.print-final{margin-top:5mm;padding:4mm;border:1px solid #aaa;border-radius:2mm;font-weight:bold}.print-follow{margin-top:8mm;padding-top:4mm;border-top:1.5px solid #999}.page{min-height:267mm}.page-break{page-break-before:always}.small{color:#666;font-size:9pt}@media print{button{display:none!important}}
-  </style></head><body>
-  <section class="page"><h1>${escapeHtml(title)}</h1><div class="meta">入試対策証明ジェネレーター　／　${escapeHtml(meta.problem_number ?? '')}</div><div class="badge">問題</div><div class="figure">${image ? `<img src="${image}" alt="問題図">` : '<div>図なし</div>'}</div><section class="question"><h3>問題</h3>${subproblems}</section><section><h3>与えられている条件</h3><ul class="conditions">${conditions}</ul></section>${followHtml}</section>
-  <section class="page page-break">${answerHtmlForPrint(data)}</section>
-  </body></html>`);
-  win.document.close();
-  setTimeout(() => { win.focus(); win.print(); }, 350);
+  const conditions = (data.given_conditions ?? [])
+    .map(x => `<li>${escapeHtml(typeof x === 'string' ? x : x.statement ?? '')}</li>`)
+    .join('');
+  const subproblems = (data.problem?.subproblems ?? data.problem?.parts ?? [])
+    .map(x => `<p><strong>（${escapeHtml(x.id ?? x.number ?? '')}）</strong> ${escapeHtml(x.prompt ?? x.question ?? '')}</p>`)
+    .join('');
+  const followups = data.follow_up?.problems ?? Object.values(data.follow_up ?? {})
+    .filter(x => x?.question || x?.prompt);
+  const followHtml = followups.length && $('#show-followup')?.checked
+    ? `<section><h3>追問</h3>${followups.map(x => `<p>${escapeHtml(x.prompt ?? x.question ?? '')}</p>`).join('')}</section>`
+    : '';
+
+  // 新しいウィンドウは開かない。
+  // 現在のページに印刷専用シートを一時的に追加して window.print() を呼ぶことで、
+  // Safari / Chrome のポップアップブロックの影響を受けないようにする。
+  const oldSheet = document.getElementById('pdf-print-sheet');
+  oldSheet?.remove();
+
+  const sheet = document.createElement('div');
+  sheet.id = 'pdf-print-sheet';
+  sheet.innerHTML = `
+    <section class="pdf-print-page">
+      <h1>${escapeHtml(title)}</h1>
+      <div class="meta">入試対策証明ジェネレーター　／　${escapeHtml(meta.problem_number ?? '')}</div>
+      <div class="badge">問題</div>
+      <div class="figure">${image ? `<img src="${image}" alt="問題図">` : '<div>図なし</div>'}</div>
+      <section class="question"><h3>問題</h3>${subproblems}</section>
+      <section><h3>与えられている条件</h3><ul class="conditions">${conditions}</ul></section>
+      ${followHtml}
+    </section>
+    <section class="pdf-print-page pdf-print-answer">
+      ${answerHtmlForPrint(data)}
+    </section>
+  `;
+  document.body.appendChild(sheet);
+
+  const cleanup = () => {
+    sheet.remove();
+    window.removeEventListener('afterprint', cleanup);
+  };
+
+  window.addEventListener('afterprint', cleanup, { once: true });
+
+  // 印刷用DOMの画像が描画されてから印刷する。
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      window.print();
+    });
+  });
 }
 
 function renderProblem(data) {
