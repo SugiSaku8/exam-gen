@@ -1,3 +1,4 @@
+import { logger } from './logger.js';
 const normalize = s => String(s ?? '').replace(/\s+/g, '').replace(/＝/g, '=').trim();
 
 function parseLines(answer) {
@@ -76,6 +77,7 @@ function check2017(problem, answer) {
 }
 
 export function checkProof(problem, answer) {
+  logger.info('CHECK', 'checkProof開始', { template: problem?.generation?.template_id, answerLength: String(answer ?? '').length });
   const template = problem?.generation?.template_id ?? problem?.generation?.source_template ?? '';
   const year = Number(problem?.metadata?.year);
   if (template.includes('ISOSCELES_PARALLEL_ASA') || year === 2014) return check2014(problem, answer);

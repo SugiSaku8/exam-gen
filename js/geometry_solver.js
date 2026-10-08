@@ -1,3 +1,4 @@
+import { logger } from './logger.js';
 /**
  * geometry_solver.js
  *
@@ -1609,6 +1610,7 @@ export function solveGeometry(
   templateId,
   parameters = {}
 ) {
+  logger.debug('GEOMETRY', 'solveGeometry', { templateId, parameters });
   switch (templateId) {
 
     case
@@ -1639,6 +1641,7 @@ export function generateGeometry(
   templateId,
   parameters = {}
 ) {
+  const finish = logger.time('GEOMETRY', `幾何生成 ${templateId}`);
   const geometry =
     solveGeometry(
       templateId,
@@ -1659,7 +1662,9 @@ export function generateGeometry(
         };
 
 
+  logger.debug('GEOMETRY', '幾何検証結果', validation);
   if (!validation.valid) {
+    logger.error('GEOMETRY', '幾何生成結果が不正', validation);
     const message =
       [
         `生成した図形が不正です。`,
@@ -1672,7 +1677,7 @@ export function generateGeometry(
 
   geometry.constraints =
     validation;
-
+  finish({ points: geometry.points?.size ?? 0, errors: validation.errors.length, warnings: validation.warnings.length });
   return geometry;
 }
 

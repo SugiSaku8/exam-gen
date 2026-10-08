@@ -1,3 +1,4 @@
+import { logger } from './logger.js';
 export class CanvasManager {
   constructor(container) {
     this.container = container;
@@ -8,6 +9,7 @@ export class CanvasManager {
   }
 
   create(width = 900, height = 620) {
+    logger.info('CANVAS', 'Canvas作成', { width, height });
     this.width = width;
     this.height = height;
     this.container.innerHTML = '';
@@ -24,6 +26,7 @@ export class CanvasManager {
   }
 
   clear() {
+    logger.debug('CANVAS', 'Canvasクリア');
     if (!this.ctx) return;
     this.ctx.clearRect(0, 0, this.width, this.height);
   }

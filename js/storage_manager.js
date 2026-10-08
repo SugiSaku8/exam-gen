@@ -1,3 +1,4 @@
+import { logger } from './logger.js';
 /**
  * storage_manager.js
  *
@@ -49,6 +50,7 @@ function sanitizeFileName(name) {
 }
 
 export function createSaveData(problem, name) {
+  logger.debug('STORAGE', '保存データを作成', { name, year: problem?.metadata?.year });
   return {
     format: 'SHIZUOKA_PROOF_GENERATOR_SAVE',
     format_version: '1.1.0',
@@ -59,6 +61,7 @@ export function createSaveData(problem, name) {
 }
 
 export function downloadSave(saveData) {
+  logger.info('STORAGE', 'PC保存を開始', { name: saveData?.name });
   const name = sanitizeFileName(saveData?.save_name);
   const blob = new Blob([JSON.stringify(saveData, null, 2)], { type: 'application/json;charset=utf-8' });
   const url = URL.createObjectURL(blob);
@@ -72,6 +75,7 @@ export function downloadSave(saveData) {
 }
 
 export function readSaveFile(file) {
+  logger.info('STORAGE', 'PCファイル読み込みを開始', { name: file?.name });
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
@@ -236,6 +240,7 @@ function deleteCookie(id) {
  * Cookie容量超過でも localStorage 側には保存を残す。
  */
 export function saveBrowser(saveData) {
+  logger.info('STORAGE', 'ブラウザ保存を開始', { name: saveData?.name });
   const id = safeId();
   let localSaved = false;
   let cookieSaved = false;
@@ -282,6 +287,7 @@ export function listBrowserSaves() {
 }
 
 export function loadBrowser(id) {
+  logger.info('STORAGE', 'ブラウザ保存を読み込み', { id });
   try {
     return loadLocalStorage(id);
   } catch (localError) {
@@ -294,6 +300,7 @@ export function loadBrowser(id) {
 }
 
 export function deleteBrowser(id) {
+  logger.info('STORAGE', 'ブラウザ保存を削除', { id });
   deleteLocalStorage(id);
   deleteCookie(id);
 }

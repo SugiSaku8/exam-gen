@@ -1,3 +1,4 @@
+import { logger } from './logger.js';
 function getPoint(geometry, id) {
   const points = geometry?.points;
   if (points instanceof Map) return points.get(id);
@@ -54,6 +55,7 @@ export function validate2014Proof(problem, options = {}) {
 
 const VALIDATORS = { SHIZUOKA_CIRCLE_ISOSCELES_PARALLEL_ASA_001: validate2014Proof };
 export function validateProof(problem, options = {}) {
+  logger.debug('VALIDATE', 'proof検証開始', { template: problem?.generation?.template_id });
   const template = problem?.generation?.template_id ?? 'SHIZUOKA_CIRCLE_ISOSCELES_PARALLEL_ASA_001';
   return (VALIDATORS[template] ?? validate2014Proof)(problem, options);
 }

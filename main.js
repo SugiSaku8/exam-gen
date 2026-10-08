@@ -1,9 +1,11 @@
+import { logger } from './js/logger.js';
 import { ProofGenerator } from './js/generator.js';
 import { checkProof } from './js/proof_checker.js';
 import { generateAutoProblem, getTemplateInfo } from './js/problem_generator.js';
 import { createSaveData, downloadSave, readSaveFile, saveBrowser, listBrowserSaves, loadBrowser, deleteBrowser } from './js/storage_manager.js';
 
 const generator = new ProofGenerator();
+logger.info('APP', 'アプリケーション初期化');
 const canvasContainer = document.querySelector('#canvas-container');
 if (canvasContainer) generator.initializeCanvas(canvasContainer);
 
@@ -201,6 +203,7 @@ function getFollowupAnswer(data) {
 }
 
 function renderAnswer(data) {
+  logger.debug('UI', '解答表示データを構築');
   const content = $('#answer-content');
   if (!content) return;
   const steps = getProofSteps(data);
@@ -246,6 +249,7 @@ function answerHtmlForPrint(data) {
 }
 
 function exportPdf() {
+  logger.info('PDF', 'PDF印刷処理を開始');
   if (!generator.data) throw new Error('書き出す問題がありません。');
 
   const data = generator.data;
@@ -299,12 +303,14 @@ function exportPdf() {
   // 印刷用DOMの画像が描画されてから印刷する。
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
+      logger.info('PDF', 'ブラウザ印刷ダイアログを表示');
       window.print();
     });
   });
 }
 
 function renderProblem(data) {
+  logger.info('UI', '問題を画面へ描画', { template: data?.generation?.template_id, year: data?.metadata?.year });
   const meta = data.metadata ?? {};
   const problemInfo = $('#problem-info');
   if (problemInfo) problemInfo.textContent = `${meta.prefecture ?? '静岡県'}　${meta.year ?? ''}年度　数学　${meta.problem_number ?? ''}`;
@@ -361,12 +367,16 @@ function selectedFilters() {
 }
 
 async function refresh() {
+  const finish = logger.time('APP', `refresh [mode=${currentMode}]`);
   try {
     if (currentMode === 'past') {
       // 過去問モードでは年度選択UIを持たせず、対応年度からランダムに表示。
       const years = [2014, 2015, 2016, 2017];
       const year = years[Math.floor(Math.random() * years.length)];
-      renderProblem(await generator.load(year));
+      logger.info('APP', `過去問モード: ${year}年度を読み込み`);
+      const data = await generator.load(year);
+      renderProblem(data);
+      finish({ mode: currentMode, year });
       return;
     }
 
@@ -377,7 +387,9 @@ async function refresh() {
       rotation: $('#rotate-figure')?.checked ? undefined : 0
     });
     renderProblem(data);
+    finish({ mode: currentMode, template: data?.generation?.template_id });
   } catch (error) {
+    logger.error('APP', 'refreshに失敗', error);
     if (result) {
       result.className = 'bubble proof-result invalid';
       result.innerHTML = `<strong>生成できませんでした。</strong><br>${escapeHtml(error.message)}`;
@@ -395,8 +407,10 @@ $('#show-answer')?.addEventListener('click', () => setAnswerVisible($('#answer-p
 $('#pdf-export')?.addEventListener('click', () => { try { exportPdf(); } catch (error) { showStorageMessage(error.message, true); } });
 
 $('#check-proof')?.addEventListener('click', () => {
+  logger.info('CHECK', '証明入力の検証を開始');
   const checked = checkProof(generator.data, proofAnswer.value);
   result.className = `bubble proof-result ${checked.valid ? 'valid' : 'invalid'}`;
+  logger.info('CHECK', checked.valid ? '証明OK' : '証明NG', checked);
   result.innerHTML = checked.valid
     ? '<strong>証明OK</strong><br>決定的ルールによる証明検証を通過しました。'
     : `<strong>証明NG</strong><ul>${checked.errors.map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul>`;

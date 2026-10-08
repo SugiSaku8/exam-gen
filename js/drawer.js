@@ -1,3 +1,4 @@
+import { logger } from './logger.js';
 export class Drawer {
   constructor(canvasManager) {
     this.canvasManager = canvasManager;
@@ -54,14 +55,15 @@ export class Drawer {
   }
 
   drawGeometry(geometry) {
-    if (!this.ctx) return;
+    if (!this.ctx) { logger.warn('DRAW', 'Canvas contextがありません'); return; }
+    logger.info('DRAW', '図形描画開始', { points: geometry?.points?.size ?? Object.keys(geometry?.points ?? {}).length, segments: geometry?.segments?.length ?? 0, lines: geometry?.lines?.length ?? 0, circles: geometry?.circles?.length ?? 0 });
 
     this.canvasManager.clear();
     const g = this.normalizeGeometry(geometry);
     const points = [...g.points.values()].filter(p =>
       Number.isFinite(p.x) && Number.isFinite(p.y)
     );
-    if (!points.length) return;
+    if (!points.length) { logger.warn('DRAW', '有効な点がないため描画を中止'); return; }
 
     const width = this.canvasManager.width;
     const height = this.canvasManager.height;
@@ -226,6 +228,7 @@ export class Drawer {
     }
 
     this.ctx.restore();
+    logger.debug('DRAW', '図形描画完了', { renderedPoints: points.length, labels: placedLabels.length, scale: Number(scale.toFixed(3)) });
   }
 
   drawInfiniteLine(a, b, width, height) {

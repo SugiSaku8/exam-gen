@@ -1,3 +1,4 @@
+import { logger } from './logger.js';
 /**
  * template_registry.js
  *
@@ -44,6 +45,7 @@ export function getTemplate(id) {
 }
 
 export function filterTemplates(filters = {}) {
+  logger.debug('TEMPLATE', 'テンプレートをフィルタ', filters);
   return TEMPLATE_CATALOG.filter(t => {
     if (filters.proofType && filters.proofType !== 'all' && t.proofType !== filters.proofType) return false;
     if (filters.method && filters.method !== 'all' && t.method !== filters.method) return false;
@@ -61,6 +63,7 @@ export function filterTemplates(filters = {}) {
  * 難易度だけ近い候補も次点として残す。
  */
 export function rankTemplates(filters = {}, random = Math.random) {
+  logger.debug('TEMPLATE', 'テンプレートをランキング', filters);
   const candidates = TEMPLATE_CATALOG.map(template => {
     let score = 0;
     const reasons = [];
@@ -95,5 +98,6 @@ export function rankTemplates(filters = {}, random = Math.random) {
     return { template, score, reasons };
   }).sort((a, b) => b.score - a.score);
 
+  logger.info('TEMPLATE', 'テンプレートランキング完了', candidates.map(x => ({ id: x.template.id, score: Number(x.score.toFixed(3)), reasons: x.reasons })));
   return candidates;
 }

@@ -1,3 +1,4 @@
+import { logger } from './logger.js';
 import { generateGeometry, geometryToJSON } from './geometry_solver.js';
 import { TEMPLATE_CATALOG, filterTemplates, rankTemplates, getTemplate } from './template_registry.js';
 import { generate2015, generate2016, generate2017 } from './templates/canonical_generators.js';
@@ -83,16 +84,21 @@ function generate2014FollowUp(parameters) {
 }
 
 export function generate2014Problem(options = {}) {
+  const finish = logger.time('PROBLEM', '2014型問題生成');
   const seed = options.seed ?? Date.now();
   const random = createSeededRandom(seed);
+  logger.debug('PROBLEM', '2014型パラメータ生成', { seed });
   const parameters = generate2014Parameters(options, random);
+  logger.debug('PROBLEM', '2014型パラメータ', parameters);
   const parameterValidation = validate2014Parameters(parameters);
   if (!parameterValidation.valid) throw new Error(parameterValidation.errors.join('\n'));
 
+  logger.debug('PROBLEM', '幾何図形生成を開始', { template: TEMPLATE_2014 });
   const geometry = generateGeometry(TEMPLATE_2014, parameters);
+  logger.info('PROBLEM', '幾何図形生成完了', geometry.constraints);
   const proof = generate2014Proof();
 
-  return {
+  const result = {
     schema_version: '1.1.0',
     metadata: {
       id: 'generated_2014_math_07',
@@ -138,6 +144,8 @@ export function generate2014Problem(options = {}) {
       geometry: geometry.constraints ?? null
     }
   };
+  finish({ template: TEMPLATE_2014, seed, answer: parameters.answerCAE });
+  return result;
 }
 
 const GENERATORS = {
@@ -158,23 +166,33 @@ export class ProblemGenerator {
 }
 
 export function generateProblem(templateId, options = {}) {
+  logger.info('PROBLEM', 'テンプレート指定生成', { templateId, retries: options.retries ?? 5 });
   const generator = GENERATORS[templateId];
   if (!generator) throw new Error(`未知の問題テンプレートです: ${templateId}`);
   let lastError = null;
   for (let i = 0; i < (options.retries ?? 5); i++) {
-    try { return generator(options); }
-    catch (error) { lastError = error; }
+    try {
+      logger.debug('PROBLEM', `生成試行 ${i + 1}/${options.retries ?? 5}`, { templateId });
+      const result = generator(options);
+      logger.info('PROBLEM', '生成成功', { templateId, attempt: i + 1 });
+      return result;
+    } catch (error) {
+      lastError = error;
+      logger.warn('PROBLEM', '生成試行に失敗', { templateId, attempt: i + 1, message: error.message });
+    }
   }
   throw lastError ?? new Error('問題生成に失敗しました。');
 }
 
 export function generateAutoProblem(options = {}) {
+  logger.info('PROBLEM', '自動テンプレート選択を開始', options.filters ?? {});
   const random = options.random ?? createSeededRandom(options.seed ?? Date.now());
   const ranked = rankTemplates(options.filters ?? {}, random);
   if (!ranked.length) throw new Error('生成可能な問題テンプレートがありません。');
 
   // 最上位候補を選ぶ。条件が同点ならrankTemplates内の乱数で分散する。
   const selected = ranked[0];
+  logger.info('PROBLEM', 'テンプレート選択結果', { template: selected.template.id, score: selected.score, reasons: selected.reasons });
   const result = generateProblem(selected.template.id, options);
   result.generation = {
     ...(result.generation ?? {}),

@@ -1,3 +1,4 @@
+import { logger } from './logger.js';
 import { loadYear } from './json_loader.js';
 import { analyzeProblem, normalizeProblem } from './json_analyzer.js';
 import { CanvasManager } from './canvas_manager.js';
@@ -18,6 +19,7 @@ export class ProofGenerator {
   }
 
   async load(year) {
+    const finish = logger.time('GEN', `過去問ロード ${year}`);
     this.data = normalizeProblem(await loadYear(year));
     this.data.geometryModel = this.data.geometryModel ?? this.data.geometry?.coordinates ? {
       coordinate_system: this.data.geometry.coordinate_system,
@@ -30,19 +32,26 @@ export class ProofGenerator {
     this.currentYear = year;
     this.currentSubproblem = null;
     this.mode = 'past';
+    finish({ year, subproblems: this.getSubproblems().length });
+    logger.info('GEN', '過去問ロード完了', this.data.metadata);
     return this.data;
   }
 
   generate(options = {}) {
+    const finish = logger.time('GEN', '類題生成');
+    logger.info('GEN', '生成オプション', options);
     this.data = normalizeProblem(this.problemGenerator.generate(options));
     this.analysis = analyzeProblem(this.data);
     this.currentYear = null;
     this.currentSubproblem = null;
     this.mode = 'generated';
+    finish({ template: this.data.generation?.template_id, seed: this.data.generation?.seed });
+    logger.info('GEN', '類題生成完了', this.data.generation);
     return this.data;
   }
 
   loadData(data, mode = 'generated') {
+    logger.info('GEN', '保存データを読み込み', { mode, year: data?.metadata?.year });
     this.data = normalizeProblem(structuredClone(data ?? {}));
     this.analysis = analyzeProblem(this.data);
     this.currentYear = this.data.metadata?.year ?? null;
@@ -52,13 +61,15 @@ export class ProofGenerator {
   }
 
   initializeCanvas(container) {
+    logger.info('CANVAS', 'Canvasを初期化');
     this.canvasManager = new CanvasManager(container);
     this.canvasManager.create(900, 620);
     this.drawer = new Drawer(this.canvasManager);
   }
 
   draw() {
-    if (!this.drawer || !this.data) return;
+    if (!this.drawer || !this.data) { logger.warn('DRAW', '描画対象がありません'); return; }
+    logger.debug('DRAW', '図形描画を開始');
     this.drawer.drawGeometry(this.data.geometryModel ?? this.data.geometry);
   }
 

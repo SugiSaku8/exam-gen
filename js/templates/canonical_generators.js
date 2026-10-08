@@ -1,3 +1,4 @@
+import { logger } from '../logger.js';
 import { BASE_2015 } from './2015.js';
 import { BASE_2016 } from './2016.js';
 import { BASE_2017 } from './2017.js';
@@ -320,11 +321,23 @@ function circumcenter(A, B, C) {
 }
 
 export function generate2015(options = {}) {
-  return build2015(options, seededRandom(options.seed ?? Date.now()));
+  const finish = logger.time('PROBLEM', 'generate2015');
+  logger.debug('PROBLEM', 'generate2015 options', options);
+  const result = build2015(options, seededRandom(options.seed ?? Date.now()));
+  finish({ template: result.generation?.template_id, seed: result.generation?.seed });
+  return result;
 }
 export function generate2016(options = {}) {
-  return build2016(options, seededRandom(options.seed ?? Date.now()));
+  const finish = logger.time('PROBLEM', 'generate2016');
+  logger.debug('PROBLEM', 'generate2016 options', options);
+  const result = build2016(options, seededRandom(options.seed ?? Date.now()));
+  finish({ template: result.generation?.template_id, seed: result.generation?.seed });
+  return result;
 }
 export function generate2017(options = {}) {
-  return build2017(options, seededRandom(options.seed ?? Date.now()));
+  const finish = logger.time('PROBLEM', 'generate2017');
+  logger.debug('PROBLEM', 'generate2017 options', options);
+  const result = build2017(options, seededRandom(options.seed ?? Date.now()));
+  finish({ template: result.generation?.template_id, seed: result.generation?.seed });
+  return result;
 }

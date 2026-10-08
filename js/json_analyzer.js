@@ -1,4 +1,6 @@
+import { logger } from './logger.js';
 export function normalizeProblem(data) {
+  logger.debug('ANALYZE', '問題データを正規化', { year: data?.metadata?.year, template: data?.generation?.template_id });
   const problem = structuredClone(data ?? {});
   const analysis = problem.analysis ?? {};
 
@@ -34,6 +36,7 @@ export function normalizeProblem(data) {
 }
 
 export function analyzeProblem(data) {
+  logger.debug('ANALYZE', '問題を分析');
   const problem = normalizeProblem(data);
   const analysis = problem.analysis;
   return {
