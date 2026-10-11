@@ -83,12 +83,43 @@ export function filterTemplates(filters = {}) {
  * 条件から候補をスコアリングする。
  * 年度は評価項目に含めない。
  *
- * exact条件が全て一致する候補を最優先し、
- * 難易度だけ近い候補も次点として残す。
+ * 難易度・証明形式・証明方法・指定条件を満たす候補だけを残し、
+ * 残った候補の中で乱数を用いて偏りを減らす。
  */
 export function rankTemplates(filters = {}, random = Math.random) {
   logger.debug('TEMPLATE', 'テンプレートをランキング', filters);
-  const candidates = TEMPLATE_CATALOG.map(template => {
+  // 難易度は「近いものを選ぶ」ソフト条件にせず、生成ファミリーを制約する。
+  // 6〜8は厳密な代数的数値答案を構成できる2017型に限定する。
+  const requestedDifficulty = filters.difficulty && filters.difficulty !== 'all'
+    ? Number(filters.difficulty) : null;
+  const allowedYearsByDifficulty = {
+    3: [2014, 2015],
+    4: [2016],
+    5: [2017, 2024, 2025, 2026],
+    6: [2017],
+    7: [2017],
+    8: [2017]
+  };
+  const allowedYears = requestedDifficulty == null
+    ? null : allowedYearsByDifficulty[requestedDifficulty];
+  const sourceCandidates = allowedYears
+    ? TEMPLATE_CATALOG.filter(template => allowedYears.includes(template.year))
+    : TEMPLATE_CATALOG;
+  if (requestedDifficulty != null && !allowedYears) {
+    logger.warn('TEMPLATE', '未対応の難易度が指定されました', requestedDifficulty);
+    return [];
+  }
+  const requestedFeatures = Array.isArray(filters.features)
+    ? filters.features.filter(Boolean)
+    : (filters.feature && filters.feature !== 'all' ? [filters.feature] : []);
+  // 選択された証明形式・方法・条件も黙って無視せず、全て満たす候補だけを残す。
+  const compatibleCandidates = sourceCandidates.filter(template => {
+    if (filters.proofType && filters.proofType !== 'all' && template.proofType !== filters.proofType) return false;
+    if (filters.method && filters.method !== 'all' && template.method !== filters.method) return false;
+    if (requestedFeatures.some(feature => !template.features.includes(feature))) return false;
+    return true;
+  });
+  const candidates = compatibleCandidates.map(template => {
     let score = 0;
     const reasons = [];
 
@@ -110,11 +141,9 @@ export function rankTemplates(filters = {}, random = Math.random) {
       if (matched === requestedFeatures.length) reasons.push('図形条件一致');
       else if (matched > 0) reasons.push(`${matched}/${requestedFeatures.length}条件一致`);
     }
-    if (filters.difficulty && filters.difficulty !== 'all') {
-      const d = Number(filters.difficulty);
-      const diff = Math.abs(template.difficulty - d);
-      score += Math.max(0, 45 - diff * 20);
-      if (diff === 0) reasons.push('難易度一致');
+    if (requestedDifficulty != null) {
+      reasons.push(`難易度${requestedDifficulty}の生成プロファイル`);
+      score += 45;
     }
 
     // 条件未指定時は同じ問題ばかりにならないよう軽く乱数を加える。

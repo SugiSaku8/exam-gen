@@ -98,6 +98,12 @@ function isPerfectSquareInt(n) {
   return r * r === n;
 }
 
+function isSquareFreeInt(n) {
+  if (!Number.isInteger(n) || n < 2) return false;
+  for (let p = 2; p * p <= n; p++) if (n % (p * p) === 0) return false;
+  return true;
+}
+
 function simplifyFraction(n, d) {
   if (!Number.isInteger(n) || !Number.isInteger(d) || d === 0) return null;
   if (d < 0) { n = -n; d = -d; }
@@ -174,6 +180,26 @@ function classifySimpleNumber(value, options = {}) {
     }
   }
 
+  // 二次の無理数を含む分数 (a+b√c)/d を厳密候補として照合する。
+  // cは平方因子を含まない整数に限定し、循環小数への近似は行わない。
+  const maxCoefficient = options.maxCoefficient ?? 100;
+  for (let d = 1; d <= maxDenominator; d++) {
+    for (let c = 2; c <= maxRadicand; c++) {
+      if (!isSquareFreeInt(c)) continue;
+      const root = Math.sqrt(c);
+      for (let b = 1; b <= maxDenominator; b++) {
+        const a = Math.round(value * d - b * root);
+        if (a === 0 || Math.abs(a) > maxCoefficient) continue;
+        // 既約な代数的分数だけを採用する。
+        if (gcdInt(gcdInt(a, b), d) !== 1) continue;
+        const candidate = (a + b * root) / d;
+        if (Math.abs(value - candidate) <= tolerance) {
+          return { type: 'quadratic_fraction', a, b, denominator: d, radicand: c };
+        }
+      }
+    }
+  }
+
   return null;
 }
 
@@ -185,6 +211,12 @@ function formatSimpleNumber(value, options = {}) {
   if (classified.type === 'integer') return `${classified.numerator}`;
   if (classified.type === 'fraction') {
     return `${classified.numerator}/${classified.denominator}`;
+  }
+  if (classified.type === 'quadratic_fraction') {
+    const a = classified.a;
+    const bText = classified.b === 1 ? '' : String(classified.b);
+    const numerator = `${a}${classified.b >= 0 ? '+' : ''}${bText}√${classified.radicand}`;
+    return classified.denominator === 1 ? numerator : `(${numerator})/${classified.denominator}`;
   }
   const rootNumerator = classified.numerator === 1
     ? `√${classified.radicand}`
@@ -422,11 +454,35 @@ function solveEqualDistancePoint(B, C, E) {
   return add(B, mul(v, s));
 }
 
+function formatNestedRadicalLength(value) {
+  if (!(Number.isFinite(value) && value > 0)) return null;
+  const square = value * value;
+  for (let d = 1; d <= 24; d++) {
+    for (let c = 2; c <= 30; c++) {
+      if (!isSquareFreeInt(c)) continue;
+      for (let b = -12; b <= 12; b++) {
+        if (b === 0) continue;
+        const a = Math.round(square * d - b * Math.sqrt(c));
+        if (a === 0 || Math.abs(a) > 50 || gcdInt(gcdInt(a, b), d) !== 1) continue;
+        if (Math.abs(square - (a + b * Math.sqrt(c)) / d) > 1e-8) continue;
+        const rootTerm = `${Math.abs(b) === 1 ? '' : Math.abs(b)}√${c}`;
+        const inside = `${a}${b > 0 ? '+' : '−'}${rootTerm}`;
+        return d === 1 ? `√(${inside})` : `√((${inside})/${d})`;
+      }
+    }
+  }
+  return null;
+}
+
 function formatGeneratedLength(value, exactText = null) {
   if (exactText) return exactText;
   const simple = formatSimpleNumber(value);
-  if (!simple) throw new Error(`生成された長さが許容形式ではありません: ${value}`);
-  return simple;
+  if (simple) return simple;
+  // 中間的な補助線分だけは、必要に応じて厳密な二重根号で記録する。
+  // 最終的な数値答案は assertSimpleNumericAnswer でより簡単な形式に制限する。
+  const nested = formatNestedRadicalLength(value);
+  if (nested) return nested;
+  throw new Error(`生成された長さを有限の厳密表現にできません: ${value}`);
 }
 
 function build2017(options, random) {
@@ -435,7 +491,16 @@ function build2017(options, random) {
     { halfArc: 60, bAngle: 300, ratio: [1, 2], scale: Math.sqrt(3), scaleText: '√3' },
     { halfArc: 90, bAngle: 270, ratio: [1, 1], scale: Math.sqrt(2), scaleText: '√2' }
   ];
-  const selectedShape = choice(random, simpleShapes);
+  const difficultyShapes = {
+    3: { halfArc: 60, bAngle: 240, ratio: [1, 1], scale: 2, scaleText: '2' },
+    4: { halfArc: 60, bAngle: 300, ratio: [1, 2], scale: Math.sqrt(3), scaleText: '√3' },
+    5: { halfArc: 60, bAngle: 300, ratio: [1, 2], scale: Math.sqrt(3), scaleText: '√3' },
+    6: { halfArc: 60, bAngle: 240, ratio: [1, 1], scale: 2, scaleText: '2' },
+    7: { halfArc: 60, bAngle: 300, ratio: [1, 2], scale: 1, scaleText: '1' },
+    8: { halfArc: 60, bAngle: 240, ratio: [1, 1], scale: 1, scaleText: '1' }
+  };
+  const requestedDifficulty = Number(options.difficulty);
+  const selectedShape = difficultyShapes[requestedDifficulty] ?? choice(random, simpleShapes);
   const halfArc = options.halfArc ?? selectedShape.halfArc;
   const bAngle = options.bAngle ?? selectedShape.bAngle;
   const ratio = options.ratio ?? selectedShape.ratio;
@@ -480,18 +545,45 @@ function build2017(options, random) {
   } else if (halfArc === 90 && bAngle === 270 && ratio[0] === 1 && ratio[1] === 1 && Math.abs(scale - Math.sqrt(2)) < 1e-8) {
     adText = '2'; aeText = '√2'; ecText = '√2';
   }
-  data.problem.parts[1].question = `AD=${adText}cm、AE=${aeText}cm、EC=${ecText}cmのとき、△CDEの面積は△DGEの面積の何倍か答えなさい。`;
-  data.problem.parts[1].target.answer = areaRatioAnswer;
-  data.follow_up.P2.answer = areaRatioAnswer;
+  let numericAnswer = areaRatioAnswer;
+  let numericTask = 'area_ratio';
+  let numericSolutionChain = null;
+  const difficulty = Number(options.difficulty);
+  if (difficulty >= 6 && difficulty <= 8) {
+    const multiplier = difficulty === 8 ? 3 : difficulty === 7 ? 2 : 1;
+    const numericValue = AD + multiplier * AE;
+    assertSimpleNumericAnswer(numericValue, `難易度${difficulty}・線分の長さの和`);
+    numericAnswer = formatSimpleNumber(numericValue);
+    numericTask = difficulty === 8 ? 'AD+3AE' : difficulty === 7 ? 'AD+2AE' : 'AD+AE';
+    data.problem.parts[1].question = `AD=${adText}cm、AE=${aeText}cm、EC=${ecText}cmのとき、${numericTask}の値を求めなさい。答えは最も簡単な厳密な形で表しなさい。`;
+    data.problem.parts[1].unit = 'cm';
+    data.follow_up.P2.unit = ' cm';
+    delete data.follow_up.P2.formula;
+    delete data.follow_up.P2.substitution;
+    numericSolutionChain = [
+      `AD=${adText}、AE=${aeText}を用いる。`,
+      `${numericTask}を代入すると、${numericAnswer}となる。`
+    ];
+  } else {
+    data.problem.parts[1].question = `AD=${adText}cm、AE=${aeText}cm、EC=${ecText}cmのとき、△CDEの面積は△DGEの面積の何倍か答えなさい。`;
+  }
+  data.problem.parts[1].target.answer = numericAnswer;
+  data.follow_up.P2.answer = numericAnswer;
+  if (numericSolutionChain) data.follow_up.P2.solution_chain = numericSolutionChain;
   const exactAD = formatGeneratedLength(AD);
   const exactAE = formatGeneratedLength(AE);
   const exactEC = formatGeneratedLength(EC);
-  const exactAG = formatGeneratedLength(AG);
-  const exactDG = formatGeneratedLength(DG);
+  // AG/DGは最終設問で与えない補助線分。厳密な許容形式に落とせない場合は
+  // 近似小数を保存せず、値を未設定として扱う（誤った循環小数の表示を防ぐ）。
+  let exactAG = null, exactDG = null;
+  try { exactAG = formatGeneratedLength(AG); } catch { /* 補助値は省略 */ }
+  try { exactDG = formatGeneratedLength(DG); } catch { /* 補助値は省略 */ }
   data.follow_up.P2.givens = { AD: exactAD, AE: exactAE, EC: exactEC };
   data.variables.AG.value = exactAG;
   data.variables.DG.value = exactDG;
-  data.generation.parameters.derived = { AD: exactAD, AE: exactAE, EC: exactEC, AG: exactAG, DG: exactDG, areaRatio: areaRatioAnswer };
+  data.generation.parameters.derived = { AD: exactAD, AE: exactAE, EC: exactEC, areaRatio: areaRatioAnswer, targetAnswer: numericAnswer, numericTask };
+  if (exactAG !== null) data.generation.parameters.derived.AG = exactAG;
+  if (exactDG !== null) data.generation.parameters.derived.DG = exactDG;
   return data;
 }
 

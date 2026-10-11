@@ -101,7 +101,9 @@ function checkConditions(problem, checks) {
         if (/circle|円周上|on the circle|on circle/i.test(statement)) {
           const names = parsePointList(statement);
           const center = points.O ?? { x: 0, y: 0 };
-          const radius = Number(problem?.geometry?.coordinate_system?.radius ?? 1);
+          const declaredRadius = Number(problem?.geometry?.coordinate_system?.radius ?? 1);
+          const inferredRadius = names.length && points[names[0]] ? distance(points[names[0]], center) : NaN;
+          const radius = Number.isFinite(inferredRadius) && inferredRadius > EPS ? inferredRadius : declaredRadius;
           for (const name of names) {
             if (!points[name]) { addCheck(checks, `${condition.id ?? type}/${variant}: 点${name}の円周条件`, false, '座標がありません。'); continue; }
             addCheck(checks, `${condition.id ?? type}/${variant}: 点${name}の円周条件`, close(distance(points[name], center), radius), null, distance(points[name], center), radius);
@@ -157,7 +159,9 @@ function checkConditions(problem, checks) {
       if (type === 'diameter') {
         const m = /([A-Z])([A-Z]).{0,30}(?:diameter|直径)/i.exec(statement);
         if (m && points[m[1]] && points[m[2]]) {
-          const center = points.O ?? { x: 0, y: 0 }, radius = Number(problem?.geometry?.coordinate_system?.radius ?? 1);
+          const center = points.O ?? { x: 0, y: 0 };
+          const inferredRadius = points[m[1]] ? distance(points[m[1]], center) : NaN;
+          const radius = Number.isFinite(inferredRadius) && inferredRadius > EPS ? inferredRadius : Number(problem?.geometry?.coordinate_system?.radius ?? 1);
           const chord = distance(points[m[1]], points[m[2]]);
           const midpoint = { x: (points[m[1]].x + points[m[2]].x) / 2, y: (points[m[1]].y + points[m[2]].y) / 2 };
           addCheck(checks, `${condition.id ?? type}/${variant}: ${m[1]}${m[2]}が直径`, close(chord, 2 * radius) && distance(midpoint, center) <= EPS, null, chord, 2 * radius);
@@ -209,7 +213,8 @@ function checkConditions(problem, checks) {
 }
 
 function checkProofTarget(problem, checks) {
-  const target = typeof problem?.proof?.target === 'string' ? problem.proof.target : problem?.proof?.target?.statement ?? '';
+  const rawTarget = problem?.proof?.target ?? problem?.proof?.P1?.target ?? problem?.proof?.P1?.goal ?? problem?.proof?.selected_solution?.target ?? problem?.problem?.statement?.parts?.find(p => p.id === 'P1')?.target ?? '';
+  const target = typeof rawTarget === 'string' ? rawTarget : rawTarget?.statement ?? rawTarget?.conclusion ?? '';
   const variant = 'P1', points = pointMap(problem, variant);
   if (!target) return;
   const sideEquality = parseSideEqualities(target);
@@ -234,9 +239,10 @@ function checkProofTarget(problem, checks) {
 }
 
 function checkAnswer(problem, checks) {
-  const part = problem?.problem?.statement?.parts?.find(p => p.id === 'P2');
-  const answer = String(part?.answer ?? problem?.follow_up?.answer ?? '');
-  const target = String(part?.target ?? problem?.follow_up?.target ?? '');
+  const part = problem?.problem?.statement?.parts?.find(p => p.id === 'P2') ?? problem?.problem?.parts?.find(p => p.id === 'P2') ?? problem?.problem?.parts?.[1];
+  const followup = problem?.follow_up?.problems?.[0] ?? problem?.follow_up?.P2 ?? problem?.follow_up;
+  const answer = String(part?.answer ?? part?.target?.answer ?? followup?.answer ?? '');
+  const target = String(part?.target?.statement ?? part?.target ?? followup?.target ?? followup?.question ?? '');
   if (!answer || !target) return;
   const points = pointMap(problem, 'P2');
   const angleTarget = /∠([A-Z]{3})/.exec(target);
@@ -258,14 +264,14 @@ function checkAnswer(problem, checks) {
 }
 
 export function validateProblemGeometry(problem) {
-  const hasCoordinates = Boolean(problem?.geometry?.coordinates?.points);
+  const hasCoordinates = Boolean(problem?.geometry?.coordinates?.points || problem?.geometryModel?.points || problem?.geometry?.points);
   if (!hasCoordinates) {
-    const hasModel = Boolean(problem?.geometryModel?.points);
+    const hasModel = Boolean(problem?.geometryModel?.points || problem?.geometry?.points);
     return {
       version: '1.0.0', independent: true,
       status: hasModel ? 'structural-only' : 'not-applicable', valid: null,
       check_count: 0, passed_count: 0, failed_count: 0, checks: [], errors: [],
-      note: hasModel ? 'GeometryModelはありますが、条件を独立再計算する座標JSONがないため、条件レベルの検証は省略しました。' : 'この問題形式には独立検証用の座標データがありません。'
+      note: hasModel ? 'GeometryModelの座標から検証します。' : 'この問題形式には独立検証用の座標データがありません。'
     };
   }
   const checks = [];

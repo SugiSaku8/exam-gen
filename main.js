@@ -3,6 +3,7 @@ import { ProofGenerator } from './js/generator.js';
 import { checkProof } from './js/proof_checker.js';
 import { generateAutoProblem, getTemplateInfo } from './js/problem_generator.js';
 import { createSaveData, downloadSave, readSaveFile, saveBrowser, listBrowserSaves, loadBrowser, deleteBrowser } from './js/storage_manager.js';
+import { generateAnswerModel } from './js/answer_generator.js';
 
 const generator = new ProofGenerator();
 logger.info('APP', 'アプリケーション初期化');
@@ -125,119 +126,60 @@ function showView(view) {
 }
 
 
-function getProofSteps(data) {
-  const proof = data?.proof;
-  if (!proof) return [];
-  const selected = proof.selected_solution?.steps;
-  if (Array.isArray(selected)) return selected;
-  // 生成問題は proof.steps、過去問JSONは selected_solution.steps / P1.solution_steps など、
-  // 複数の証明データ形式を持ち得る。優先順位を明示して、
-  // 「結論だけ」の表示にならないよう、必ず証明の中間過程を拾う。
-  if (Array.isArray(proof.steps)) {
-    return proof.steps.map((x, i) => ({
-      id: x?.id ?? `S${i + 1}`,
-      statement: x?.statement ?? x,
-      reason: x?.reason ?? ''
-    }));
-  }
-
-  const candidates = [proof.P1, proof.P2];
-  for (const item of candidates) {
-    if (Array.isArray(item?.solution_steps)) {
-      return item.solution_steps.map((x, i) => ({
-        id: x?.id ?? `S${i + 1}`,
-        statement: x?.statement ?? x,
-        reason: x?.reason ?? ''
-      }));
-    }
-  }
-  return [];
+function getAnswerModel(data) {
+  return generateAnswerModel(data);
 }
 
-function getProofTarget(data) {
-  const proof = data?.proof;
-  return proof?.target?.statement
-    ?? proof?.target
-    ?? proof?.P1?.target
-    ?? '';
+function getProofSteps(data) { return getAnswerModel(data).steps; }
+function getProofTarget(data) { return getAnswerModel(data).target; }
+function getProofMethod(data) {
+  const method = getAnswerModel(data).criterion;
+  return japaneseProofCriterion(method);
 }
+function getFollowupAnswer(data) { return getAnswerModel(data).followup; }
 
 function japaneseProofCriterion(value) {
   if (!value) return '';
-
   const normalized = String(value).trim();
-
   const labels = {
-    AA: '2組の角',
-    AA_similarity: '2組の角',
-    ASA: '1組の辺と両端の角',
-    SAS: '2組の辺と間の角',
-    SSS: '3組の辺',
-    parallelism_to_parallelogram: '平行四辺形の性質',
-    parallelism_to_parallelograms: '平行四辺形の性質',
-    constraint_based: '図形の条件と性質',
-    proof_graph_traversal: '図形の性質'
+    AA: '2組の角がそれぞれ等しい',
+    AA_similarity: '2組の角がそれぞれ等しい',
+    ASA: '1組の辺とその両端の角がそれぞれ等しい',
+    one_side_and_two_endpoint_angles: '1組の辺とその両端の角がそれぞれ等しい',
+    SAS: '2組の辺とその間の角がそれぞれ等しい',
+    SSS: '3組の辺がそれぞれ等しい',
+    parallelism_to_parallelogram: '平行四辺形の性質を利用する',
+    parallelism_to_parallelograms: '平行四辺形の性質を利用する',
+    constraint_based: '図形の条件と性質を利用する',
+    proof_graph_traversal: '図形の性質を順に用いる',
+    isosceles_triangle_by_equal_base_angles: '底角が等しい三角形の性質を利用する'
   };
-
   return labels[normalized] ?? normalized;
 }
 
-function getProofMethod(data) {
-  const proof = data?.proof;
-  const criterion = proof?.target_decomposition?.japanese_criterion
-    ?? proof?.target_decomposition?.criterion
-    ?? proof?.target_decomposition?.similarity_criterion
-    ?? proof?.criterion
-    ?? proof?.similarity_criterion
-    ?? proof?.P1?.method
-    ?? '';
-
-  return japaneseProofCriterion(criterion);
-}
-
-function getFollowupAnswer(data) {
-  const follow = data?.follow_up;
-  if (!follow) return null;
-  const candidates = [];
-  if (Array.isArray(follow.problems)) candidates.push(...follow.problems);
-  for (const value of Object.values(follow)) {
-    if (value && typeof value === 'object' && !Array.isArray(value)) candidates.push(value);
-  }
-  for (const item of candidates) {
-    const answer = item?.answer ?? item?.target?.answer ?? item?.derived?.answer;
-    if (answer !== undefined && answer !== null && answer !== '') {
-      return { prompt: item.prompt ?? item.question ?? item.target?.object ?? '追問', answer, unit: item.unit ?? item.target?.unit ?? '' };
-    }
-  }
-  return null;
-}
-
 function renderAnswer(data) {
-  logger.debug('UI', '解答表示データを構築');
+  logger.debug('UI', '決定的ルールから解答を組み立て');
   const content = $('#answer-content');
   if (!content) return;
-  const steps = getProofSteps(data);
-  const target = getProofTarget(data);
-  const method = getProofMethod(data);
-  const follow = getFollowupAnswer(data);
+  const model = getAnswerModel(data);
   const parts = [];
-
-  if (target) parts.push(`<div><strong>証明すること：</strong>${escapeHtml(target)}</div>`);
-  if (method) parts.push(`<div><strong>証明の基準：</strong>${escapeHtml(method)}</div>`);
-  if (steps.length) {
+  if (model.target) parts.push(`<div><strong>証明すること：</strong>${escapeHtml(model.target)}</div>`);
+  if (model.criterion) parts.push(`<div><strong>証明の基準：</strong>${escapeHtml(japaneseProofCriterion(model.criterion))}</div>`);
+  if (model.steps.length) {
     parts.push('<div class="answer-steps">');
-    for (const [i, step] of steps.entries()) {
-      const statement = step?.statement ?? '';
-      const reason = step?.reason ?? '';
-      parts.push(`<div class="answer-step"><strong>${i + 1}.</strong> ${escapeHtml(statement)}${reason ? `<br><span class="muted">理由：${escapeHtml(reason)}</span>` : ''}</div>`);
+    for (const [i, step] of model.steps.entries()) {
+      parts.push(`<div class="answer-step"><strong>${i + 1}.</strong> ${escapeHtml(step.statement)}${step.reason ? `<br><span class="muted">理由：${escapeHtml(step.reason)}</span>` : ''}</div>`);
     }
     parts.push('</div>');
   }
-  if (target) parts.push(`<div class="answer-final">したがって、${escapeHtml(target)}。</div>`);
-  if (follow) {
-    parts.push(`<div class="answer-followup"><div class="answer-followup-title">追問の答え</div><div>${escapeHtml(follow.prompt)}</div><div class="answer-final">答え：${escapeHtml(follow.answer)}${escapeHtml(follow.unit)}</div></div>`);
+  if (model.target) parts.push(`<div class="answer-final">したがって、${escapeHtml(model.target)}。</div>`);
+  if (model.followup) {
+    parts.push('<div class="answer-followup"><div class="answer-followup-title">追問の答え</div>');
+    parts.push(`<div>${escapeHtml(model.followup.prompt)}</div>`);
+    if (model.followup.steps.length) parts.push(`<div class="answer-steps">${model.followup.steps.map((step, i) => `<div class="answer-step"><strong>${i + 1}.</strong> ${escapeHtml(step.statement)}</div>`).join('')}</div>`);
+    parts.push(`<div class="answer-final">答え：${escapeHtml(model.followup.answer)}${escapeHtml(model.followup.unit)}</div></div>`);
   }
-  content.innerHTML = parts.join('') || '<div>この問題の解答データはありません。</div>';
+  content.innerHTML = parts.join('') || '<div>この問題には解答に利用できる証明ステップがありません。</div>';
 }
 
 function setAnswerVisible(visible) {
@@ -251,13 +193,10 @@ function setAnswerVisible(visible) {
 }
 
 function answerHtmlForPrint(data) {
-  const steps = getProofSteps(data);
-  const target = getProofTarget(data);
-  const method = getProofMethod(data);
-  const follow = getFollowupAnswer(data);
-  const stepHtml = steps.map((step, i) => `<div class="print-step"><strong>${i + 1}.</strong> ${escapeHtml(step?.statement ?? '')}${step?.reason ? `<br><span>理由：${escapeHtml(step.reason)}</span>` : ''}</div>`).join('');
-  const followHtml = follow ? `<div class="print-follow"><h3>追問の答え</h3><p>${escapeHtml(follow.prompt)}</p><p><strong>答え：${escapeHtml(follow.answer)}${escapeHtml(follow.unit)}</strong></p></div>` : '';
-  return `<h2>解答</h2>${target ? `<p><strong>証明すること：</strong>${escapeHtml(target)}</p>` : ''}${method ? `<p><strong>証明の基準：</strong>${escapeHtml(method)}</p>` : ''}${stepHtml}${target ? `<div class="print-final">したがって、${escapeHtml(target)}。</div>` : ''}${followHtml}`;
+  const model = getAnswerModel(data);
+  const stepHtml = model.steps.map((step, i) => `<div class="print-step"><strong>${i + 1}.</strong> ${escapeHtml(step.statement)}${step.reason ? `<br><span>理由：${escapeHtml(step.reason)}</span>` : ''}</div>`).join('');
+  const followHtml = model.followup ? `<div class="print-follow"><h3>追問の答え</h3><p>${escapeHtml(model.followup.prompt)}</p>${model.followup.steps.map((step, i) => `<p>${i + 1}. ${escapeHtml(step.statement)}</p>`).join('')}<p><strong>答え：${escapeHtml(model.followup.answer)}${escapeHtml(model.followup.unit)}</strong></p></div>` : '';
+  return `<h2>解答</h2>${model.target ? `<p><strong>証明すること：</strong>${escapeHtml(model.target)}</p>` : ''}${model.criterion ? `<p><strong>証明の基準：</strong>${escapeHtml(japaneseProofCriterion(model.criterion))}</p>` : ''}${stepHtml}${model.target ? `<div class="print-final">したがって、${escapeHtml(model.target)}。</div>` : ''}${followHtml}`;
 }
 
 function exportPdf() {
@@ -321,6 +260,34 @@ function exportPdf() {
   });
 }
 
+function fitBadgeText(element) {
+  if (!element) return;
+  const fit = () => {
+    const style = getComputedStyle(element);
+    const canvas = fitBadgeText.measureCanvas ??= document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const base = element._fitBaseFontSize ?? (element._fitBaseFontSize = Number.parseFloat(style.fontSize) || 24);
+    const horizontalPadding = (Number.parseFloat(style.paddingLeft) || 0) + (Number.parseFloat(style.paddingRight) || 0);
+    const available = Math.max(24, element.clientWidth - horizontalPadding - 4);
+    let size = base;
+    ctx.font = `${style.fontWeight} ${size}px ${style.fontFamily}`;
+    while (size > 12 && ctx.measureText(element.textContent).width > available) {
+      size -= 0.5;
+      ctx.font = `${style.fontWeight} ${size}px ${style.fontFamily}`;
+    }
+    element.style.fontSize = `${size}px`;
+    element.style.whiteSpace = ctx.measureText(element.textContent).width > available ? 'normal' : 'normal';
+    element.style.overflowWrap = 'anywhere';
+    element.style.lineHeight = '1.15';
+  };
+  requestAnimationFrame(fit);
+  if (!element._fitObserver && 'ResizeObserver' in window) {
+    element._fitObserver = new ResizeObserver(fit);
+    element._fitObserver.observe(element);
+  }
+}
+
 function renderProblem(data) {
   logger.info('UI', '問題を画面へ描画', { template: data?.generation?.template_id, year: data?.metadata?.year });
   const meta = data.metadata ?? {};
@@ -332,15 +299,12 @@ function renderProblem(data) {
   const proofType = /≡|合同/.test(target) ? '合同' : /∽|相似/.test(target) ? '相似' : /＝|=/.test(target) ? '長さの等式' : '証明';
   if (templateBadge) templateBadge.textContent = proofType;
   const criterionBadge = $('#criterion-badge');
-  if (criterionBadge) criterionBadge.textContent = getProofMethod(data) || '図形の性質';
+  if (criterionBadge) { criterionBadge.textContent = japaneseProofCriterion(getProofMethod(data)) || '図形の性質'; fitBadgeText(criterionBadge); }
   const conditions = data.given_conditions ?? [];
   const conditionCount = $('#condition-count');
   if (conditionCount) conditionCount.textContent = `条件:${conditions.length}`;
   if (problemInfo) {
-    const difficulty = Number(info?.difficulty ?? data.generation?.difficulty ?? 4);
-    problemInfo.textContent = '★'.repeat(Math.max(1, Math.min(8, difficulty)));
-    problemInfo.setAttribute('aria-label', `難易度 ${difficulty}`);
-    problemInfo.title = `${meta.year ?? ''}年度 ${meta.problem_number ?? ''}`;
+
   }
   const conditionsEl = $('#conditions');
   if (conditionsEl) conditionsEl.innerHTML = conditions.map(x => {
@@ -348,9 +312,9 @@ function renderProblem(data) {
     return `<li>${escapeHtml(text)}</li>`;
   }).join('');
 
-  const subproblems = data.problem?.subproblems ?? [];
+  const subproblems = data.problem?.subproblems ?? data.problem?.parts ?? [];
   const problemText = $('#problem-text');
-  if (problemText) problemText.innerHTML = subproblems.map(x => `<p><strong>（${escapeHtml(x.id ?? '')}）</strong> ${escapeHtml(x.prompt ?? '')}</p>`).join('');
+  if (problemText) problemText.innerHTML = subproblems.map(x => `<p><strong>（${escapeHtml(x.label ?? x.id ?? '')}）</strong> ${escapeHtml(x.prompt ?? x.question ?? x.target?.statement ?? '')}</p>`).join('');
 
   const followups = data.follow_up?.problems ?? Object.values(data.follow_up ?? {}).map(x => x?.question ? x : null).filter(Boolean);
   const showFollowup = $('#show-followup')?.checked;
@@ -441,15 +405,55 @@ $('#more-options')?.addEventListener('click', () => {
   button?.setAttribute('aria-expanded', String(Boolean(open)));
 });
 $('#settings-button')?.addEventListener('click', () => { modeButtons.forEach(b => b.classList.remove('active')); showView('settings'); });
+function openModal({ title, body }) {
+  const modal = $('#app-modal');
+  if (!modal) return;
+  $('#app-modal-title').textContent = title;
+  $('#app-modal-body').innerHTML = body;
+  modal.classList.remove('hidden');
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('modal-open');
+  $('#app-modal-close')?.focus();
+}
+function closeModal() {
+  const modal = $('#app-modal');
+  if (!modal) return;
+  modal.classList.add('hidden');
+  modal.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('modal-open');
+  $('#hint-button')?.focus();
+}
 $('#hint-button')?.addEventListener('click', () => {
-  if (!generator.data) { window.alert('まず「作成」から問題を生成してください。'); return; }
-  const method = getProofMethod(generator.data);
+  if (!generator.data) {
+    openModal({ title: 'HINT', body: '<p>まず「作成」から問題を生成してください。</p>' });
+    return;
+  }
+  const model = getAnswerModel(generator.data);
   const conditions = (generator.data.given_conditions ?? []).map(x => typeof x === 'string' ? x : x.statement ?? '').filter(Boolean);
   const hints = [];
-  if (method) hints.push(`証明方法：${method}`);
-  if (conditions.length) hints.push(`条件を整理し、仮定から使える性質を探しましょう。\n・${conditions.slice(0, 4).join('\n・')}`);
-  hints.push('図だけを根拠にせず、「仮定より」「円周角の定理より」「平行線の性質より」など、理由を明記してつなげましょう。');
-  window.alert(hints.join('\n\n'));
+  if (model.criterion) hints.push(`<p><strong>証明方法：</strong>${escapeHtml(japaneseProofCriterion(model.criterion))}</p>`);
+  if (conditions.length) hints.push(`<p>条件を整理し、仮定から使える性質を探しましょう。</p><ul>${conditions.slice(0, 5).map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul>`);
+  hints.push('<p>図だけを根拠にせず、「仮定より」「円周角の定理より」「平行線の性質より」など、理由を明記してつなげましょう。</p>');
+  if (model.steps.length) hints.push(`<p class="hint-subtle">考える手がかり：まずは「${escapeHtml(model.steps[0].statement)}」につながる条件を探してみましょう。</p>`);
+  openModal({ title: 'HINT — 解法の手がかり', body: hints.join('') });
+});
+$('#app-modal-close')?.addEventListener('click', closeModal);
+$('#app-modal')?.addEventListener('click', event => { if (event.target === $('#app-modal')) closeModal(); });
+document.addEventListener('keydown', event => { if (event.key === 'Escape' && !$('#app-modal')?.classList.contains('hidden')) closeModal(); });
+$('#show-answer')?.addEventListener('click', () => {
+  if (!generator.data) {
+    openModal({ title: 'ANSWER', body: '<p>まず「作成」から問題を生成してください。</p>' });
+    return;
+  }
+  const panel = $('#answer-panel');
+  const isVisible = !panel?.classList.contains('hidden');
+  if (isVisible) {
+    setAnswerVisible(false);
+  } else {
+    renderAnswer(generator.data);
+    setAnswerVisible(true);
+    requestAnimationFrame(() => $('#answer-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
+  }
 });
 $('#save-button')?.addEventListener('click', () => {
   const menu = $('#save-menu');
@@ -468,12 +472,32 @@ $('#pdf-export')?.addEventListener('click', () => { try { exportPdf(); } catch (
 
 $('#check-proof')?.addEventListener('click', () => {
   logger.info('CHECK', '証明入力の検証を開始');
-  const checked = checkProof(generator.data, proofAnswer.value);
+  if (!generator.data) {
+    result.className = 'bubble proof-result invalid';
+    result.textContent = '先に問題を作成するか、過去問を表示してください。';
+    return;
+  }
+  const checked = checkProof(generator.data, proofAnswer?.value ?? '');
   result.className = `bubble proof-result ${checked.valid ? 'valid' : 'invalid'}`;
-  logger.info('CHECK', checked.valid ? '証明OK' : '証明NG', checked);
-  result.innerHTML = checked.valid
-    ? '<strong>証明OK</strong><br>決定的ルールによる証明検証を通過しました。'
-    : `<strong>証明NG</strong><ul>${checked.errors.map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul>`;
+  logger.info('CHECK', checked.valid ? '基準一致' : '基準未達', checked);
+  const title = checked.valid ? '登録済みの確認基準を満たしました' : '確認できていない項目があります';
+  const factLabels = {
+    'AC=AD':'仮定の辺の等しさ','ACB=ADG':'円周角の等しさ','BAC=BDC':'円周角の等しさ','BDC=DCE':'平行線の角の性質','DCE=GAD':'円周角の等しさ','BAC=GAD':'角の推移','target':'証明目標',
+    right1:'直径に対する円周角',right2:'平行線と垂直の関係',bisect:'二等辺三角形の角',arc:'同じ弧に対する円周角',angle2:'角の推移',dfab:'DFとABの平行',adbf:'ADとBFの平行',p1:'平行四辺形の成立',bfad:'BFとADの長さ',p2:'もう一つの平行四辺形',adec:'ADとECの長さ',
+    isosceles:'二等辺三角形の条件','base-angles':'二等辺三角形の底角','target-angles':'証明目標に必要な角の等しさ','parallel-angle':'平行線の角の性質','circle-angle':'円周角の性質','angle-transitivity':'角の推移','second-angle':'2組目の角の等しさ','side-equality':'辺の等しさ','given-angle':'仮定の角の等しさ'
+  };
+  const facts = checked.facts?.length ? `<p><strong>確認した項目：</strong>${checked.facts.map(x => escapeHtml(factLabels[x] ?? x)).join('、')}</p>` : '';
+  const errors = checked.errors?.length ? `<ul>${checked.errors.map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul>` : '';
+  const warnings = checked.warnings?.length ? `<ul>${checked.warnings.map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul>` : '';
+  result.innerHTML = `<strong>${title}</strong>${facts}${errors}${warnings}`;
+});
+$('#clear-proof')?.addEventListener('click', () => {
+  if (proofAnswer) proofAnswer.value = '';
+  if (result) {
+    result.className = 'bubble proof-result';
+    result.textContent = '証明を入力すると、ここに判定が表示されます。';
+  }
+  proofAnswer?.focus();
 });
 
 $('#save-pc')?.addEventListener('click', () => {

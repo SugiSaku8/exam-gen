@@ -60,7 +60,7 @@
 
     <section id="problem-view" class="problem-view hidden">
       <div class="problem-topline" aria-label="問題の属性">
-        <div id="template-badge" class="type-pill">相似</div><div id="criterion-badge" class="meta-pill">証明方法</div><div id="condition-count" class="meta-pill">条件:0</div><div id="problem-info" class="difficulty-pill" aria-label="難易度">★★★★</div>
+        <div id="template-badge" class="type-pill">相似</div><div id="criterion-badge" class="meta-pill">証明方法</div><div id="condition-count" class="meta-pill">条件:0</div><div id="problem-info" class="difficulty-pill" aria-label="難易度">JAPAAAAN</div>
       </div>
       <div class="problem-layout">
         <div class="figure-panel"><div class="figure-label">図</div><div id="canvas-container" class="canvas-container"></div></div>
@@ -70,6 +70,20 @@
         </article>
         <article id="answer-panel" class="solution-panel hidden" aria-hidden="true"><div class="figure-label">証明ステップ</div><div id="answer-content"></div></article>
       </div>
+      <section class="student-proof-panel" aria-labelledby="student-proof-title">
+        <div class="student-proof-heading">
+          <div><h2 id="student-proof-title">自分の証明を書く</h2><p>1行ごとに「主張：理由」の形で書くと、根拠を確認しやすくなります。</p></div>
+          <span class="checker-scope">登録済み7年度の基準で確認</span>
+        </div>
+        <label class="student-proof-label" for="proof-answer">証明答案</label>
+        <textarea id="proof-answer" rows="7" spellcheck="false" placeholder="例：
+∠ABC＝∠DEF：仮定
+∠ABC＝∠GHI：円周角の定理
+したがって、△ABC∽△GHI：2組の角がそれぞれ等しい"></textarea>
+        <div class="student-proof-actions"><button id="check-proof" type="button">証明を確認</button><button id="clear-proof" type="button" class="secondary-action">消去</button></div>
+        <div id="proof-result" class="bubble proof-result" role="status" aria-live="polite">証明を入力すると、ここに判定が表示されます。</div>
+        <p class="checker-disclaimer">判定は登録済みの証明パターンとの照合です。別解や表現の違いを誤判定することがあるため、数学的な正誤の最終保証ではありません。</p>
+      </section>
     </section>
 
     <div class="bottom-bar is-before-generation">
@@ -93,6 +107,13 @@
   </main>
 </div>
 <div class="compat-controls" aria-hidden="true"><button id="save-pc" type="button"></button><button id="load-pc" type="button"></button><button id="save-browser" type="button"></button><button id="load-browser" type="button"></button><button id="delete-browser" type="button"></button></div>
+<div id="app-modal" class="app-modal hidden" role="dialog" aria-modal="true" aria-labelledby="app-modal-title" aria-hidden="true">
+  <div class="app-modal-card">
+    <div class="app-modal-header"><h2 id="app-modal-title">HINT</h2><button id="app-modal-close" class="app-modal-close" type="button" aria-label="閉じる">×</button></div>
+    <div id="app-modal-body" class="app-modal-body"></div>
+    <div class="app-modal-footer"><button type="button" class="app-modal-confirm" onclick="document.getElementById('app-modal-close').click()">閉じる</button></div>
+  </div>
+</div>
 <script src="./js/theorem-catalog.js"></script><script src="./js/geometry-relations.js"></script><script src="./js/proof-rules.js"></script><script src="./js/problem-data-engine.js"></script><script type="module" src="./main.js"></script>
 </body>
 </html>

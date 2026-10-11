@@ -1,5 +1,8 @@
 import { logger } from './logger.js';
 import { auditGeneratedProblem } from './proof_audit.js';
+import { verifyProblemMathematics } from './independent_math_verifier.js';
+import { assertProofFirstPlanReady } from './formal_proof_system.js';
+import { assertDifficultyContract } from './difficulty_engine.js';
 import { validateProblemGeometry } from './geometry_validator.js';
 import { generateGeometry, geometryToJSON } from './geometry_solver.js';
 import { TEMPLATE_CATALOG, filterTemplates, rankTemplates, getTemplate } from './template_registry.js';
@@ -22,8 +25,27 @@ function randomChoice(random, values) {
 
 export function generate2014Parameters(options = {}, random = Math.random) {
   const arcRatio = options.arcRatio ?? { ab: 3, bc: 1 };
-  const unitAngle = options.unitAngle ?? randomChoice(random, [20, 22, 24, 26, 28, 30, 32, 34]);
-  const angleA = options.angleA ?? randomChoice(random, [60, 75, 90, 105, 120]);
+  const unitAngles = [20, 22, 24, 26, 28, 30, 32, 34];
+  const angleAs = [60, 75, 90, 105, 120];
+  let unitAngle = options.unitAngle;
+  let angleA = options.angleA;
+  if (unitAngle == null || angleA == null) {
+    const candidates = [];
+    for (const u of unitAngles) for (const a of angleAs) {
+      const span = (Number(arcRatio.ab) + Number(arcRatio.bc)) * u;
+      const answer = 180 - (Number(arcRatio.ab) + 1.5) * u;
+      const angleAFB = 180 - ((Number(arcRatio.ab) + 2) * u) / 2;
+      if (a - span > 0 && a + span < 180 && a + Number(arcRatio.ab) * u < 180 && span < 180 && answer > 0 && answer < 180 && angleAFB > 0 && angleAFB < 180) {
+        if (unitAngle == null || unitAngle === u) {
+          if (angleA == null || angleA === a) candidates.push({ unitAngle: u, angleA: a });
+        }
+      }
+    }
+    if (!candidates.length) throw new Error('2014型の角度条件を満たすパラメータの組がありません。');
+    const chosen = randomChoice(random, candidates);
+    unitAngle = chosen.unitAngle;
+    angleA = chosen.angleA;
+  }
   const angleAB = arcRatio.ab * unitAngle;
   const angleBC = arcRatio.bc * unitAngle;
   const angleB = angleA + angleAB;
@@ -50,6 +72,8 @@ export function validate2014Parameters(p) {
   const errors = [];
   const warnings = [];
   if (!(p.unitAngle > 0)) errors.push('unitAngleが正ではありません。');
+  if (!(p.angleD > 0)) errors.push('∠Dが正ではなく、図形の配置が成立しません。');
+  if (!(p.angleB > 0 && p.angleB < 180 && p.angleC > 0 && p.angleC < 180)) errors.push('角度が三角形・円周角の範囲外です。');
   if (!(p.arcRatio.ab > 0 && p.arcRatio.bc > 0)) errors.push('弧の比が正ではありません。');
   if (!(p.angleC - p.angleA < 180)) errors.push('弧ACが180°以上です。');
   if (!(p.answerCAE > 0 && p.answerCAE < 180)) errors.push('∠CAEが0°〜180°の範囲外です。');
@@ -171,15 +195,50 @@ export class ProblemGenerator {
   }
 }
 
+function difficultyProfileDescription(difficulty, templateId) {
+  if (difficulty >= 8) return '最難関：分子が a+b√c の分数（循環小数を禁止）';
+  if (difficulty === 7) return '発展：二次の無理数を含む厳密値（循環小数を禁止）';
+  if (difficulty === 6) return '上級：平方根を含む厳密値（循環小数を禁止）';
+  if (difficulty === 5 && templateId === 'SHIZUOKA_CIRCLE_ANGLE_BISECTOR_ISOSCELES_SIMILARITY_AREA_001') return '標準〜発展：既約分数の数値答案';
+  if (difficulty === 4) return '標準：複数段階の角度・長さ計算';
+  return '基礎：整数または簡潔な厳密値';
+}
+
 export function generateProblem(templateId, options = {}) {
   logger.info('PROBLEM', 'テンプレート指定生成', { templateId, retries: options.retries ?? 5 });
   const generator = GENERATORS[templateId];
   if (!generator) throw new Error(`未知の問題テンプレートです: ${templateId}`);
+  // Proof-first preflight: the reviewed target/rule plan must exist before
+  // any coordinates or random parameters are constructed.
+  const proofFirstPlan = assertProofFirstPlanReady(templateId);
   let lastError = null;
   for (let i = 0; i < (options.retries ?? 5); i++) {
     try {
       logger.debug('PROBLEM', `生成試行 ${i + 1}/${options.retries ?? 5}`, { templateId });
-      const result = generator(options);
+      const templateInfo = getTemplate(templateId);
+      const filterDifficulty = options.filters?.difficulty;
+      const requestedValue = options.difficulty
+        ?? (filterDifficulty && filterDifficulty !== 'all' ? filterDifficulty : undefined)
+        ?? templateInfo?.difficulty
+        ?? 4;
+      const parsedDifficulty = Number(requestedValue);
+      const requestedDifficulty = Number.isInteger(parsedDifficulty) && parsedDifficulty >= 3 && parsedDifficulty <= 8
+        ? parsedDifficulty : Number(templateInfo?.difficulty ?? 4);
+      const generationOptions = { ...options, difficulty: requestedDifficulty };
+      const result = generator(generationOptions);
+      result.generation = {
+        ...(result.generation ?? {}),
+        difficulty: requestedDifficulty,
+        difficulty_profile: difficultyProfileDescription(requestedDifficulty, templateId)
+      };
+      result.validation = { ...(result.validation ?? {}), proof_first_preflight: {
+        version: proofFirstPlan.version, direction: proofFirstPlan.direction,
+        target: proofFirstPlan.target, macro_rule: proofFirstPlan.rule,
+        required_condition_count: proofFirstPlan.required_conditions.length,
+        derivation_step_count: proofFirstPlan.derivation.length,
+        construction_allowed: proofFirstPlan.construction_allowed
+      }, proof_first_plan: proofFirstPlan
+      };
       // 生成器自身のチェックとは独立して、保存済み座標から幾何条件を再計算する。
       const independentGeometryAudit = validateProblemGeometry(result);
       if (independentGeometryAudit.valid === false) {
@@ -200,6 +259,32 @@ export function generateProblem(templateId, options = {}) {
         ...(result.validation ?? {}),
         theorem_audit: auditGeneratedProblem(result)
       };
+      // Strict, separately computed certificate. Partial is an acceptable
+      // generation result; a mathematical contradiction is never labelled verified.
+      const independentMathAudit = verifyProblemMathematics(result);
+      result.validation = {
+        ...(result.validation ?? {}),
+        independent_math_audit: independentMathAudit
+      };
+      logger.info('MATH_VERIFY', '独立数学検証完了', {
+        status: independentMathAudit.status,
+        mathematicallyVerified: independentMathAudit.mathematically_verified,
+        geometryChecks: independentMathAudit.summary.geometry_checks,
+        proofGroups: independentMathAudit.summary.proof_groups,
+        proofGroupsVerified: independentMathAudit.summary.fully_verified_proof_groups
+      });
+      if (independentMathAudit.status === 'failed') {
+        throw new Error(`独立数学検証で矛盾を検出しました: ${[...independentMathAudit.errors, ...independentMathAudit.warnings].slice(0, 5).join(' / ')}`);
+      }
+      // Difficulty is checked after construction using actual proof and answer data.
+      // Decimal fallbacks and mismatched radical answer forms fail closed.
+      const difficultyAudit = assertDifficultyContract(result, requestedDifficulty, { strictFamily: Boolean(options.strictDifficultyFamily) });
+      result.generation.difficulty_audit = difficultyAudit;
+      result.validation.difficulty_contract = difficultyAudit;
+      logger.info('DIFFICULTY_AUDIT', '難易度契約チェック完了', {
+        level: requestedDifficulty, status: difficultyAudit.status,
+        dimensions: difficultyAudit.dimensions
+      });
       logger.info('PROBLEM', '生成成功', { templateId, attempt: i + 1 });
       return result;
     } catch (error) {
@@ -214,12 +299,12 @@ export function generateAutoProblem(options = {}) {
   logger.info('PROBLEM', '自動テンプレート選択を開始', options.filters ?? {});
   const random = options.random ?? createSeededRandom(options.seed ?? Date.now());
   const ranked = rankTemplates(options.filters ?? {}, random);
-  if (!ranked.length) throw new Error('生成可能な問題テンプレートがありません。');
+  if (!ranked.length) throw new Error(`難易度${options.filters?.difficulty ?? ''}と条件に対応する問題テンプレートがありません。難易度を変更するか、詳細条件を減らしてください。`);
 
   // 最上位候補を選ぶ。条件が同点ならrankTemplates内の乱数で分散する。
   const selected = ranked[0];
   logger.info('PROBLEM', 'テンプレート選択結果', { template: selected.template.id, score: selected.score, reasons: selected.reasons });
-  const result = generateProblem(selected.template.id, options);
+  const result = generateProblem(selected.template.id, { ...options, strictDifficultyFamily: true });
   result.generation = {
     ...(result.generation ?? {}),
     auto_selected: true,
