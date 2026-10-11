@@ -269,3 +269,12 @@ button, select, input, textarea,
 .bottom-bar .save-button,.bottom-bar .answer-button,.bottom-bar .pdf-button{min-width:0;padding:7px 15px;font-size:16px;line-height:1.2;border-radius:10px;box-shadow:0 2px 0 #172e1c;}
 .bottom-bar .answer-button.is-active{box-shadow:0 0 0 2px #9bbac833}
 @media(max-width:700px){.bottom-bar{right:10px;bottom:10px;gap:6px}.bottom-bar .save-button,.bottom-bar .answer-button,.bottom-bar .pdf-button{padding:6px 11px;font-size:14px;border-radius:8px}}
+
+
+/* Settings page, matched to setting.pdf */
+.settings-view{position:relative;min-height:calc(100vh - 36px);margin:0;padding:0;color:#fff;background:var(--green);animation:none}
+.settings-view h1{margin:22px 0 28px;font-size:clamp(38px,5.3vw,60px);line-height:1.2;font-weight:800;color:#fff}
+.settings-message{margin:18px 0 0;text-align:center;font-size:clamp(24px,3.3vw,40px);font-weight:800;line-height:1.35;color:#fff}
+.settings-credits{position:absolute;top:40%;left:0;right:0;text-align:center;color:#fff;font-size:clamp(22px,3.1vw,36px);font-weight:800;line-height:1.48}
+.settings-credits p{margin:0}
+@media(max-width:700px){.settings-view{min-height:calc(100vh - 36px)}.settings-view h1{font-size:34px;margin:12px 0 22px}.settings-message{font-size:clamp(17px,4vw,24px)}.settings-credits{position:static;margin-top:100px;font-size:clamp(15px,3.7vw,22px);line-height:1.7;overflow-wrap:anywhere}}

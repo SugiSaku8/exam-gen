@@ -462,6 +462,48 @@ async function refresh() {
 modeButtons.forEach(button => button.addEventListener('click', () => setMode(button.dataset.mode)));
 $('#new-chat')?.addEventListener('click', () => { setMode('generated'); document.querySelector('#problem-view')?.style.setProperty('display', 'none'); document.querySelector('#setup-view')?.classList.remove('hidden'); document.querySelector('.bottom-bar')?.classList.add('is-before-generation'); if (proofAnswer) proofAnswer.value = ''; });
 $('#mobile-menu')?.addEventListener('click', () => document.body.classList.toggle('sidebar-open'));
+
+// 設定画面への切り替え
+const settingsButton = $('#settings-button');
+const settingsView = $('#settings-view');
+const setupView = $('#setup-view');
+const problemView = $('#problem-view');
+const bottomBar = document.querySelector('.bottom-bar');
+settingsButton?.addEventListener('click', () => {
+  setupView?.classList.add('hidden');
+  problemView?.classList.add('hidden');
+  settingsView?.classList.remove('hidden');
+  bottomBar?.classList.add('hidden');
+  modeButtons.forEach(button => button.classList.remove('active'));
+  settingsButton.classList.add('active');
+  document.body.classList.remove('sidebar-open');
+});
+$('#new-chat')?.addEventListener('click', () => {
+  settingsView?.classList.add('hidden');
+  setupView?.classList.remove('hidden');
+  bottomBar?.classList.remove('hidden');
+  settingsButton?.classList.remove('active');
+});
+
+
+// 詳細設定パネルの開閉（HTML内のインライン処理に依存せず main.js で管理）
+const moreOptionsButton = $('#more-options');
+const advancedOptionsPanel = $('#advanced-options');
+if (moreOptionsButton && advancedOptionsPanel) {
+  const syncAdvancedOptions = opening => {
+    advancedOptionsPanel.classList.toggle('hidden', !opening);
+    advancedOptionsPanel.classList.toggle('is-open', opening);
+    moreOptionsButton.classList.toggle('is-open', opening);
+    moreOptionsButton.setAttribute('aria-expanded', String(opening));
+    advancedOptionsPanel.setAttribute('aria-hidden', String(!opening));
+  };
+  // HTMLの初期状態を保ちつつ、ボタンで確実に開閉できるようにする。
+  syncAdvancedOptions(!advancedOptionsPanel.classList.contains('hidden'));
+  moreOptionsButton.addEventListener('click', () => {
+    const opening = advancedOptionsPanel.classList.contains('hidden');
+    syncAdvancedOptions(opening);
+  });
+}
 generateButton?.addEventListener('click', refresh);
 $('#show-followup')?.addEventListener('change', () => { if (generator.data) renderProblem(generator.data); });
 
