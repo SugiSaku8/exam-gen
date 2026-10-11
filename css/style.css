@@ -48,3 +48,10 @@ body.modal-open{overflow:hidden;}
 .checker-disclaimer{font-size:12px;line-height:1.55;color:#58645b;margin:10px 0 0;}
 @media(max-width:700px){.student-proof-panel{padding:16px;border-radius:20px;}#proof-answer{font-size:15px;min-height:180px}.student-proof-heading{display:block}.checker-scope{display:inline-block;margin-top:10px;}}
 @media print{.student-proof-panel{display:none!important;}}
+
+/* MathJax 数式：スマートフォンでも式がカード幅を押し広げない */
+.mjx-container { max-width: 100%; }
+.mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; padding: .2rem 0; }
+.question-prompt .mjx-container, .conditions-block .mjx-container, .answer-step .mjx-container { vertical-align: middle; }
+
+.problem-description { line-height: 1.9; margin: 0 0 1rem; }

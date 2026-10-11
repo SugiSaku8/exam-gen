@@ -5,8 +5,8 @@
  */
 const SUPPORTED_LEVELS = Object.freeze([3, 4, 5, 6, 7, 8]);
 
-const YEARS_BY_LEVEL = Object.freeze({ 3: [2014, 2015], 4: [2016], 5: [2017, 2024, 2025, 2026], 6: [2017], 7: [2017], 8: [2017] });
-const MIN_SOURCE_STEPS_BY_YEAR = Object.freeze({ 2014: 7, 2015: 7, 2016: 8, 2017: 8, 2024: 9, 2025: 10, 2026: 11 });
+const YEARS_BY_LEVEL = Object.freeze({ 3: [2014, 2015], 4: [2016], 5: [2017, 2018, 2019, 2020, 2024, 2025, 2026], 6: [2017], 7: [2017], 8: [2017] });
+const MIN_SOURCE_STEPS_BY_YEAR = Object.freeze({ 2014: 7, 2015: 7, 2016: 8, 2017: 8, 2018: 5, 2019: 3, 2020: 5, 2024: 9, 2025: 10, 2026: 11 });
 
 const PROFILE = Object.freeze({
   3: { label: '基礎', calculation: '整数・簡潔な厳密値', numeric: 'simple-exact' },

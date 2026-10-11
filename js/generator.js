@@ -4,6 +4,7 @@ import { analyzeProblem, normalizeProblem } from './json_analyzer.js';
 import { CanvasManager } from './canvas_manager.js';
 import { Drawer } from './drawer.js';
 import { ProblemGenerator } from './problem_generator.js';
+import { generateSourceYear } from './templates/source_year_generators.js';
 
 export class ProofGenerator {
   constructor(options = {}) {
@@ -20,14 +21,17 @@ export class ProofGenerator {
 
   async load(year) {
     const finish = logger.time('GEN', `過去問ロード ${year}`);
-    this.data = normalizeProblem(await loadYear(year));
-    this.data.geometryModel = this.data.geometryModel ?? this.data.geometry?.coordinates ? {
+    const rawData = [2018, 2019, 2020].includes(Number(year))
+      ? generateSourceYear(Number(year), { seed: Number(year), preserveSourceGeometry: true })
+      : await loadYear(year);
+    this.data = normalizeProblem(rawData);
+    this.data.geometryModel = this.data.geometryModel ?? (this.data.geometry?.coordinates ? {
       coordinate_system: this.data.geometry.coordinate_system,
       points: this.data.geometry.coordinates.points ?? {},
       segments: (this.data.geometry.objects?.segments ?? []).map(id => ({ id, from: id[0], to: id[1] })).filter(x => this.data.geometry.coordinates.points[x.from] && this.data.geometry.coordinates.points[x.to]),
       lines: (this.data.geometry.objects?.lines ?? []).map(id => ({ id, through: [id[0], id[1]] })).filter(x => this.data.geometry.coordinates.points[x.through[0]] && this.data.geometry.coordinates.points[x.through[1]]),
       circles: [{ id: this.data.geometry.coordinates.circle?.id ?? 'O1', center: this.data.geometry.coordinates.circle?.center ?? 'O', radius: this.data.geometry.coordinates.circle?.radius ?? this.data.geometry.coordinate_system?.radius ?? 1 }]
-    } : this.data.geometryModel;
+    } : undefined);
     this.analysis = analyzeProblem(this.data);
     this.currentYear = year;
     this.currentSubproblem = null;

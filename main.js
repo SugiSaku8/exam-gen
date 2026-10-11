@@ -164,21 +164,21 @@ function renderAnswer(data) {
   if (!content) return;
   const model = getAnswerModel(data);
   const parts = [];
-  if (model.target) parts.push(`<div><strong>証明すること：</strong>${escapeHtml(model.target)}</div>`);
+  if (model.target) parts.push(`<div><strong>証明すること：</strong>${formatMathText(model.target)}</div>`);
   if (model.criterion) parts.push(`<div><strong>証明の基準：</strong>${escapeHtml(japaneseProofCriterion(model.criterion))}</div>`);
   if (model.steps.length) {
     parts.push('<div class="answer-steps">');
     for (const [i, step] of model.steps.entries()) {
-      parts.push(`<div class="answer-step"><strong>${i + 1}.</strong> ${escapeHtml(step.statement)}${step.reason ? `<br><span class="muted">理由：${escapeHtml(step.reason)}</span>` : ''}</div>`);
+      parts.push(`<div class="answer-step"><strong>${i + 1}.</strong> ${formatMathText(step.statement)}${step.reason ? `<br><span class="muted">理由：${formatMathText(step.reason)}</span>` : ''}</div>`);
     }
     parts.push('</div>');
   }
-  if (model.target) parts.push(`<div class="answer-final">したがって、${escapeHtml(model.target)}。</div>`);
+  if (model.target) parts.push(`<div class="answer-final">したがって、${formatMathText(model.target)}。</div>`);
   if (model.followup) {
     parts.push('<div class="answer-followup"><div class="answer-followup-title">追問の答え</div>');
-    parts.push(`<div>${escapeHtml(model.followup.prompt)}</div>`);
-    if (model.followup.steps.length) parts.push(`<div class="answer-steps">${model.followup.steps.map((step, i) => `<div class="answer-step"><strong>${i + 1}.</strong> ${escapeHtml(step.statement)}</div>`).join('')}</div>`);
-    parts.push(`<div class="answer-final">答え：${escapeHtml(model.followup.answer)}${escapeHtml(model.followup.unit)}</div></div>`);
+    parts.push(`<div>${formatMathText(model.followup.prompt)}</div>`);
+    if (model.followup.steps.length) parts.push(`<div class="answer-steps">${model.followup.steps.map((step, i) => `<div class="answer-step"><strong>${i + 1}.</strong> ${formatMathText(step.statement)}</div>`).join('')}</div>`);
+    parts.push(`<div class="answer-final">答え：${formatMathText(model.followup.answer)}${escapeHtml(model.followup.unit)}</div></div>`);
   }
   content.innerHTML = parts.join('') || '<div>この問題には解答に利用できる証明ステップがありません。</div>';
 }
@@ -195,9 +195,9 @@ function setAnswerVisible(visible) {
 
 function answerHtmlForPrint(data) {
   const model = getAnswerModel(data);
-  const stepHtml = model.steps.map((step, i) => `<div class="print-step"><strong>${i + 1}.</strong> ${escapeHtml(step.statement)}${step.reason ? `<br><span>理由：${escapeHtml(step.reason)}</span>` : ''}</div>`).join('');
-  const followHtml = model.followup ? `<div class="print-follow"><h3>追問の答え</h3><p>${escapeHtml(model.followup.prompt)}</p>${model.followup.steps.map((step, i) => `<p>${i + 1}. ${escapeHtml(step.statement)}</p>`).join('')}<p><strong>答え：${escapeHtml(model.followup.answer)}${escapeHtml(model.followup.unit)}</strong></p></div>` : '';
-  return `<h2>解答</h2>${model.target ? `<p><strong>証明すること：</strong>${escapeHtml(model.target)}</p>` : ''}${model.criterion ? `<p><strong>証明の基準：</strong>${escapeHtml(japaneseProofCriterion(model.criterion))}</p>` : ''}${stepHtml}${model.target ? `<div class="print-final">したがって、${escapeHtml(model.target)}。</div>` : ''}${followHtml}`;
+  const stepHtml = model.steps.map((step, i) => `<div class="print-step"><strong>${i + 1}.</strong> ${formatMathText(step.statement)}${step.reason ? `<br><span>理由：${formatMathText(step.reason)}</span>` : ''}</div>`).join('');
+  const followHtml = model.followup ? `<div class="print-follow"><h3>追問の答え</h3><p>${formatMathText(model.followup.prompt)}</p>${model.followup.steps.map((step, i) => `<p>${i + 1}. ${formatMathText(step.statement)}</p>`).join('')}<p><strong>答え：${formatMathText(model.followup.answer)}${escapeHtml(model.followup.unit)}</strong></p></div>` : '';
+  return `<h2>解答</h2>${model.target ? `<p><strong>証明すること：</strong>${formatMathText(model.target)}</p>` : ''}${model.criterion ? `<p><strong>証明の基準：</strong>${escapeHtml(japaneseProofCriterion(model.criterion))}</p>` : ''}${stepHtml}${model.target ? `<div class="print-final">したがって、${formatMathText(model.target)}。</div>` : ''}${followHtml}`;
 }
 
 function exportPdf() {
@@ -210,15 +210,15 @@ function exportPdf() {
   const canvas = document.querySelector('#canvas-container canvas');
   const image = canvas ? canvas.toDataURL('image/png') : '';
   const conditions = (data.given_conditions ?? [])
-    .map(x => `<li>${escapeHtml(typeof x === 'string' ? x : x.statement ?? '')}</li>`)
+    .map(x => `<li>${formatMathText(typeof x === 'string' ? x : x.statement ?? '')}</li>`)
     .join('');
   const subproblems = (data.problem?.subproblems ?? data.problem?.parts ?? [])
-    .map(x => `<p><strong>（${escapeHtml(x.id ?? x.number ?? '')}）</strong> ${escapeHtml(x.prompt ?? x.question ?? '')}</p>`)
+    .map(x => `<p><strong>（${escapeHtml(x.id ?? x.number ?? '')}）</strong> ${formatMathText(x.prompt ?? x.question ?? '')}</p>`)
     .join('');
   const followups = data.follow_up?.problems ?? Object.values(data.follow_up ?? {})
     .filter(x => x?.question || x?.prompt);
   const followHtml = followups.length && $('#show-followup')?.checked
-    ? `<section><h3>追問</h3>${followups.map(x => `<p>${escapeHtml(x.prompt ?? x.question ?? '')}</p>`).join('')}</section>`
+    ? `<section><h3>追問</h3>${followups.map(x => `<p>${formatMathText(x.prompt ?? x.question ?? '')}</p>`).join('')}</section>`
     : '';
 
   // 新しいウィンドウは開かない。
@@ -253,12 +253,15 @@ function exportPdf() {
   window.addEventListener('afterprint', cleanup, { once: true });
 
   // 印刷用DOMの画像が描画されてから印刷する。
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      logger.info('PDF', 'ブラウザ印刷ダイアログを表示');
-      window.print();
-    });
-  });
+  const printAfterTypeset = () => requestAnimationFrame(() => requestAnimationFrame(() => {
+    logger.info('PDF', 'ブラウザ印刷ダイアログを表示');
+    window.print();
+  }));
+  if (window.MathJax?.typesetPromise) {
+    window.MathJax.typesetPromise([sheet]).then(printAfterTypeset).catch(printAfterTypeset);
+  } else {
+    printAfterTypeset();
+  }
 }
 
 function fitBadgeText(element) {
@@ -319,19 +322,23 @@ ${complexity}`;
   const conditionsEl = $('#conditions');
   if (conditionsEl) conditionsEl.innerHTML = conditions.map(x => {
     const text = typeof x === 'string' ? x : x.statement ?? '';
-    return `<li>${escapeHtml(text)}</li>`;
+    return `<li>${formatMathText(text)}</li>`;
   }).join('');
 
   const subproblems = data.problem?.subproblems ?? data.problem?.parts ?? [];
   const problemText = $('#problem-text');
-  if (problemText) problemText.innerHTML = subproblems.map(x => `<p><strong>（${escapeHtml(x.label ?? x.id ?? '')}）</strong> ${escapeHtml(x.prompt ?? x.question ?? x.target?.statement ?? '')}</p>`).join('');
+  if (problemText) {
+    const summary = data.problem?.statement?.summary ?? (typeof data.problem?.statement === 'string' ? data.problem.statement : '');
+    const summaryHtml = summary ? `<p class="problem-description">${formatMathText(summary)}</p>` : '';
+    problemText.innerHTML = summaryHtml + subproblems.map(x => `<p><strong>（${escapeHtml(x.label ?? x.id ?? '')}）</strong> ${formatMathText(x.prompt ?? x.question ?? x.target?.statement ?? '')}</p>`).join('');
+  }
 
   const followups = data.follow_up?.problems ?? Object.values(data.follow_up ?? {}).map(x => x?.question ? x : null).filter(Boolean);
   const showFollowup = $('#show-followup')?.checked;
   if (followups.length && showFollowup) {
     $('#followup-block')?.classList.remove('hidden');
     const followupText = $('#followup-text');
-    if (followupText) followupText.innerHTML = followups.map(x => `<p>${escapeHtml(x.prompt ?? x.question ?? '')}</p>`).join('');
+    if (followupText) followupText.innerHTML = followups.map(x => `<p>${formatMathText(x.prompt ?? x.question ?? '')}</p>`).join('');
   } else {
     $('#followup-block')?.classList.add('hidden');
     const followupText = $('#followup-text');
@@ -347,11 +354,46 @@ ${complexity}`;
   renderAnswer(data);
   setAnswerVisible(false);
   showView('problem');
+  queueMathTypeset();
 }
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 }
+
+// MathJax向けに、入試数学で頻出する記号を安全にTeX表記へ変換する。
+// 原文の日本語はそのまま残し、認識できない式はUnicode表記のまま表示する。
+function formatMathText(value) {
+  // CDNが利用できない環境では元のUnicode数式をそのまま表示する。
+  if (!window.MathJax?.typesetPromise) return escapeHtml(value);
+  let text = escapeHtml(value);
+  text = text.replace(/(\d+)\s*sin\((\d+(?:\.\d+)?)°\)\s*\/\s*sin\((\d+(?:\.\d+)?)°\)/gi, '\\(\\frac{$1\\sin $2^\\circ}{\\sin $3^\\circ}\\)');
+  text = text.replace(/∠([A-Z]{3})\s*[＝=]\s*∠([A-Z]{3})/g, '\\(\\angle $1=\\angle $2\\)');
+  text = text.replace(/△([A-Z]{3})\s*[∽≡]\s*△([A-Z]{3})/g, '\\(\\triangle $1\\sim\\triangle $2\\)');
+  text = text.replace(/([A-Z]{2})\s*[＝=]\s*([A-Z]{2})/g, '\\($1=$2\\)');
+  text = text.replace(/△([A-Z]{3})/g, '\\(\\triangle $1\\)');
+  text = text.replace(/∠([A-Z]{3})/g, '\\(\\angle $1\\)');
+  text = text.replace(/弧([A-Z]{2})/g, '弧\\(\\widehat{$1}\\)');
+  text = text.replace(/√(\d+)/g, '\\(\\sqrt{$1}\\)');
+  text = text.replace(/(\d+(?:\.\d+)?)°/g, '\\($1^\\circ\\)');
+  text = text.replace(/(\d+)\s*\/\s*(\d+)/g, '\\(\\frac{$1}{$2}\\)');
+  text = text.replace(/∽/g, '\\(\\sim\\)');
+  text = text.replace(/≡/g, '\\(\\cong\\)');
+  text = text.replace(/⟂/g, '\\(\\perp\\)');
+  text = text.replace(/∥/g, '\\(\\parallel\\)');
+  return text;
+}
+function queueMathTypeset() {
+  const typeset = () => window.MathJax?.typesetPromise?.().catch(() => {});
+  if (window.MathJax?.startup?.promise) window.MathJax.startup.promise.then(typeset);
+  else setTimeout(() => {
+    if (window.MathJax?.startup?.promise) window.MathJax.startup.promise.then(typeset);
+  }, 250);
+}
+
+window.addEventListener('load', () => {
+  if (window.MathJax?.typesetPromise && generator.data) renderProblem(generator.data);
+});
 
 function selectedFilters() {
   return {
@@ -367,7 +409,7 @@ async function refresh() {
   try {
     if (currentMode === 'past') {
       // 過去問モードでは年度選択UIを持たせず、対応年度からランダムに表示。
-      const years = [2014, 2015, 2016, 2017, 2024, 2025, 2026];
+      const years = [2014, 2015, 2016, 2017, 2018, 2019, 2020, 2024, 2025, 2026];
       const year = years[Math.floor(Math.random() * years.length)];
       logger.info('APP', `過去問モード: ${year}年度を読み込み`);
       const data = await generator.load(year);

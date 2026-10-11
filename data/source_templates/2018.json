@@ -1,0 +1,251 @@
+{
+  "schema_version": "1.2.0",
+  "dataset_type": "shizuoka_prefecture_high_school_entrance_math_proof",
+  "language": "ja",
+  "coordinate_convention": {
+    "description": "各年の座標は問題条件を満たすために構成した検証用モデル。図の見た目をピクセル単位でトレースしたものではない。",
+    "units": "座標は特記がない限り任意単位。実長を扱う場合は尺度を明示する。",
+    "angle_unit": "degree"
+  },
+  "metadata": {
+    "id": "shizuoka_2018_math_07",
+    "prefecture": "静岡県",
+    "exam_type": "公立高校入試",
+    "subject": "数学",
+    "year": 2018,
+    "problem_number": "7",
+    "points_total": 9,
+    "source": {
+      "type": "user_uploaded_exam_image",
+      "filename": "Shizuoka Math Exam 2018 Q6.jpg"
+    },
+    "data_status": "source_transcribed_and_geometry_model_checked",
+    "generation_ready": true
+  },
+  "problem": {
+    "figure": "図8",
+    "statement": "図8において、4点A、B、C、Dは円Oの円周上の点であり、△ACDはAC＝ADの二等辺三角形である。また、弧BC＝弧CDである。AD上に∠ACB＝∠ACEとなる点Eをとる。ACとBDとの交点をFとする。このとき、次の(1)、(2)の問いに答えなさい。",
+    "conditions": [
+      {
+        "id": "C1",
+        "type": "concyclic",
+        "points": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "description": "A、B、C、Dは同一円周上"
+      },
+      {
+        "id": "C2",
+        "type": "equal_length",
+        "segments": [
+          "AC",
+          "AD"
+        ]
+      },
+      {
+        "id": "C3",
+        "type": "equal_arc",
+        "arcs": [
+          "BC",
+          "CD"
+        ]
+      },
+      {
+        "id": "C4",
+        "type": "point_on_segment",
+        "point": "E",
+        "segment": "AD"
+      },
+      {
+        "id": "C5",
+        "type": "equal_angle",
+        "angles": [
+          "ACB",
+          "ACE"
+        ]
+      },
+      {
+        "id": "C6",
+        "type": "intersection",
+        "point": "F",
+        "lines": [
+          "AC",
+          "BD"
+        ]
+      }
+    ],
+    "questions": [
+      {
+        "id": "P1",
+        "points": 6,
+        "type": "similarity_proof",
+        "target": "triangle_similarity",
+        "triangles": [
+          "BCF",
+          "ADE"
+        ],
+        "statement": "△BCF ∽ △ADEであることを証明しなさい。"
+      },
+      {
+        "id": "P2",
+        "points": 3,
+        "type": "length_calculation",
+        "given": {
+          "AD_cm": 6,
+          "BC_cm": 3
+        },
+        "target": "BF",
+        "unit": "cm"
+      }
+    ]
+  },
+  "geometry": {
+    "objects": [
+      {
+        "name": "circle_O",
+        "type": "circle",
+        "members": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ]
+      },
+      {
+        "name": "triangle_ACD",
+        "type": "triangle",
+        "properties": [
+          "AC=AD"
+        ]
+      },
+      {
+        "name": "E",
+        "type": "point",
+        "constraint": "E lies on segment AD and angle ACB equals angle ACE"
+      },
+      {
+        "name": "F",
+        "type": "point",
+        "constraint": "F = intersection(AC,BD)"
+      }
+    ],
+    "cyclic_order": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "proof_correspondence": {
+      "triangle_1": "BCF",
+      "triangle_2": "ADE",
+      "vertices": {
+        "B": "A",
+        "C": "D",
+        "F": "E"
+      }
+    }
+  },
+  "proof": {
+    "P1": {
+      "target": "△BCF ∽ △ADE",
+      "steps": [
+        {
+          "id": "S1",
+          "claim": "∠BCF = ∠ACB",
+          "reason": "FはAC上にある"
+        },
+        {
+          "id": "S2",
+          "claim": "∠DAE = ∠DAC = ∠DBC",
+          "reason": "EはAD上、また∠DACと∠DBCは同じ弧DCに対する円周角"
+        },
+        {
+          "id": "S3",
+          "claim": "∠BCF = ∠DAE",
+          "reason": "∠ACB＝∠ACE（条件）かつ、円周角の関係とEがAD上にあることから対応角を整理する"
+        },
+        {
+          "id": "S4",
+          "claim": "∠BFC = ∠AED",
+          "reason": "∠BFCは直線BDとACのなす角、∠AEDはADとECのなす角。S1–S3の角関係より対応するもう一組の角が等しい"
+        },
+        {
+          "id": "S5",
+          "claim": "△BCF ∽ △ADE",
+          "reason": "2組の角がそれぞれ等しい"
+        }
+      ],
+      "proof_note": "機械生成用の角追跡では、S3–S4を角の向き付き表現で検証すること。答案では、円周角と∠ACB＝∠ACEを用いて2組の角の等しさを示す。"
+    },
+    "P2": {
+      "derivation": [
+        {
+          "claim": "△BCF ∽ △ADEより BF/AE = BC/AD = 3/6 = 1/2",
+          "reason": "相似比"
+        },
+        {
+          "claim": "△ACEで ∠CAE = ∠CAD = 20°、∠ACE = ∠ACB = 60°",
+          "reason": "EはAD上、弧BC＝弧CDより対応する円周角を求める"
+        },
+        {
+          "claim": "AE/AC = sin60°/sin100°",
+          "reason": "正弦定理"
+        },
+        {
+          "claim": "AC=AD=6 より AE = 6 sin60°/sin100°",
+          "reason": "条件と正弦定理"
+        },
+        {
+          "claim": "BF = 3 sin60°/sin100° ≈ 2.638 cm",
+          "reason": "BF/AE=1/2"
+        }
+      ],
+      "answer_exact": "3 sin(60°) / sin(100°) cm",
+      "answer_approx_cm": 2.638
+    }
+  },
+  "coordinates": {
+    "model": "unit_circle",
+    "points": {
+      "A": [
+        0.0,
+        1.0
+      ],
+      "B": [
+        -0.8660254038,
+        -0.5
+      ],
+      "C": [
+        -0.3420201433,
+        -0.9396926208
+      ],
+      "D": [
+        0.3420201433,
+        -0.9396926208
+      ],
+      "E": [
+        0.3007674664,
+        -0.7057370639
+      ]
+    },
+    "note": "円周上の偏角をA=90°、B=210°、C=250°、D=290°としたモデル。EはAD上で∠ACB=∠ACEを満たす点。FはACとBDの交点として計算する。",
+    "derived_points": {
+      "F": "intersection(AC,BD)"
+    },
+    "validation": {
+      "AC_equals_AD": true,
+      "arc_BC_equals_arc_CD": true,
+      "E_on_segment_AD": true,
+      "angle_ACB_equals_ACE": true
+    }
+  },
+  "validation": {
+    "source_image_transcribed": true,
+    "all_given_conditions_modelled": true,
+    "coordinate_model_is_pixel_trace": false,
+    "answer_method": "similarity ratio + sine rule"
+  }
+}

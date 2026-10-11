@@ -39,6 +39,30 @@ export const TEMPLATE_CATALOG = [
     difficulty: 5, sourceTemplate: '2017', generated: true
   },
   {
+    id: 'SHIZUOKA_SOURCE_2018_001',
+    year: 2018,
+    title: '円・等しい弧・二等辺三角形・相似',
+    proofType: 'similarity', method: 'AA',
+    features: ['circle', 'isosceles', 'similarity', 'equal_arc'],
+    difficulty: 5, sourceTemplate: '2018', generated: true, verificationTier: 'source-adapter'
+  },
+  {
+    id: 'SHIZUOKA_SOURCE_2019_001',
+    year: 2019,
+    title: '直径・垂直・円周角・相似',
+    proofType: 'similarity', method: 'AA',
+    features: ['circle', 'diameter', 'perpendicular', 'similarity'],
+    difficulty: 5, sourceTemplate: '2019', generated: true, verificationTier: 'source-adapter'
+  },
+  {
+    id: 'SHIZUOKA_SOURCE_2020_001',
+    year: 2020,
+    title: '円・二等辺三角形・等しい弦',
+    proofType: 'equal_length', method: 'isosceles_triangle_by_equal_base_angles',
+    features: ['circle', 'isosceles', 'inscribed_angle', 'length'],
+    difficulty: 5, sourceTemplate: '2020', generated: true, verificationTier: 'source-adapter'
+  },
+  {
     id: 'SHIZUOKA_CIRCLE_ISOSCELES_MOVING_POINT_ISOSCELES_2024_001',
     year: 2024,
     title: '円・動点・二等辺三角形・線分の長さ',
@@ -95,7 +119,7 @@ export function rankTemplates(filters = {}, random = Math.random) {
   const allowedYearsByDifficulty = {
     3: [2014, 2015],
     4: [2016],
-    5: [2017, 2024, 2025, 2026],
+    5: [2017, 2018, 2019, 2020, 2024, 2025, 2026],
     6: [2017],
     7: [2017],
     8: [2017]

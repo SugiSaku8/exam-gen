@@ -129,6 +129,23 @@ function check2026(problem, answer) {
   return result(errors, warnings, [...facts]);
 }
 
+
+function checkSourceTemplate(year, problem, answer) {
+  const lines = parseLines(answer);
+  const expected = (problem?.proof?.P1?.steps ?? []).map(step => normalize(step.statement)).filter(Boolean);
+  const matched = expected.filter(statement => lines.some(line => line.statement === statement || line.raw.includes(statement)));
+  const target = normalize(problem?.proof?.target ?? problem?.proof?.P1?.target ?? '');
+  const targetMatched = lines.some(line => line.statement === target || line.raw.includes(target));
+  const errors = [];
+  const facts = matched.map((_, i) => `source-step-${i + 1}`);
+  if (matched.length < Math.max(1, expected.length - 1)) {
+    errors.push(`${year}年度テンプレートの証明ステップが不足しています（${matched.length}/${expected.length}段階を照合）。`);
+  }
+  if (!targetMatched && target) errors.push(`最終結論「${target}」が答案に見つかりません。`);
+  if (targetMatched) facts.push('target');
+  return result(errors, ['原資料の登録済み証明ステップとの文字列照合です。別表現・別解は誤判定する場合があります。'], facts);
+}
+
 export function checkProof(problem, answer) {
   logger.info('CHECK', 'checkProof開始', { template: problem?.generation?.template_id, answerLength: String(answer ?? '').length });
   if (!String(answer ?? '').trim()) return result(['証明を入力してください。']);
@@ -142,5 +159,8 @@ export function checkProof(problem, answer) {
   if (template === 'SHIZUOKA_CIRCLE_ISOSCELES_MOVING_POINT_ISOSCELES_2024_001' || year === 2024) return check2024(problem, answer);
   if (template === 'SHIZUOKA_CIRCLE_ISOSCELES_PARALLEL_SIMILARITY_2025_001' || year === 2025) return check2025(problem, answer);
   if (template === 'SHIZUOKA_CIRCLE_ISOSCELES_PARALLEL_CONGRUENCE_2026_001' || year === 2026) return check2026(problem, answer);
+  if (['SHIZUOKA_SOURCE_2018_001','SHIZUOKA_SOURCE_2019_001','SHIZUOKA_SOURCE_2020_001'].includes(template) || [2018,2019,2020].includes(year)) {
+    return checkSourceTemplate(year, problem, answer);
+  }
   return result(['このテンプレートの証明チェッカーは未実装です。判定できる証明パターンが登録されていません。']);
 }

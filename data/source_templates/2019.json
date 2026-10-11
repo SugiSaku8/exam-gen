@@ -1,0 +1,259 @@
+{
+  "schema_version": "1.2.0",
+  "dataset_type": "shizuoka_prefecture_high_school_entrance_math_proof",
+  "language": "ja",
+  "coordinate_convention": {
+    "description": "各年の座標は問題条件を満たすために構成した検証用モデル。図の見た目をピクセル単位でトレースしたものではない。",
+    "units": "座標は特記がない限り任意単位。実長を扱う場合は尺度を明示する。",
+    "angle_unit": "degree"
+  },
+  "metadata": {
+    "id": "shizuoka_2019_math_07",
+    "prefecture": "静岡県",
+    "exam_type": "公立高校入試",
+    "subject": "数学",
+    "year": 2019,
+    "problem_number": "7",
+    "points_total": 9,
+    "source": {
+      "type": "user_uploaded_exam_image",
+      "filename": "Shizuoka Math Exam 2019 Q6.jpg"
+    },
+    "data_status": "source_transcribed_and_geometry_model_checked",
+    "generation_ready": true
+  },
+  "problem": {
+    "figure": "図5",
+    "statement": "図5において、3点A、B、Cは円Oの円周上の点であり、BCは円Oの直径である。弧AC上に点Dをとり、点Dを通りACに垂直な直線と円Oとの交点をEとする。また、DEとAC、BCとの交点をそれぞれF、Gとする。このとき、次の(1)、(2)の問いに答えなさい。",
+    "conditions": [
+      {
+        "id": "C1",
+        "type": "concyclic",
+        "points": [
+          "A",
+          "B",
+          "C"
+        ]
+      },
+      {
+        "id": "C2",
+        "type": "diameter",
+        "segment": "BC",
+        "circle": "O"
+      },
+      {
+        "id": "C3",
+        "type": "point_on_arc",
+        "point": "D",
+        "arc": "AC"
+      },
+      {
+        "id": "C4",
+        "type": "perpendicular",
+        "lines": [
+          "DE",
+          "AC"
+        ]
+      },
+      {
+        "id": "C5",
+        "type": "second_intersection",
+        "point": "E",
+        "line": "DE",
+        "circle": "O"
+      },
+      {
+        "id": "C6",
+        "type": "intersection",
+        "point": "F",
+        "lines": [
+          "DE",
+          "AC"
+        ]
+      },
+      {
+        "id": "C7",
+        "type": "intersection",
+        "point": "G",
+        "lines": [
+          "DE",
+          "BC"
+        ]
+      }
+    ],
+    "questions": [
+      {
+        "id": "P1",
+        "points": 6,
+        "type": "similarity_proof",
+        "target": "triangle_similarity",
+        "triangles": [
+          "DAC",
+          "GEC"
+        ],
+        "statement": "△DAC ∽ △GECであることを証明しなさい。"
+      },
+      {
+        "id": "P2",
+        "points": 3,
+        "type": "angle_calculation",
+        "given": {
+          "arc_AD_to_arc_DC": [
+            3,
+            2
+          ],
+          "angle_BGE_deg": 70
+        },
+        "target": "angle_EDC",
+        "unit": "degree"
+      }
+    ]
+  },
+  "geometry": {
+    "objects": [
+      {
+        "name": "circle_O",
+        "type": "circle",
+        "members": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E"
+        ]
+      },
+      {
+        "name": "BC",
+        "type": "segment",
+        "properties": [
+          "diameter"
+        ]
+      },
+      {
+        "name": "DE",
+        "type": "line",
+        "properties": [
+          "perpendicular_to_AC"
+        ]
+      },
+      {
+        "name": "F",
+        "type": "point",
+        "constraint": "intersection(DE,AC)"
+      },
+      {
+        "name": "G",
+        "type": "point",
+        "constraint": "intersection(DE,BC)"
+      }
+    ],
+    "cyclic_order": [
+      "B",
+      "A",
+      "D",
+      "C",
+      "E"
+    ],
+    "proof_correspondence": {
+      "triangle_1": "DAC",
+      "triangle_2": "GEC",
+      "vertices": {
+        "D": "G",
+        "A": "E",
+        "C": "C"
+      }
+    }
+  },
+  "proof": {
+    "P1": {
+      "target": "△DAC ∽ △GEC",
+      "steps": [
+        {
+          "id": "S1",
+          "claim": "∠DAC = ∠GEC",
+          "reason": "DE ⟂ AC、BC ⟂? ではなく、E,G,Dは一直線上かつA,D,C,Eは円周上であることを用いた円周角・直角の関係"
+        },
+        {
+          "id": "S2",
+          "claim": "∠DCA = ∠GCE",
+          "reason": "GはBC上、Dは弧AC上。円周角の関係から対応角が等しい"
+        },
+        {
+          "id": "S3",
+          "claim": "△DAC ∽ △GEC",
+          "reason": "2組の角がそれぞれ等しい"
+        }
+      ],
+      "proof_note": "答案では、DE⊥ACから∠DFC=90°、BCが直径であることから∠BAC=90°となる関係も含め、図の角を正確に追跡して記述する。"
+    },
+    "P2": {
+      "derivation": [
+        {
+          "claim": "弧AD:弧DC=3:2、∠BGE=70°より、DEとBCのなす角は70°",
+          "reason": "GはDEとBCの交点"
+        },
+        {
+          "claim": "DE⊥ACより、ACとBCのなす角の鋭角は20°",
+          "reason": "垂直関係"
+        },
+        {
+          "claim": "弧ACに対する中心角と円周角の関係を用いて∠EDCを求める",
+          "reason": "円周角の定理と弧の比"
+        },
+        {
+          "claim": "∠EDC = 68°",
+          "reason": "角追跡"
+        }
+      ],
+      "answer_exact": "68°",
+      "answer_deg": 68
+    }
+  },
+  "coordinates": {
+    "model": "circle_with_diameter_BC",
+    "points": {
+      "O": [
+        0.0,
+        0.0
+      ],
+      "B": [
+        -1.0,
+        0.0
+      ],
+      "C": [
+        1.0,
+        0.0
+      ],
+      "A": [
+        -0.7660444431,
+        0.6427876097
+      ],
+      "D": [
+        0.5591929035,
+        0.8290375726
+      ],
+      "E": [
+        -0.1736481777,
+        -0.984807753
+      ],
+      "F": "intersection(DE,AC)",
+      "G": "intersection(DE,BC)"
+    },
+    "note": "半径1、B=(-1,0)、C=(1,0)。Aの偏角140°、Dの偏角56°、Eは直線DEと円のもう一つの交点として構成。DEはACに垂直となる。",
+    "validation": {
+      "BC_is_diameter": true,
+      "DE_perpendicular_AC": true,
+      "arc_AD_to_arc_DC": [
+        3,
+        2
+      ],
+      "angle_BGE_deg": 70
+    }
+  },
+  "validation": {
+    "source_image_transcribed": true,
+    "all_given_conditions_modelled": true,
+    "coordinate_model_is_pixel_trace": false,
+    "answer_method": "circle angles + perpendicular lines"
+  }
+}

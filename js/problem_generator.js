@@ -8,6 +8,7 @@ import { generateGeometry, geometryToJSON } from './geometry_solver.js';
 import { TEMPLATE_CATALOG, filterTemplates, rankTemplates, getTemplate } from './template_registry.js';
 import { generate2015, generate2016, generate2017 } from './templates/canonical_generators.js';
 import { generate2024, generate2025, generate2026 } from './templates/recent_generators.js';
+import { generate2018, generate2019, generate2020 } from './templates/source_year_generators.js';
 
 export const TEMPLATE_2014 = 'SHIZUOKA_CIRCLE_ISOSCELES_PARALLEL_ASA_001';
 
@@ -180,6 +181,9 @@ const GENERATORS = {
   SHIZUOKA_DIAMETER_ISOSCELES_AA_001: generate2015,
   SHIZUOKA_CIRCLE_PARALLEL_PARALLELOGRAM_LENGTH_001: generate2016,
   SHIZUOKA_CIRCLE_ANGLE_BISECTOR_ISOSCELES_SIMILARITY_AREA_001: generate2017,
+  SHIZUOKA_SOURCE_2018_001: generate2018,
+  SHIZUOKA_SOURCE_2019_001: generate2019,
+  SHIZUOKA_SOURCE_2020_001: generate2020,
   SHIZUOKA_CIRCLE_ISOSCELES_MOVING_POINT_ISOSCELES_2024_001: generate2024,
   SHIZUOKA_CIRCLE_ISOSCELES_PARALLEL_SIMILARITY_2025_001: generate2025,
   SHIZUOKA_CIRCLE_ISOSCELES_PARALLEL_CONGRUENCE_2026_001: generate2026
@@ -208,6 +212,20 @@ export function generateProblem(templateId, options = {}) {
   logger.info('PROBLEM', 'テンプレート指定生成', { templateId, retries: options.retries ?? 5 });
   const generator = GENERATORS[templateId];
   if (!generator) throw new Error(`未知の問題テンプレートです: ${templateId}`);
+  // 2018–2020は新規に取り込んだソースJSONを基にした専用アダプターで生成する。
+  // 元資料の証明内容は保持するが、既存年度と同一の形式証明証明書を持つとは扱わない。
+  if (['SHIZUOKA_SOURCE_2018_001','SHIZUOKA_SOURCE_2019_001','SHIZUOKA_SOURCE_2020_001'].includes(templateId)) {
+    const templateInfo = getTemplate(templateId);
+    const filterDifficulty = options.filters?.difficulty;
+    const requestedValue = options.difficulty
+      ?? (filterDifficulty && filterDifficulty !== 'all' ? filterDifficulty : undefined)
+      ?? templateInfo?.difficulty ?? 5;
+    const requestedDifficulty = Math.max(3, Math.min(8, Number(requestedValue) || 5));
+    const result = generator({ ...options, difficulty: requestedDifficulty });
+    result.generation.difficulty = requestedDifficulty;
+    result.generation.difficulty_profile = 'ソースJSON型：原資料の証明・追問を保持し、図形配置を変換';
+    return result;
+  }
   // Proof-first preflight: the reviewed target/rule plan must exist before
   // any coordinates or random parameters are constructed.
   const proofFirstPlan = assertProofFirstPlanReady(templateId);

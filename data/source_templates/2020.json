@@ -1,0 +1,280 @@
+{
+  "schema_version": "1.2.0",
+  "dataset_type": "shizuoka_prefecture_high_school_entrance_math_proof",
+  "language": "ja",
+  "coordinate_convention": {
+    "description": "各年の座標は問題条件を満たすために構成した検証用モデル。図の見た目をピクセル単位でトレースしたものではない。",
+    "units": "座標は特記がない限り任意単位。実長を扱う場合は尺度を明示する。",
+    "angle_unit": "degree"
+  },
+  "metadata": {
+    "id": "shizuoka_2020_math_06",
+    "prefecture": "静岡県",
+    "exam_type": "公立高校入試",
+    "subject": "数学",
+    "year": 2020,
+    "problem_number": "6",
+    "points_total": 9,
+    "source": {
+      "type": "user_uploaded_exam_image",
+      "filename": "Shizuoka Math Exam 2020 Q6.jpg"
+    },
+    "data_status": "source_transcribed_and_geometry_model_checked",
+    "generation_ready": true
+  },
+  "problem": {
+    "figure": "図6",
+    "statement": "図6において、3点A、B、Cは円Oの円周上の点であり、AB＝ACである。AC上にBC＝BDとなる点Dをとり、BDの延長と円Oとの交点をEとする。このとき、次の(1)、(2)の問いに答えなさい。",
+    "conditions": [
+      {
+        "id": "C1",
+        "type": "concyclic",
+        "points": [
+          "A",
+          "B",
+          "C"
+        ]
+      },
+      {
+        "id": "C2",
+        "type": "equal_length",
+        "segments": [
+          "AB",
+          "AC"
+        ]
+      },
+      {
+        "id": "C3",
+        "type": "point_on_segment",
+        "point": "D",
+        "segment": "AC"
+      },
+      {
+        "id": "C4",
+        "type": "equal_length",
+        "segments": [
+          "BC",
+          "BD"
+        ]
+      },
+      {
+        "id": "C5",
+        "type": "intersection",
+        "point": "E",
+        "line": "BD",
+        "circle": "O",
+        "intersection": "second"
+      }
+    ],
+    "questions": [
+      {
+        "id": "P1",
+        "points": 6,
+        "type": "equal_length_proof",
+        "target": "equal_length",
+        "segments": [
+          "CB",
+          "CE"
+        ],
+        "statement": "CB＝CEであることを証明しなさい。"
+      },
+      {
+        "id": "P2",
+        "points": 3,
+        "type": "length_calculation",
+        "given": {
+          "AB_cm": 6,
+          "BC_cm": 4
+        },
+        "target": "DE",
+        "unit": "cm"
+      }
+    ]
+  },
+  "geometry": {
+    "objects": [
+      {
+        "name": "circle_O",
+        "type": "circle",
+        "members": [
+          "A",
+          "B",
+          "C",
+          "E"
+        ]
+      },
+      {
+        "name": "triangle_ABC",
+        "type": "triangle",
+        "properties": [
+          "AB=AC"
+        ]
+      },
+      {
+        "name": "D",
+        "type": "point",
+        "constraint": "D lies on segment AC and BD=BC"
+      },
+      {
+        "name": "E",
+        "type": "point",
+        "constraint": "second intersection of line BD with circle O"
+      }
+    ],
+    "cyclic_order": [
+      "A",
+      "E",
+      "C",
+      "B"
+    ],
+    "proof_graph": {
+      "nodes": [
+        {
+          "id": "N1",
+          "claim": "AB=AC",
+          "source": "given"
+        },
+        {
+          "id": "N2",
+          "claim": "∠ABC=∠BCA",
+          "source": "isosceles_triangle"
+        },
+        {
+          "id": "N3",
+          "claim": "BC=BD",
+          "source": "given"
+        },
+        {
+          "id": "N4",
+          "claim": "∠BCD=∠BDC",
+          "source": "isosceles_triangle_BCD"
+        },
+        {
+          "id": "N5",
+          "claim": "∠BCA=∠CBD",
+          "source": "D lies on AC and B,D,E are collinear"
+        },
+        {
+          "id": "N6",
+          "claim": "∠BCA=∠BEC",
+          "source": "same chord BC"
+        },
+        {
+          "id": "N7",
+          "claim": "△BCD and △ECB have corresponding equal angles and BC=CB",
+          "source": "angle chase"
+        },
+        {
+          "id": "N8",
+          "claim": "CB=CE",
+          "source": "congruent/similar triangle relation"
+        }
+      ]
+    }
+  },
+  "proof": {
+    "P1": {
+      "target": "CB=CE",
+      "steps": [
+        {
+          "id": "S1",
+          "claim": "∠ABC=∠BCA",
+          "reason": "AB=ACより△ABCは二等辺三角形"
+        },
+        {
+          "id": "S2",
+          "claim": "∠CBD=∠BCA",
+          "reason": "B、D、Eは一直線上、A、D、Cは一直線上であることを用いた角の関係"
+        },
+        {
+          "id": "S3",
+          "claim": "∠CBD=∠ABC",
+          "reason": "S1、S2より"
+        },
+        {
+          "id": "S4",
+          "claim": "∠BCE=∠CBE",
+          "reason": "円周角の定理と同じ弧に対する角の関係"
+        },
+        {
+          "id": "S5",
+          "claim": "CB=CE",
+          "reason": "△BCEの底角が等しいので二等辺三角形"
+        }
+      ],
+      "proof_note": "証明の最終形では、同じ弧に対する円周角の等しさを明示し、△BCEのどの2角が等しいかを記号で確定させる。"
+    },
+    "P2": {
+      "derivation": [
+        {
+          "claim": "AB=AC=6、BC=4",
+          "reason": "条件"
+        },
+        {
+          "claim": "△ABCをB=(-2,0)、C=(2,0)、A=(0,4√2)と置く",
+          "reason": "AB=AC=6、BC=4を満たす座標モデル"
+        },
+        {
+          "claim": "DはAC上かつBD=BC=4なので、D=(10/9,16√2/9)",
+          "reason": "距離条件を解く"
+        },
+        {
+          "claim": "円Oと直線BDのもう一つの交点はE=(230/81,224√2/81)",
+          "reason": "円と直線の交点"
+        },
+        {
+          "claim": "DE=20/9 cm",
+          "reason": "距離公式"
+        }
+      ],
+      "answer_exact": "20/9 cm",
+      "answer_approx_cm": 2.2222222222
+    }
+  },
+  "coordinates": {
+    "model": "exact_cartesian",
+    "points": {
+      "A": [
+        0,
+        "4*sqrt(2)"
+      ],
+      "B": [
+        -2,
+        0
+      ],
+      "C": [
+        2,
+        0
+      ],
+      "D": [
+        "10/9",
+        "16*sqrt(2)/9"
+      ],
+      "E": [
+        "230/81",
+        "224*sqrt(2)/81"
+      ],
+      "O": [
+        0,
+        "7*sqrt(2)/4"
+      ]
+    },
+    "radius": "9*sqrt(2)/4",
+    "note": "BC=4、AB=AC=6を満たす厳密座標モデル。実際の長さ単位cmを使用。",
+    "validation": {
+      "AB_cm": 6,
+      "AC_cm": 6,
+      "BC_cm": 4,
+      "BD_cm": 4,
+      "D_on_AC": true,
+      "A_B_C_E_concyclic": true,
+      "DE_cm": "20/9"
+    }
+  },
+  "validation": {
+    "source_image_transcribed": true,
+    "all_given_conditions_modelled": true,
+    "coordinate_model_is_pixel_trace": false,
+    "answer_method": "coordinate geometry cross-check"
+  }
+}
