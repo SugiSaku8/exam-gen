@@ -304,7 +304,24 @@ function renderProblem(data) {
   const conditionCount = $('#condition-count');
   if (conditionCount) conditionCount.textContent = `条件:${conditions.length}`;
   if (problemInfo) {
-
+    const difficulty = Number(data.generation?.difficulty ?? info?.difficulty ?? 4);
+    problemInfo.textContent = '★'.repeat(Math.max(1, Math.min(8, difficulty)));
+    problemInfo.setAttribute('aria-label', `難易度 ${difficulty}`);
+    const audit = data.generation?.difficulty_audit?.dimensions;
+    const complexity = audit
+      ? `証明: ${audit.source_proof_steps}段階 / 推論深度: ${audit.formal_derivation_depth} / 使用規則: ${audit.distinct_inference_rules}種 / 条件: ${audit.required_condition_count}個 / 計算: ${audit.calculation_profile}`
+      : '難易度は登録済みテンプレートに基づく目安';
+    problemInfo.title = `${meta.year ?? ''}年度 ${meta.problem_number ?? ''}・難易度 ${difficulty}/8
+${complexity}`;
+    const detail = $('#difficulty-detail');
+    if (detail) {
+      if (audit) {
+        detail.textContent = `難易度 ${difficulty}/8　｜　証明 ${audit.source_proof_steps}段階　｜　推論深度 ${audit.formal_derivation_depth}　｜　使用規則 ${audit.distinct_inference_rules}種　｜　条件 ${audit.required_condition_count}個　｜　計算 ${audit.calculation_profile}`;
+        detail.title = data.generation?.difficulty_audit?.limitation ?? '';
+      } else {
+        detail.textContent = `難易度 ${difficulty}/8　｜　登録済み問題テンプレートに基づく目安`;
+      }
+    }
   }
   const conditionsEl = $('#conditions');
   if (conditionsEl) conditionsEl.innerHTML = conditions.map(x => {
