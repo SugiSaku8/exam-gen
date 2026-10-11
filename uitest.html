@@ -96,26 +96,7 @@
 <script src="./js/geometry-relations.js"></script>
 <script src="./js/proof-rules.js"></script>
 <script src="./js/problem-data-engine.js"></script>
-<script src="./js/problem-content.js"></script>
 <script type="module" src="./main.js"></script>
-<script>
-const moreOptionsButton = document.getElementById('more-options');
-const advancedOptionsPanel = document.getElementById('advanced-options');
-function toggleAdvancedOptions(force) {
-  if (!moreOptionsButton || !advancedOptionsPanel) return;
-  const shouldOpen = typeof force === 'boolean' ? force : !moreOptionsButton.classList.contains('is-open');
-  moreOptionsButton.classList.toggle('is-open', shouldOpen);
-  advancedOptionsPanel.classList.toggle('is-open', shouldOpen);
-  advancedOptionsPanel.classList.toggle('hidden', !shouldOpen);
-  moreOptionsButton.setAttribute('aria-expanded', String(shouldOpen));
-}
-moreOptionsButton?.addEventListener('click', () => toggleAdvancedOptions());
-document.getElementById('settings-button')?.addEventListener('click', () => toggleAdvancedOptions());
-document.getElementById('hint-button')?.addEventListener('click', () => document.getElementById('show-answer')?.click());
-document.querySelectorAll('.nav-item[data-mode]').forEach(b => b.addEventListener('click', () => {
-  if (b.dataset.mode === 'generated') document.getElementById('generate-button')?.click();
-  else document.getElementById('generate-button')?.click();
-}));
-</script>
+
 </body>
 </html>

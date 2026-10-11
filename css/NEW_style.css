@@ -121,3 +121,145 @@ html{scroll-behavior:smooth}body{ -webkit-font-smoothing:antialiased;text-render
 .answer-followup .answer-final { font-weight: 400; }
 .answer-followup .answer-final strong { font-weight: 900; }
 @media(prefers-reduced-motion:reduce){.feature-options input[type="checkbox"]::after,.check-option input[type="checkbox"]::after{transition:none}}
+
+
+/* v6: reference fidelity, restrained motion, more reliable text fitting */
+:root { --motion-fast: 140ms; --motion-normal: 190ms; }
+html { scroll-behavior: auto; }
+.main-area, .setup-view, .problem-view { animation: none !important; }
+button, select, input, textarea,
+.nav-item, .control-block select, .wide-button, .create-button,
+.criteria-select, .save-button, .answer-button, .pdf-button,
+.advanced-options, .solution-panel {
+  animation: none !important;
+  transition-duration: var(--motion-fast) !important;
+  transition-timing-function: ease-out !important;
+}
+.wide-button::after, .create-button::after { display: none !important; }
+.nav-item { letter-spacing: .01em !important; }
+.nav-item::before { transition: none !important; }
+.advanced-options { box-shadow: none !important; }
+.wide-button.is-open { border-radius: 18px 18px 0 0 !important; }
+.advanced-options, .advanced-options.is-open {
+  border-top: 0 !important;
+  margin-top: -1px !important;
+  border-radius: 0 0 18px 18px !important;
+}
+/* Square checkbox with a larger hollow ring when selected. */
+.feature-options input[type="checkbox"], .check-option input[type="checkbox"] {
+  appearance: none !important; -webkit-appearance: none !important;
+  width: 28px !important; height: 28px !important; flex: 0 0 28px !important;
+  border: 0 !important; border-radius: 0 !important; background: #3c5c77 !important;
+  display: inline-grid !important; place-items: center !important; position: relative !important;
+  box-shadow: none !important; outline: none !important; transform: none !important;
+}
+.feature-options input[type="checkbox"]::after, .check-option input[type="checkbox"]::after {
+  content: ""; display: block; width: 0; height: 0; box-sizing: border-box;
+  border: 2.5px solid transparent; border-radius: 50%; background: transparent !important;
+  transform: none !important; transition: none !important;
+}
+.feature-options input[type="checkbox"]:checked::after {
+  width: 21px; height: 21px; border-color: #fff; background: transparent !important;
+}
+.check-option input[type="checkbox"]:checked::after {
+  width: 17px; height: 17px; border-color: #fff; background: transparent !important;
+}
+.feature-options input[type="checkbox"]:focus-visible, .check-option input[type="checkbox"]:focus-visible {
+  outline: 2px solid #fff !important; outline-offset: 3px !important;
+}
+/* Text containers must be measurable; don't clip content when minimum size is reached. */
+.question-panel, .solution-panel { min-width: 0; overflow-wrap: anywhere; }
+.question-panel { line-height: 1.48; }
+.solution-panel { line-height: 1.38; }
+.question-panel .question-prompt { margin-bottom: 20px; }
+.answer-followup-title { font-weight: 400 !important; }
+.answer-followup .answer-final { font-weight: 400 !important; }
+.answer-followup .answer-final strong { font-weight: 900 !important; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+
+
+/* v7: quiet option controls and a restrained, connected MORE OPTIONS expansion */
+.feature-options label,
+.feature-options input[type="checkbox"],
+.check-option input[type="checkbox"] {
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
+}
+.feature-options label:hover { transform: none !important; background: transparent; }
+.feature-options input[type="checkbox"]:checked,
+.check-option input[type="checkbox"]:checked { transform: none !important; box-shadow: none !important; }
+
+/* The trigger and its panel read as one continuous control. */
+#more-options {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 0;
+  border-radius: 16px;
+  transition: border-radius .18s ease;
+}
+#more-options.is-open {
+  border-radius: 16px 16px 0 0;
+}
+#advanced-options {
+  display: grid;
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transform: none;
+  transform-origin: top;
+  overflow: hidden;
+  margin-top: 0;
+  border-radius: 0 0 16px 16px;
+  border-top: 0;
+  transition: grid-template-rows .22s ease, padding .22s ease, opacity .16s ease;
+}
+#advanced-options.hidden {
+  display: grid !important;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+#advanced-options > * { min-height: 0; }
+#advanced-options.is-open { visibility: visible; pointer-events: auto; }
+
+/* Square outer checkbox; selected state is a larger unfilled ring, never a tick. */
+.feature-options input[type="checkbox"],
+.check-option input[type="checkbox"] {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  width: 25px !important;
+  height: 25px !important;
+  flex: 0 0 25px !important;
+  border: 2px solid #3c5c77 !important;
+  border-radius: 2px !important;
+  background: transparent !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  position: relative;
+}
+.feature-options input[type="checkbox"]::after,
+.check-option input[type="checkbox"]::after {
+  content: "" !important;
+  width: 15px !important;
+  height: 15px !important;
+  border: 2px solid #fff !important;
+  border-radius: 50% !important;
+  background: transparent !important;
+  transform: scale(0) !important;
+  transition: none !important;
+  box-sizing: border-box;
+}
+.feature-options input[type="checkbox"]:checked::after,
+.check-option input[type="checkbox"]:checked::after { transform: scale(1) !important; }
+.feature-options input[type="checkbox"]:checked,
+.check-option input[type="checkbox"]:checked { background: transparent !important; border-color: #3c5c77 !important; }
+@media (max-width:700px) {
+  .feature-options input[type="checkbox"], .check-option input[type="checkbox"] { width:25px!important;height:25px!important;flex-basis:25px!important; }
+  .feature-options input[type="checkbox"]::after, .check-option input[type="checkbox"]::after { width:16px!important;height:16px!important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #advanced-options, #more-options { transition: none !important; }
+}
