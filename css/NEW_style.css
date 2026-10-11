@@ -235,7 +235,7 @@ button, select, input, textarea,
   flex: 0 0 25px !important;
   border: 2px solid #3c5c77 !important;
   border-radius: 2px !important;
-  background: transparent !important;
+  background: #3c5c77 !important;
   display: inline-grid !important;
   place-items: center !important;
   position: relative;
@@ -255,7 +255,7 @@ button, select, input, textarea,
 .feature-options input[type="checkbox"]:checked::after,
 .check-option input[type="checkbox"]:checked::after { transform: scale(1) !important; }
 .feature-options input[type="checkbox"]:checked,
-.check-option input[type="checkbox"]:checked { background: transparent !important; border-color: #3c5c77 !important; }
+.check-option input[type="checkbox"]:checked { background: #3c5c77 !important; border-color: #3c5c77 !important; }
 @media (max-width:700px) {
   .feature-options input[type="checkbox"], .check-option input[type="checkbox"] { width:25px!important;height:25px!important;flex-basis:25px!important; }
   .feature-options input[type="checkbox"]::after, .check-option input[type="checkbox"]::after { width:16px!important;height:16px!important; }
@@ -263,3 +263,9 @@ button, select, input, textarea,
 @media (prefers-reduced-motion: reduce) {
   #advanced-options, #more-options { transition: none !important; }
 }
+
+/* Compact utility controls: SAVE / ANSWER / PDF */
+.bottom-bar{gap:7px;right:16px;bottom:14px}
+.bottom-bar .save-button,.bottom-bar .answer-button,.bottom-bar .pdf-button{min-width:0;padding:7px 15px;font-size:16px;line-height:1.2;border-radius:10px;box-shadow:0 2px 0 #172e1c;}
+.bottom-bar .answer-button.is-active{box-shadow:0 0 0 2px #9bbac833}
+@media(max-width:700px){.bottom-bar{right:10px;bottom:10px;gap:6px}.bottom-bar .save-button,.bottom-bar .answer-button,.bottom-bar .pdf-button{padding:6px 11px;font-size:14px;border-radius:8px}}
