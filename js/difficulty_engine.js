@@ -50,7 +50,7 @@ function numericForm(answer) {
   if (/^[+-]?\d+$/u.test(answer)) return 'integer';
   if (/^\(?[+-]?\d+\)?\/\d+$/u.test(answer)) return 'rational';
   if (/^[+-]?\d*√\d+$/u.test(answer) || /^[+-]?\d+(?:[+-]\d*√\d+)$/u.test(answer)) return 'single-radical';
-  if (/^\(\d+[+-]\d+√\d+\)\/\d+$/u.test(answer)) return 'radical-fraction';
+  if (/^\(?[+-]?\d+[+-]\d*√\d+\)?\/\d+$/u.test(answer)) return 'radical-fraction';
   if (/\d+\.\d+/u.test(answer)) return 'decimal';
   return 'other-exact';
 }

@@ -385,12 +385,29 @@ async function refresh() {
     renderProblem(data);
     finish({ mode: currentMode, template: data?.generation?.template_id });
   } catch (error) {
+    const message = String(error?.message ?? error);
+    const noMatchingTemplate = /対応する問題テンプレートがありません/u.test(message);
+    // 条件の組み合わせによる生成不能は想定内。開発者コンソールに例外として
+    // 赤く表示するのではなく、利用者向けのモーダルで案内する。
+    if (noMatchingTemplate) {
+      logger.warn('APP', '条件に合う問題がありません', { message });
+      openModal({
+        title: '条件に合う問題がありません',
+        body: `<p>${escapeHtml(message)}</p><p class="hint-subtle">選択した難易度と詳細条件を同時に満たす問題が、現在の登録テンプレートにはありません。難易度を変更するか、詳細条件を減らしてから、もう一度「作成」を押してください。</p>`
+      });
+      if (result) {
+        result.className = 'bubble proof-result invalid';
+        result.textContent = '条件に合う問題がありません。モーダルの案内を確認してください。';
+      }
+      return;
+    }
+
     logger.error('APP', 'refreshに失敗', error);
+    // 生成失敗はすべてモーダルでも通知し、画面下の表示だけに依存しない。
+    openModal({ title: '問題を生成できませんでした', body: `<p>${escapeHtml(message)}</p><p class="hint-subtle">条件を変更して再度お試しください。繰り返し発生する場合は、エラー内容を開発者にお知らせください。</p>` });
     if (result) {
       result.className = 'bubble proof-result invalid';
-      result.innerHTML = `<strong>生成できませんでした。</strong><br>${escapeHtml(error.message)}`;
-    } else {
-      window.alert(`生成できませんでした。\n${error.message}`);
+      result.innerHTML = `<strong>生成できませんでした。</strong><br>${escapeHtml(message)}`;
     }
   }
 }

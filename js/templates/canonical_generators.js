@@ -550,20 +550,56 @@ function build2017(options, random) {
   let numericSolutionChain = null;
   const difficulty = Number(options.difficulty);
   if (difficulty >= 6 && difficulty <= 8) {
-    const multiplier = difficulty === 8 ? 3 : difficulty === 7 ? 2 : 1;
-    const numericValue = AD + multiplier * AE;
-    assertSimpleNumericAnswer(numericValue, `難易度${difficulty}・線分の長さの和`);
-    numericAnswer = formatSimpleNumber(numericValue);
-    numericTask = difficulty === 8 ? 'AD+3AE' : difficulty === 7 ? 'AD+2AE' : 'AD+AE';
-    data.problem.parts[1].question = `AD=${adText}cm、AE=${aeText}cm、EC=${ecText}cmのとき、${numericTask}の値を求めなさい。答えは最も簡単な厳密な形で表しなさい。`;
+    let numericValue;
+    if (difficulty === 8) {
+      // 最難関は、係数・根号内・分母を複数の組から選び、
+      // (a+b√c)/d 型の扱いにくい厳密値を作る。小数への近似は禁止。
+      const exactForms = [
+        { a: 7, b: 4, multiplier: 16, denominator: 23 },  // (7+4√13)/23
+        { a: 11, b: 7, multiplier: 24, denominator: 19 }, // (11+7√19)/19
+        { a: 13, b: 9, multiplier: 28, denominator: 17 }, // (13+9√22)/17
+        { a: 17, b: 11, multiplier: 40, denominator: 23 },// (17+11√31)/23
+        { a: 19, b: 13, multiplier: 44, denominator: 17 },// (19+13√34)/17
+        { a: 23, b: 15, multiplier: 48, denominator: 19 },// (23+15√37)/19
+        { a: 29, b: 17, multiplier: 56, denominator: 23 } // (29+17√43)/23
+      ];
+      const form = choice(random, exactForms);
+      const radicandValue = AD * AD + form.multiplier * AE * AE;
+      const radicand = Math.round(radicandValue);
+      if (Math.abs(radicandValue - radicand) > 1e-8 || !isSquareFreeInt(radicand)) {
+        throw new Error('難易度8の複雑な厳密値を構成できません。別の図形条件をお試しください。');
+      }
+      numericValue = (form.a + form.b * Math.sqrt(radicand)) / form.denominator;
+      numericTask = `(${form.a}+${form.b}√(AD²+${form.multiplier}AE²))/${form.denominator}`;
+      numericAnswer = `(${form.a}+${form.b}√${radicand})/${form.denominator}`;
+      assertSimpleNumericAnswer(numericValue, '難易度8・二次無理数分数');
+      if (formatSimpleNumber(numericValue) !== numericAnswer) {
+        throw new Error(`難易度8の厳密値の表記を検証できません: ${numericAnswer}`);
+      }
+      numericSolutionChain = [
+        `AD=${adText}、AE=${aeText}を代入する。`,
+        `AD²+${form.multiplier}AE²=${adText}²+${form.multiplier}×(${aeText})²=${radicand} より、√(AD²+${form.multiplier}AE²)=√${radicand}。`,
+        `分子・分母を整理すると、${numericAnswer}。`
+      ];
+    } else {
+      const multiplier = difficulty === 7 ? 2 : 1;
+      numericValue = AD + multiplier * AE;
+      assertSimpleNumericAnswer(numericValue, `難易度${difficulty}・線分の長さの和`);
+      numericAnswer = formatSimpleNumber(numericValue);
+      numericTask = difficulty === 7 ? 'AD+2AE' : 'AD+AE';
+      numericSolutionChain = [
+        `AD=${adText}、AE=${aeText}を用いる。`,
+        `${numericTask}を代入すると、${numericAnswer}となる。`
+      ];
+    }
+    data.problem.parts[1].question = difficulty === 8
+      ? `AD=${adText}cm、AE=${aeText}cm、EC=${ecText}cmのとき、${numericTask} の値を求めなさい。答えは最も簡単な厳密な形で表しなさい。`
+      : `AD=${adText}cm、AE=${aeText}cm、EC=${ecText}cmのとき、${numericTask}の値を求めなさい。答えは最も簡単な厳密な形で表しなさい。`;
     data.problem.parts[1].unit = 'cm';
+    data.follow_up.P2.prompt = data.problem.parts[1].question;
     data.follow_up.P2.unit = ' cm';
     delete data.follow_up.P2.formula;
     delete data.follow_up.P2.substitution;
-    numericSolutionChain = [
-      `AD=${adText}、AE=${aeText}を用いる。`,
-      `${numericTask}を代入すると、${numericAnswer}となる。`
-    ];
   } else {
     data.problem.parts[1].question = `AD=${adText}cm、AE=${aeText}cm、EC=${ecText}cmのとき、△CDEの面積は△DGEの面積の何倍か答えなさい。`;
   }
