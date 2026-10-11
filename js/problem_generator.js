@@ -1,5 +1,6 @@
 import { logger } from './logger.js';
 import { auditGeneratedProblem } from './proof_audit.js';
+import { validateProblemGeometry } from './geometry_validator.js';
 import { generateGeometry, geometryToJSON } from './geometry_solver.js';
 import { TEMPLATE_CATALOG, filterTemplates, rankTemplates, getTemplate } from './template_registry.js';
 import { generate2015, generate2016, generate2017 } from './templates/canonical_generators.js';
@@ -179,8 +180,22 @@ export function generateProblem(templateId, options = {}) {
     try {
       logger.debug('PROBLEM', `生成試行 ${i + 1}/${options.retries ?? 5}`, { templateId });
       const result = generator(options);
-      // 生成物を返す前に、定理カタログとの対応候補と幾何データの構造を監査する。
-      // 監査は証明器ではないため、未対応ステップがあっても生成自体を偽って失敗扱いしない。
+      // 生成器自身のチェックとは独立して、保存済み座標から幾何条件を再計算する。
+      const independentGeometryAudit = validateProblemGeometry(result);
+      if (independentGeometryAudit.valid === false) {
+        throw new Error(`独立幾何検証に失敗しました: ${independentGeometryAudit.errors.slice(0, 5).join(' / ')}`);
+      }
+      result.validation = {
+        ...(result.validation ?? {}),
+        independent_geometry_audit: independentGeometryAudit
+      };
+      logger.info('GEOMETRY_VALIDATE', '独立幾何検証完了', {
+        status: independentGeometryAudit.status,
+        valid: independentGeometryAudit.valid,
+        checks: independentGeometryAudit.check_count,
+        failures: independentGeometryAudit.failed_count
+      });
+      // 定理カタログ対応候補と逐次証明監査も記録する。未対応ステップを正しいと扱わない。
       result.validation = {
         ...(result.validation ?? {}),
         theorem_audit: auditGeneratedProblem(result)

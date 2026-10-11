@@ -15,7 +15,7 @@
     <button class="nav-item" id="settings-button">設定</button>
   </aside>
   <main id="app-root" class="main-area">
-    <header class="mobile-header"><strong>入試対策証明ジェネレーター</strong><button id="mobile-menu" class="icon-button">☰</button></header>
+    <header class="mobile-header"><strong>入試対策証明ジェネレーター</strong><button id="mobile-menu" class="icon-button" type="button">☰</button></header>
     <section id="setup-view" class="setup-view">
       <div class="top-controls">
         <label class="control-block"><span>TYPE:証明の種類</span>
@@ -25,8 +25,8 @@
           <select id="filter-difficulty"><option value="all">CHOOSE</option><option value="3">★★★</option><option value="4">★★★★</option><option value="5">★★★★★</option><option value="6">★★★★★★</option><option value="7">★★★★★★★</option><option value="8">★★★★★★★★</option></select>
         </label>
       </div>
-      <button id="more-options" class="wide-button">MORE OPTIONS:詳細設定</button>
-      <section id="advanced-options" class="advanced-options hidden">
+      <button id="more-options" class="wide-button" type="button" aria-expanded="false">MORE OPTIONS:詳細設定</button>
+      <section id="advanced-options" class="advanced-options hidden" aria-hidden="true">
         <div class="advanced-column">
           <label class="advanced-heading" for="filter-method">CRITERIA:証明方法</label>
           <select id="filter-method" class="criteria-select"><option value="all">CHOOSE</option><option value="ASA">1組の辺と両端の角</option><option value="AA">2組の角</option><option value="parallelism_to_parallelogram">平行四辺形</option></select>
@@ -53,26 +53,18 @@
       <h1 id="settings-title">設定</h1>
       <p class="settings-message">There ain’t content you can decide.</p>
       <div class="settings-credits">
-        <p>(C)Carnation Studio 2026</p>
-        <p>Made By Sugisaku8 &amp; Syari3</p>
-        <p>Designed By Sugisaku8</p>
-        <p>Data Format By Syari4</p>
-        <p>We do not simply reproduce past examination papers; rather, we draw on our analysis of trends.</p>
-        <p>From Japan</p>
+        <p>(C)Carnation Studio 2026</p><p>Made By Sugisaku8 &amp; Syari3</p><p>Designed By Sugisaku8</p><p>Data Format By Syari4</p>
+        <p>We do not simply reproduce past examination papers; rather, we draw on our analysis of trends.</p><p>From Japan</p>
       </div>
     </section>
 
-    <section id="problem-view" class="problem-view">
+    <section id="problem-view" class="problem-view hidden">
       <div class="problem-topline" aria-label="問題の属性">
-        <div id="template-badge" class="type-pill">相似</div>
-        <div id="criterion-badge" class="meta-pill">2辺と角</div>
-        <div id="condition-count" class="meta-pill">条件:3</div>
-        <div id="problem-info" class="difficulty-pill" aria-label="難易度">★★★★★★★★</div>
+        <div id="template-badge" class="type-pill">相似</div><div id="criterion-badge" class="meta-pill">証明方法</div><div id="condition-count" class="meta-pill">条件:0</div><div id="problem-info" class="difficulty-pill" aria-label="難易度">★★★★</div>
       </div>
       <div class="problem-layout">
         <div class="figure-panel"><div class="figure-label">図</div><div id="canvas-container" class="canvas-container"></div></div>
-        <article class="question-panel">
-          <div class="question-prompt"><div class="figure-label">問題</div><div id="problem-text"></div></div>
+        <article class="question-panel"><div class="question-prompt"><div class="figure-label">問題</div><div id="problem-text"></div></div>
           <div class="conditions-block"><div class="figure-label">条件</div><ul id="conditions"></ul></div>
           <div id="followup-block" class="followup-block hidden"><div class="figure-label">追問</div><div id="followup-text"></div></div>
         </article>
@@ -100,16 +92,7 @@
     </div>
   </main>
 </div>
-<!-- main.jsとの互換性を維持するための非表示の既存操作ボタン -->
-<div class="compat-controls" aria-hidden="true">
-  <button id="save-pc" type="button"></button><button id="load-pc" type="button"></button>
-  <button id="save-browser" type="button"></button><button id="load-browser" type="button"></button><button id="delete-browser" type="button"></button>
-</div>
-<script src="./js/theorem-catalog.js"></script>
-<script src="./js/geometry-relations.js"></script>
-<script src="./js/proof-rules.js"></script>
-<script src="./js/problem-data-engine.js"></script>
-<script type="module" src="./main.js"></script>
-
+<div class="compat-controls" aria-hidden="true"><button id="save-pc" type="button"></button><button id="load-pc" type="button"></button><button id="save-browser" type="button"></button><button id="load-browser" type="button"></button><button id="delete-browser" type="button"></button></div>
+<script src="./js/theorem-catalog.js"></script><script src="./js/geometry-relations.js"></script><script src="./js/proof-rules.js"></script><script src="./js/problem-data-engine.js"></script><script type="module" src="./main.js"></script>
 </body>
 </html>

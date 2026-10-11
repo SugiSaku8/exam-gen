@@ -409,6 +409,23 @@
       level: "initial",
       testCases: { positive: "同じ円の同じ弧に対する中心角と円周角には2倍の関係がある", negative: "対応する弧が違う場合は2倍の関係を導かない" }
     },
+    {
+      id: "angle.bisector-definition",
+      name: "角の二等分線の定義",
+      subject: "angle",
+      premises: [
+        { type: "angle-bisector", vertex: "B", firstRayPoint: "A", bisectorPoint: "D", secondRayPoint: "C" }
+      ],
+      conclusions: [
+        { type: "equal-angles", angles: [["A", "B", "D"], ["D", "B", "C"]] }
+      ],
+      reason: "角の二等分線は、1つの角を等しい2つの角に分ける。",
+      level: "initial",
+      testCases: {
+        positive: "BDが∠ABCの二等分線なら∠ABD=∠DBCを導ける",
+        negative: "角の二等分線の条件がなければ角の等しさを断定しない"
+      }
+    },
 
   ];
 

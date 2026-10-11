@@ -1,5 +1,6 @@
 import { logger } from './logger.js';
 import { runProofEngine } from './proof_engine_bridge.js';
+import { auditStructuredProof } from './proof_structure_adapter.js';
 
 const RULES = [
   [/同じ弧|円周角/, 'circle.inscribed-angles-same-arc'],
@@ -97,6 +98,17 @@ export function auditGeneratedProblem(problem) {
   const mapped = annotated.filter(x => x.theorem_id).length;
   const geometry = auditGeometry(problem);
   const proofEngine = runProofEngine(problem);
+  const symbolicProofAudit = auditStructuredProof(problem);
+  const derivedFactAudit = symbolicProofAudit.derived_fact_audit;
+  const derivedFactsComplete = derivedFactAudit.source_fact_count === 0 ||
+    (derivedFactAudit.unproved_count === 0 && derivedFactAudit.unsupported_count === 0);
+  const symbolicVerificationStatus = symbolicProofAudit.proof_group_count === 0
+    ? 'no-proof-steps'
+    : symbolicProofAudit.fully_proved_group_count === symbolicProofAudit.proof_group_count && derivedFactsComplete
+      ? 'verified'
+      : symbolicProofAudit.groups.some(group => group.proved_step_count > 0 || group.already_known_step_count > 0) || derivedFactAudit.proved_count > 0 || derivedFactAudit.already_known_count > 0
+        ? 'partial'
+        : 'not-proved-with-current-rules';
   const result = {
     version: '1.0.0',
     catalog_available: Boolean(catalog?.get),
@@ -106,6 +118,8 @@ export function auditGeneratedProblem(problem) {
     unmapped_step_count: steps.length - mapped,
     geometry,
     proof_engine: proofEngine,
+    symbolic_proof_audit: symbolicProofAudit,
+    symbolic_verification_status: symbolicVerificationStatus,
     status: geometry.valid ? (steps.length && mapped === steps.length ? 'reviewable' : 'partial') : 'invalid-structure',
     steps: annotated,
     note: '定理IDは文章から推定した監査候補です。数学的な証明の正しさを保証するものではありません。'
@@ -116,7 +130,12 @@ export function auditGeneratedProblem(problem) {
     mapped: result.mapped_step_count,
     unmapped: result.unmapped_step_count,
     geometryValid: geometry.valid,
-    proofEngineStatus: proofEngine.status
+    proofEngineStatus: proofEngine.status,
+    symbolicGroups: symbolicProofAudit.proof_group_count,
+    fullyProvedGroups: symbolicProofAudit.fully_proved_group_count,
+    derivedFactsProved: symbolicProofAudit.derived_fact_audit?.proved_count ?? 0,
+    derivedFactsUnproved: symbolicProofAudit.derived_fact_audit?.unproved_count ?? 0,
+    symbolicVerificationStatus
   });
   return result;
 }

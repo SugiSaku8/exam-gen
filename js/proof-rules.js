@@ -199,6 +199,7 @@
         category: rule.category
       }));
     const dynamicRules = [
+      ...angleBisectorCandidates(facts),
       ...isoscelesBaseAngleCandidates(facts),
       ...triangleAngleSumCandidates(facts),
       ...equalRadiusCandidates(facts),
@@ -293,6 +294,29 @@
     if (!a || !b) return false;
     return (sameSideExpression(a.left, b.left) && sameSideExpression(a.right, b.right)) ||
       (sameSideExpression(a.left, b.right) && sameSideExpression(a.right, b.left));
+  }
+
+  // An explicitly declared angle bisector divides an angle into two equal angles.
+  // angleBisector(V,A,D,C): vertex V, side rays VA/VC, bisector ray VD.
+  function angleBisectorCandidates(known) {
+    const results = [];
+    for (const fact of known) {
+      const match = /^angleBisector\(([A-Z]),([A-Z]),([A-Z]),([A-Z])\)$/.exec(fact);
+      if (!match) continue;
+      const [, vertex, first, bisector, last] = match;
+      if (new Set([vertex, first, bisector, last]).size !== 4) continue;
+      const left = 'angle(' + first + vertex + bisector + ')';
+      const right = 'angle(' + bisector + vertex + last + ')';
+      results.push({
+        id: 'angle.bisector-definition',
+        name: '角の二等分線の定義',
+        premises: [fact],
+        conclusion: [left, right].sort().join('='),
+        explain: '角の二等分線は、1つの角を等しい2つの角に分ける。',
+        category: 'angle'
+      });
+    }
+    return results;
   }
 
   // In a triangle, equal sides imply equal opposite base angles.
@@ -1004,6 +1028,27 @@
           if (step.conclusion === goal) {
             return { success: true, goal, facts: known, steps, reason: "proved" };
           }
+        }
+
+        const angleBisectors = angleBisectorCandidates(known);
+        const angleBisector = angleBisectors.find((rule) => sameAngleEquality(rule.conclusion, goal) && !known.includes(goal)) ||
+          angleBisectors.find((rule) => !known.includes(rule.conclusion));
+        if (angleBisector) {
+          const step = {
+            index: steps.length + 1,
+            ruleId: angleBisector.id,
+            ruleName: angleBisector.name,
+            premises: [...angleBisector.premises],
+            premiseSources: angleBisector.premises.map((premise) => ({ fact: premise, ...(sourceByFact.get(premise) || { type: 'unknown' }) })),
+            conclusion: sameAngleEquality(angleBisector.conclusion, goal) ? goal : angleBisector.conclusion,
+            explanation: angleBisector.explain,
+            category: angleBisector.category
+          };
+          known.push(step.conclusion);
+          sourceByFact.set(step.conclusion, { type: 'step', index: step.index });
+          steps.push(step);
+          changed = true;
+          if (step.conclusion === goal) return { success: true, goal, facts: known, steps, reason: 'proved' };
         }
 
         const isoscelesCandidates = isoscelesBaseAngleCandidates(known);
