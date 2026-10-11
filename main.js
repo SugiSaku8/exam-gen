@@ -5,6 +5,7 @@ import { generateAutoProblem, getTemplateInfo } from './js/problem_generator.js'
 import { createSaveData, downloadSave, readSaveFile, saveBrowser, listBrowserSaves, loadBrowser, deleteBrowser } from './js/storage_manager.js';
 import { generateAnswerModel } from './js/answer_generator.js';
 import { getDisplayConditions } from './js/condition_display.js';
+import { formatMathText } from './js/math_text.js';
 
 const generator = new ProofGenerator();
 logger.info('APP', 'アプリケーション初期化');
@@ -361,34 +362,18 @@ function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 }
 
-// MathJax向けに、入試数学で頻出する記号を安全にTeX表記へ変換する。
-// 原文の日本語はそのまま残し、認識できない式はUnicode表記のまま表示する。
-function formatMathText(value) {
-  // CDNが利用できない環境では元のUnicode数式をそのまま表示する。
-  if (!window.MathJax?.typesetPromise) return escapeHtml(value);
-  let text = escapeHtml(value);
-  text = text.replace(/(\d+)\s*sin\((\d+(?:\.\d+)?)°\)\s*\/\s*sin\((\d+(?:\.\d+)?)°\)/gi, '\\(\\frac{$1\\sin $2^\\circ}{\\sin $3^\\circ}\\)');
-  text = text.replace(/∠([A-Z]{3})\s*[＝=]\s*∠([A-Z]{3})/g, '\\(\\angle $1=\\angle $2\\)');
-  text = text.replace(/△([A-Z]{3})\s*[∽≡]\s*△([A-Z]{3})/g, '\\(\\triangle $1\\sim\\triangle $2\\)');
-  text = text.replace(/([A-Z]{2})\s*[＝=]\s*([A-Z]{2})/g, '\\($1=$2\\)');
-  text = text.replace(/△([A-Z]{3})/g, '\\(\\triangle $1\\)');
-  text = text.replace(/∠([A-Z]{3})/g, '\\(\\angle $1\\)');
-  text = text.replace(/弧([A-Z]{2})/g, '弧\\(\\widehat{$1}\\)');
-  text = text.replace(/√(\d+)/g, '\\(\\sqrt{$1}\\)');
-  text = text.replace(/(\d+(?:\.\d+)?)°/g, '\\($1^\\circ\\)');
-  text = text.replace(/(\d+)\s*\/\s*(\d+)/g, '\\(\\frac{$1}{$2}\\)');
-  text = text.replace(/∽/g, '\\(\\sim\\)');
-  text = text.replace(/≡/g, '\\(\\cong\\)');
-  text = text.replace(/⟂/g, '\\(\\perp\\)');
-  text = text.replace(/∥/g, '\\(\\parallel\\)');
-  return text;
-}
-function queueMathTypeset() {
-  const typeset = () => window.MathJax?.typesetPromise?.().catch(() => {});
-  if (window.MathJax?.startup?.promise) window.MathJax.startup.promise.then(typeset);
-  else setTimeout(() => {
-    if (window.MathJax?.startup?.promise) window.MathJax.startup.promise.then(typeset);
-  }, 250);
+function queueMathTypeset(attempt = 0) {
+  const mathJax = window.MathJax;
+  if (mathJax?.typesetPromise) {
+    const typeset = () => mathJax.typesetPromise().catch(error => {
+      logger.warn('MATHJAX', '数式の組版に失敗しました', { message: error?.message });
+    });
+    if (mathJax.startup?.promise) mathJax.startup.promise.then(typeset).catch(() => {});
+    else typeset();
+    return;
+  }
+  // CDNが遅れて読み込まれる場合にも、描画をあきらめず再試行する。
+  if (attempt < 100) setTimeout(() => queueMathTypeset(attempt + 1), 50);
 }
 
 window.addEventListener('load', () => {
@@ -482,6 +467,7 @@ function openModal({ title, body }) {
   modal.classList.remove('hidden');
   modal.setAttribute('aria-hidden', 'false');
   document.body.classList.add('modal-open');
+  queueMathTypeset();
   $('#app-modal-close')?.focus();
 }
 function closeModal() {
@@ -501,9 +487,9 @@ $('#hint-button')?.addEventListener('click', () => {
   const conditions = (generator.data.given_conditions ?? []).map(x => typeof x === 'string' ? x : x.statement ?? '').filter(Boolean);
   const hints = [];
   if (model.criterion) hints.push(`<p><strong>証明方法：</strong>${escapeHtml(japaneseProofCriterion(model.criterion))}</p>`);
-  if (conditions.length) hints.push(`<p>条件を整理し、仮定から使える性質を探しましょう。</p><ul>${conditions.slice(0, 5).map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul>`);
+  if (conditions.length) hints.push(`<p>条件を整理し、仮定から使える性質を探しましょう。</p><ul>${conditions.slice(0, 5).map(x => `<li>${formatMathText(x)}</li>`).join('')}</ul>`);
   hints.push('<p>図だけを根拠にせず、「仮定より」「円周角の定理より」「平行線の性質より」など、理由を明記してつなげましょう。</p>');
-  if (model.steps.length) hints.push(`<p class="hint-subtle">考える手がかり：まずは「${escapeHtml(model.steps[0].statement)}」につながる条件を探してみましょう。</p>`);
+  if (model.steps.length) hints.push(`<p class="hint-subtle">考える手がかり：まずは「${formatMathText(model.steps[0].statement)}」につながる条件を探してみましょう。</p>`);
   openModal({ title: 'HINT — 解法の手がかり', body: hints.join('') });
 });
 $('#app-modal-close')?.addEventListener('click', closeModal);
@@ -521,6 +507,7 @@ $('#show-answer')?.addEventListener('click', () => {
   } else {
     renderAnswer(generator.data);
     setAnswerVisible(true);
+    queueMathTypeset();
     requestAnimationFrame(() => $('#answer-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
   }
 });
@@ -559,6 +546,7 @@ $('#check-proof')?.addEventListener('click', () => {
   const errors = checked.errors?.length ? `<ul>${checked.errors.map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul>` : '';
   const warnings = checked.warnings?.length ? `<ul>${checked.warnings.map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul>` : '';
   result.innerHTML = `<strong>${title}</strong>${facts}${errors}${warnings}`;
+  queueMathTypeset();
 });
 $('#clear-proof')?.addEventListener('click', () => {
   if (proofAnswer) proofAnswer.value = '';
