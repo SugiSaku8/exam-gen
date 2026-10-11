@@ -4,6 +4,7 @@ import { checkProof } from './js/proof_checker.js';
 import { generateAutoProblem, getTemplateInfo } from './js/problem_generator.js';
 import { createSaveData, downloadSave, readSaveFile, saveBrowser, listBrowserSaves, loadBrowser, deleteBrowser } from './js/storage_manager.js';
 import { generateAnswerModel } from './js/answer_generator.js';
+import { getDisplayConditions } from './js/condition_display.js';
 
 const generator = new ProofGenerator();
 logger.info('APP', 'アプリケーション初期化');
@@ -300,7 +301,8 @@ function renderProblem(data) {
   if (templateBadge) templateBadge.textContent = proofType;
   const criterionBadge = $('#criterion-badge');
   if (criterionBadge) { criterionBadge.textContent = japaneseProofCriterion(getProofMethod(data)) || '図形の性質'; fitBadgeText(criterionBadge); }
-  const conditions = data.given_conditions ?? [];
+  // 表示用に冗長な点の配置定義を除外。数学検証用の元データは保持する。
+  const conditions = getDisplayConditions(data.given_conditions ?? []);
   const conditionCount = $('#condition-count');
   if (conditionCount) conditionCount.textContent = `条件:${conditions.length}`;
   if (problemInfo) {
@@ -313,15 +315,6 @@ function renderProblem(data) {
       : '難易度は登録済みテンプレートに基づく目安';
     problemInfo.title = `${meta.year ?? ''}年度 ${meta.problem_number ?? ''}・難易度 ${difficulty}/8
 ${complexity}`;
-    const detail = $('#difficulty-detail');
-    if (detail) {
-      if (audit) {
-        detail.textContent = `難易度 ${difficulty}/8　｜　証明 ${audit.source_proof_steps}段階　｜　推論深度 ${audit.formal_derivation_depth}　｜　使用規則 ${audit.distinct_inference_rules}種　｜　条件 ${audit.required_condition_count}個　｜　計算 ${audit.calculation_profile}`;
-        detail.title = data.generation?.difficulty_audit?.limitation ?? '';
-      } else {
-        detail.textContent = `難易度 ${difficulty}/8　｜　登録済み問題テンプレートに基づく目安`;
-      }
-    }
   }
   const conditionsEl = $('#conditions');
   if (conditionsEl) conditionsEl.innerHTML = conditions.map(x => {
