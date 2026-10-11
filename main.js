@@ -310,6 +310,8 @@ function exportPdf() {
 }
 
 function renderProblem(data) {
+  document.querySelector('#setup-view')?.classList.add('hidden');
+  document.querySelector('#problem-view')?.style.setProperty('display', 'block');
   logger.info('UI', '問題を画面へ描画', { template: data?.generation?.template_id, year: data?.metadata?.year });
   const meta = data.metadata ?? {};
   const problemInfo = $('#problem-info');
@@ -332,7 +334,7 @@ function renderProblem(data) {
   if (problemText) problemText.innerHTML = subproblems.map(x => `<p><strong>（${escapeHtml(x.id ?? '')}）</strong> ${escapeHtml(x.prompt ?? '')}</p>`).join('');
 
   const followups = data.follow_up?.problems ?? Object.values(data.follow_up ?? {}).map(x => x?.question ? x : null).filter(Boolean);
-  const showFollowup = $('#show-followup')?.checked;
+  const showFollowup = true;
   if (followups.length && showFollowup) {
     $('#followup-block')?.classList.remove('hidden');
     const followupText = $('#followup-text');
@@ -382,9 +384,9 @@ async function refresh() {
 
     const filters = selectedFilters();
     const data = generator.generate({
-      seed: seed?.value ? Number(seed.value) : undefined,
+      seed: Math.floor(Math.random() * 2_147_483_646) + 1,
       filters,
-      rotation: $('#rotate-figure')?.checked ? undefined : 0
+      rotation: undefined
     });
     renderProblem(data);
     finish({ mode: currentMode, template: data?.generation?.template_id });
@@ -398,7 +400,7 @@ async function refresh() {
 }
 
 modeButtons.forEach(button => button.addEventListener('click', () => setMode(button.dataset.mode)));
-$('#new-chat')?.addEventListener('click', () => { setMode('generated'); if (proofAnswer) proofAnswer.value = ''; refresh(); });
+$('#new-chat')?.addEventListener('click', () => { setMode('generated'); document.querySelector('#problem-view')?.style.setProperty('display', 'none'); document.querySelector('#setup-view')?.classList.remove('hidden'); if (proofAnswer) proofAnswer.value = ''; });
 $('#mobile-menu')?.addEventListener('click', () => document.body.classList.toggle('sidebar-open'));
 generateButton?.addEventListener('click', refresh);
 $('#show-followup')?.addEventListener('change', () => { if (generator.data) renderProblem(generator.data); });
@@ -416,6 +418,7 @@ $('#check-proof')?.addEventListener('click', () => {
     : `<strong>証明NG</strong><ul>${checked.errors.map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul>`;
 });
 
+// SAVEボタンに保存・ロード操作を集約。メニュー内の操作は既存処理を再利用する。
 $('#save-pc')?.addEventListener('click', () => {
   try { saveCurrentToPC(); showStorageMessage('JSONファイルとして保存しました。', false); }
   catch (error) { showStorageMessage(error.message, true); }
@@ -431,6 +434,20 @@ $('#save-browser')?.addEventListener('click', () => {
 });
 $('#load-browser')?.addEventListener('click', loadSelectedBrowser);
 $('#delete-browser')?.addEventListener('click', deleteSelectedBrowser);
+$('#save-button')?.addEventListener('click', () => {
+  const panel = $('#save-menu');
+  if (panel) panel.classList.toggle('hidden');
+});
+$('#save-menu')?.addEventListener('click', event => {
+  const action = event.target.closest('[data-save-action]')?.dataset.saveAction;
+  if (!action) return;
+  if (action === 'browser-save') $('#save-browser')?.click();
+  if (action === 'browser-load') $('#load-browser')?.click();
+  if (action === 'browser-delete') $('#delete-browser')?.click();
+  if (action === 'pc-save') $('#save-pc')?.click();
+  if (action === 'pc-load') $('#load-pc')?.click();
+  if (action !== 'noop') $('#save-menu')?.classList.add('hidden');
+});
 refreshBrowserList();
 
 setMode('generated');
