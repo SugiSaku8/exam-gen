@@ -53,3 +53,71 @@ html{scroll-behavior:smooth}body{ -webkit-font-smoothing:antialiased;text-render
   .advanced-options { animation: none !important; }
   .wide-button { transition: none !important; }
 }
+
+/* Generated-problem screen: reference-image layout */
+.problem-view{max-width:none;padding-bottom:18px}
+.problem-topline{display:grid;grid-template-columns:minmax(180px,1.15fr) minmax(120px,.62fr) minmax(125px,.62fr) minmax(250px,1.3fr);gap:16px;margin:0 0 16px;align-items:stretch}
+.type-pill,.meta-pill,.difficulty-pill{min-width:0;min-height:72px;padding:10px 14px;border-radius:22px;background:var(--pale);color:#050505;display:flex;align-items:center;justify-content:center;text-align:center;font-size:clamp(20px,2.7vw,34px);font-weight:900;white-space:nowrap;box-shadow:none}
+.type-pill{width:auto}
+.meta-pill{letter-spacing:.01em}
+.difficulty-pill{letter-spacing:0;font-size:clamp(19px,2.5vw,32px)}
+.problem-layout{grid-template-columns:minmax(0,1.65fr) minmax(260px,.95fr);gap:16px;align-items:stretch}
+.problem-layout:has(.solution-panel:not(.hidden)){grid-template-columns:minmax(0,1.55fr) minmax(250px,.9fr) minmax(250px,.9fr)}
+.figure-panel,.question-panel,.solution-panel{border-radius:34px;padding:20px;background:#fff;box-shadow:none}
+.figure-panel{min-height:500px;display:flex;flex-direction:column}
+.canvas-container{flex:1;min-height:430px}
+.canvas-container canvas{width:100%;height:100%;max-width:100%;max-height:100%}
+.question-panel{font-size:clamp(16px,1.45vw,21px);line-height:1.6;padding:28px 24px}
+.question-panel .question-prompt{margin-bottom:30px;font-size:1.08em;font-weight:800}
+.question-panel .figure-label,.solution-panel .figure-label{font-size:clamp(16px,1.3vw,20px);margin-bottom:10px}
+.conditions-block{margin-top:24px}
+.conditions-block ul{padding-left:24px;margin:8px 0;line-height:1.65;font-weight:700}
+.solution-panel{font-size:clamp(14px,1.05vw,17px);line-height:1.48;overflow:auto;animation:solution-reveal .38s cubic-bezier(.22,1,.36,1) both}
+.solution-panel.hidden{display:none!important}
+.answer-steps{display:flex;flex-direction:column;gap:8px}
+.answer-step{margin:0 0 5px}
+.answer-final{margin-top:12px;font-weight:900}
+.bottom-bar{right:2.4%;bottom:18px;gap:14px}
+.save-button,.answer-button,.pdf-button{min-width:112px;background:var(--pale);border-radius:18px;padding:13px 28px;font-size:clamp(22px,2.4vw,32px);font-weight:900;box-shadow:none;color:#050505}
+.answer-button{transition:transform .3s var(--ease-out),background-color .3s ease,box-shadow .3s ease}
+.answer-button.is-active{background:#9bbac8;box-shadow:0 0 0 4px #9bbac833}
+.save-menu{bottom:calc(100% + 12px);right:0}
+/* Square checkbox housing with a circular selection mark (not a tick). */
+.feature-options input[type="checkbox"],.check-option input[type="checkbox"]{appearance:none;-webkit-appearance:none;width:25px;height:25px;flex:0 0 25px;margin:0;border:0;border-radius:0;background:#3c5c77;display:inline-grid;place-items:center;position:relative;box-shadow:none;transform:none}
+.feature-options input[type="checkbox"]::after,.check-option input[type="checkbox"]::after{content:"";width:0;height:0;border:0;border-radius:50%;background:#fff;transform:scale(0);transition:transform .24s cubic-bezier(.22,1,.36,1);margin:0}
+.feature-options input[type="checkbox"]:checked,.check-option input[type="checkbox"]:checked{background:#3c5c77;border:0;box-shadow:none;transform:none}
+.feature-options input[type="checkbox"]:checked::after,.check-option input[type="checkbox"]:checked::after{width:15px;height:15px;transform:scale(1);background:#fff;border:0;border-radius:50%}
+.check-option input[type="checkbox"]{width:20px;height:20px;flex-basis:20px;background:#3c5c77}
+.check-option input[type="checkbox"]:checked::after{width:12px;height:12px}
+@keyframes solution-reveal{from{opacity:0;transform:translateY(8px) scale(.99)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-width:900px){.problem-topline{grid-template-columns:1fr 1fr;gap:10px}.type-pill,.meta-pill,.difficulty-pill{min-height:58px;border-radius:16px;font-size:clamp(18px,3vw,25px)}.problem-layout,.problem-layout:has(.solution-panel:not(.hidden)){grid-template-columns:minmax(0,1fr)}.figure-panel{min-height:360px}.canvas-container{min-height:320px}.question-panel{font-size:16px}.solution-panel{max-height:none}.bottom-bar{right:12px;bottom:12px}.save-button,.answer-button,.pdf-button{min-width:0;padding:10px 17px;font-size:19px}}
+@media(max-width:480px){.problem-topline{grid-template-columns:1fr 1fr}.problem-topline .difficulty-pill{grid-column:1/-1}.figure-panel,.question-panel,.solution-panel{padding:16px;border-radius:22px}.figure-panel{min-height:300px}.canvas-container{min-height:260px}.bottom-bar{gap:8px}.save-button,.answer-button,.pdf-button{padding:10px 13px;font-size:16px;border-radius:13px}}
+@media print{.problem-topline{grid-template-columns:repeat(4,1fr)}.problem-layout,.problem-layout:has(.solution-panel:not(.hidden)){grid-template-columns:1.5fr 1fr 1fr}.solution-panel.hidden{display:block!important}.bottom-bar{display:none!important}}
+
+
+/* v5 refinement: hide action bar until a problem exists; seamless MORE OPTIONS surface */
+.bottom-bar.is-before-generation { display: none !important; }
+.wide-button.is-open { border-radius: 18px 18px 0 0 !important; }
+.advanced-options { border-top: 0 !important; margin-top: -1px !important; box-shadow: 0 18px 34px #0c20151c; }
+.advanced-options.is-open { border-radius: 0 0 18px 18px !important; }
+/* Square checkbox base, hollow circular ring when checked — never a filled dot or tick. */
+.feature-options input[type="checkbox"], .check-option input[type="checkbox"] {
+  appearance: none !important; -webkit-appearance: none !important;
+  background: #3c5c77 !important; border: 0 !important; border-radius: 0 !important;
+  display: inline-grid; place-items: center; position: relative; box-shadow: none !important;
+}
+.feature-options input[type="checkbox"]::after, .check-option input[type="checkbox"]::after {
+  content: ""; width: 0; height: 0; border: 2px solid transparent; border-radius: 50%;
+  background: transparent !important; transform: scale(.4); transition: width .22s cubic-bezier(.22,1,.36,1),height .22s cubic-bezier(.22,1,.36,1),transform .22s ease,border-color .22s ease;
+}
+.feature-options input[type="checkbox"]:checked::after {
+  width: 15px; height: 15px; border: 2px solid #fff; background: transparent !important; transform: scale(1);
+}
+.check-option input[type="checkbox"]:checked::after {
+  width: 11px; height: 11px; border: 2px solid #fff; background: transparent !important; transform: scale(1);
+}
+.font-fit-minimum { overflow-wrap: anywhere; }
+.answer-followup-title { font-weight: 400 !important; }
+.answer-followup .answer-final { font-weight: 400; }
+.answer-followup .answer-final strong { font-weight: 900; }
+@media(prefers-reduced-motion:reduce){.feature-options input[type="checkbox"]::after,.check-option input[type="checkbox"]::after{transition:none}}

@@ -50,17 +50,26 @@
     </section>
 
     <section id="problem-view" class="problem-view">
-      <div class="problem-topline"><div id="template-badge" class="type-pill">相似</div><div id="problem-info" class="difficulty-pill">★★★★★★★★</div></div>
+      <div class="problem-topline" aria-label="問題の属性">
+        <div id="template-badge" class="type-pill">相似</div>
+        <div id="criterion-badge" class="meta-pill">2辺と角</div>
+        <div id="condition-count" class="meta-pill">条件:3</div>
+        <div id="problem-info" class="difficulty-pill" aria-label="難易度">★★★★★★★★</div>
+      </div>
       <div class="problem-layout">
         <div class="figure-panel"><div class="figure-label">図</div><div id="canvas-container" class="canvas-container"></div></div>
-        <article class="question-panel"><div class="figure-label">問題</div><div id="problem-text"></div><div class="conditions-block"><div class="figure-label">与えられている条件</div><ul id="conditions"></ul></div><div id="followup-block" class="followup-block hidden"><div class="figure-label">追問</div><div id="followup-text"></div></div></article>
-        <article id="answer-panel-inline" class="solution-panel"><div class="figure-label">証明ステップ</div><div id="answer-content"></div></article>
+        <article class="question-panel">
+          <div class="question-prompt"><div class="figure-label">問題</div><div id="problem-text"></div></div>
+          <div class="conditions-block"><div class="figure-label">条件</div><ul id="conditions"></ul></div>
+          <div id="followup-block" class="followup-block hidden"><div class="figure-label">追問</div><div id="followup-text"></div></div>
+        </article>
+        <article id="answer-panel" class="solution-panel hidden" aria-hidden="true"><div class="figure-label">証明ステップ</div><div id="answer-content"></div></article>
       </div>
-      <section class="answer-work"><h2>回答</h2><label for="proof-answer">証明を書いてください</label><textarea id="proof-answer" rows="5" placeholder="証明を入力…"></textarea><div class="work-actions"><div id="proof-result" class="proof-result">証明を入力すると、ここに判定が表示されます。</div><button id="check-proof" class="action-button">採点</button><button id="show-answer" class="action-button" aria-expanded="false">答えを見る</button></div><div id="answer-panel" class="answer-panel hidden"><div class="answer-panel-title">解答</div><div id="answer-content-duplicate"></div></div></section>
     </section>
 
-    <div class="bottom-bar">
-      <button id="save-button" class="save-button" type="button">SAVE</button>
+    <div class="bottom-bar is-before-generation">
+      <button id="save-button" class="save-button" type="button" aria-expanded="false">SAVE</button>
+      <button id="show-answer" class="answer-button" type="button" aria-expanded="false">ANSWER</button>
       <div id="save-menu" class="save-menu hidden">
         <div class="save-menu-title">保存・ロード</div>
         <label class="save-name-label">問題名<input id="save-name" type="text" maxlength="80" placeholder="問題名を入力"></label>
@@ -87,6 +96,7 @@
 <script src="./js/geometry-relations.js"></script>
 <script src="./js/proof-rules.js"></script>
 <script src="./js/problem-data-engine.js"></script>
+<script src="./js/problem-content.js"></script>
 <script type="module" src="./main.js"></script>
 <script>
 const moreOptionsButton = document.getElementById('more-options');
@@ -101,14 +111,11 @@ function toggleAdvancedOptions(force) {
 }
 moreOptionsButton?.addEventListener('click', () => toggleAdvancedOptions());
 document.getElementById('settings-button')?.addEventListener('click', () => toggleAdvancedOptions());
-document.getElementById('hint-button')?.addEventListener('click',()=>document.getElementById('show-answer')?.click());
-document.getElementById('show-answer')?.addEventListener('click',()=>{
- const panel=document.getElementById('answer-panel');
- const target=document.getElementById('answer-content-duplicate');
- const source=document.getElementById('answer-content');
- if(panel && target && source) target.innerHTML=source.innerHTML;
-});
-document.querySelectorAll('.nav-item[data-mode]').forEach(b=>b.addEventListener('click',()=>document.getElementById('generate-button')?.click()));
+document.getElementById('hint-button')?.addEventListener('click', () => document.getElementById('show-answer')?.click());
+document.querySelectorAll('.nav-item[data-mode]').forEach(b => b.addEventListener('click', () => {
+  if (b.dataset.mode === 'generated') document.getElementById('generate-button')?.click();
+  else document.getElementById('generate-button')?.click();
+}));
 </script>
 </body>
 </html>

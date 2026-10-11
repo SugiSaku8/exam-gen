@@ -225,7 +225,7 @@ function renderAnswer(data) {
   }
   if (target) parts.push(`<div class="answer-final">したがって、${escapeHtml(target)}。</div>`);
   if (follow) {
-    parts.push(`<div class="answer-followup"><div class="answer-followup-title">追問の答え</div><div>${escapeHtml(follow.prompt)}</div><div class="answer-final">答え：${escapeHtml(follow.answer)}${escapeHtml(follow.unit)}</div></div>`);
+    parts.push(`<div class="answer-followup"><div class="answer-followup-title">追問</div><div>${escapeHtml(follow.prompt)}</div><div class="answer-final"><strong>${escapeHtml(follow.answer)}${escapeHtml(follow.unit)}</strong></div></div>`);
   }
   content.innerHTML = parts.join('') || '<div>この問題の解答データはありません。</div>';
 }
@@ -235,7 +235,9 @@ function setAnswerVisible(visible) {
   const button = $('#show-answer');
   if (!panel || !button) return;
   panel.classList.toggle('hidden', !visible);
+  panel.setAttribute('aria-hidden', String(!visible));
   button.setAttribute('aria-expanded', String(visible));
+  button.classList.toggle('is-active', visible);
 }
 
 function answerHtmlForPrint(data) {
@@ -314,15 +316,24 @@ function renderProblem(data) {
   document.querySelector('#problem-view')?.style.setProperty('display', 'block');
   logger.info('UI', '問題を画面へ描画', { template: data?.generation?.template_id, year: data?.metadata?.year });
   const meta = data.metadata ?? {};
-  const problemInfo = $('#problem-info');
-  if (problemInfo) problemInfo.textContent = `${meta.prefecture ?? '静岡県'}　${meta.year ?? ''}年度　数学　${meta.problem_number ?? ''}`;
   const info = getTemplateInfo(data.generation?.template_id);
   const templateBadge = $('#template-badge');
-  if (templateBadge) templateBadge.textContent = info
-    ? `${info.year}型　${info.title}　／　難易度 ${'★'.repeat(info.difficulty)}`
-    : `${meta.year ?? ''}年度の過去問`;
+  if (templateBadge) templateBadge.textContent = /相似|similar/i.test(`${info?.title ?? ''} ${data?.proof?.type ?? ''}`) ? '相似' : (info?.title ?? window.PROBLEM_CONTENT?.typeFallback ?? '証明');
+  const criterionBadge = $('#criterion-badge');
+  const criterionRaw = data?.proof?.target_decomposition?.japanese_criterion
+    ?? data?.proof?.target_decomposition?.criterion
+    ?? data?.proof?.target_decomposition?.similarity_criterion
+    ?? data?.proof?.criterion
+    ?? data?.proof?.similarity_criterion
+    ?? data?.proof?.P1?.method ?? '';
+  const criterionLabels = { SAS: '2辺と角', SSS: '3辺', AA: '2組の角', AA_similarity: '2組の角', ASA: '1辺と両端の角', parallelism_to_parallelogram: '平行四辺形' };
+  if (criterionBadge) criterionBadge.textContent = criterionLabels[criterionRaw] ?? (criterionRaw ? japaneseProofCriterion(criterionRaw) : (window.PROBLEM_CONTENT?.criterionFallback ?? '2辺と角'));
+  const problemInfo = $('#problem-info');
+  if (problemInfo) problemInfo.textContent = window.PROBLEM_CONTENT?.difficultyStars ?? '★★★★★★★★';
 
   const conditions = data.given_conditions ?? [];
+  const conditionCount = $('#condition-count');
+  if (conditionCount) conditionCount.textContent = `条件:${conditions.length}`;
   const conditionsEl = $('#conditions');
   if (conditionsEl) conditionsEl.innerHTML = conditions.map(x => {
     const text = typeof x === 'string' ? x : x.statement ?? '';
@@ -346,13 +357,10 @@ function renderProblem(data) {
   }
 
   generator.draw();
-  if (result) {
-    result.className = 'bubble proof-result';
-    result.textContent = '証明を入力すると、ここに判定が表示されます。';
-  }
-  if (proofAnswer) proofAnswer.value = '';
   renderAnswer(data);
   setAnswerVisible(false);
+  document.querySelector('.bottom-bar')?.classList.remove('is-before-generation');
+  window.fitProblemPanelText?.();
 }
 
 function escapeHtml(value) {
@@ -400,7 +408,7 @@ async function refresh() {
 }
 
 modeButtons.forEach(button => button.addEventListener('click', () => setMode(button.dataset.mode)));
-$('#new-chat')?.addEventListener('click', () => { setMode('generated'); document.querySelector('#problem-view')?.style.setProperty('display', 'none'); document.querySelector('#setup-view')?.classList.remove('hidden'); if (proofAnswer) proofAnswer.value = ''; });
+$('#new-chat')?.addEventListener('click', () => { setMode('generated'); document.querySelector('#problem-view')?.style.setProperty('display', 'none'); document.querySelector('#setup-view')?.classList.remove('hidden'); document.querySelector('.bottom-bar')?.classList.add('is-before-generation'); if (proofAnswer) proofAnswer.value = ''; });
 $('#mobile-menu')?.addEventListener('click', () => document.body.classList.toggle('sidebar-open'));
 generateButton?.addEventListener('click', refresh);
 $('#show-followup')?.addEventListener('change', () => { if (generator.data) renderProblem(generator.data); });
@@ -408,15 +416,7 @@ $('#show-followup')?.addEventListener('change', () => { if (generator.data) rend
 $('#show-answer')?.addEventListener('click', () => setAnswerVisible($('#answer-panel')?.classList.contains('hidden')));
 $('#pdf-export')?.addEventListener('click', () => { try { exportPdf(); } catch (error) { showStorageMessage(error.message, true); } });
 
-$('#check-proof')?.addEventListener('click', () => {
-  logger.info('CHECK', '証明入力の検証を開始');
-  const checked = checkProof(generator.data, proofAnswer.value);
-  result.className = `bubble proof-result ${checked.valid ? 'valid' : 'invalid'}`;
-  logger.info('CHECK', checked.valid ? '証明OK' : '証明NG', checked);
-  result.innerHTML = checked.valid
-    ? '<strong>証明OK</strong><br>決定的ルールによる証明検証を通過しました。'
-    : `<strong>証明NG</strong><ul>${checked.errors.map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul>`;
-});
+
 
 // SAVEボタンに保存・ロード操作を集約。メニュー内の操作は既存処理を再利用する。
 $('#save-pc')?.addEventListener('click', () => {
@@ -436,7 +436,11 @@ $('#load-browser')?.addEventListener('click', loadSelectedBrowser);
 $('#delete-browser')?.addEventListener('click', deleteSelectedBrowser);
 $('#save-button')?.addEventListener('click', () => {
   const panel = $('#save-menu');
-  if (panel) panel.classList.toggle('hidden');
+  if (panel) {
+    const opening = panel.classList.contains('hidden');
+    panel.classList.toggle('hidden', !opening);
+    $('#save-button')?.setAttribute('aria-expanded', String(opening));
+  }
 });
 $('#save-menu')?.addEventListener('click', event => {
   const action = event.target.closest('[data-save-action]')?.dataset.saveAction;
