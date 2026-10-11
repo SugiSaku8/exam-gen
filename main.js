@@ -1,4 +1,4 @@
-import { logger } from './logger.js';
+import { logger } from './js/logger.js';
 import { ProofGenerator } from './js/generator.js';
 import { checkProof } from './js/proof_checker.js';
 import { generateAutoProblem, getTemplateInfo } from './js/problem_generator.js';
@@ -371,7 +371,7 @@ async function refresh() {
   try {
     if (currentMode === 'past') {
       // 過去問モードでは年度選択UIを持たせず、対応年度からランダムに表示。
-      const years = [2014, 2015, 2016, 2017];
+      const years = [2014, 2015, 2016, 2017, 2024, 2025, 2026];
       const year = years[Math.floor(Math.random() * years.length)];
       logger.info('APP', `過去問モード: ${year}年度を読み込み`);
       const data = await generator.load(year);

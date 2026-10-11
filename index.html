@@ -39,7 +39,7 @@
 
               <div class="filter-grid">
                 <label><span>証明の種類</span><select id="filter-proof"><option value="all">指定なし</option><option value="congruence">合同</option><option value="similarity">相似</option><option value="equal_length">長さの等式</option></select></label>
-                <label><span>証明基準</span><select id="filter-method"><option value="all">指定なし</option><option value="ASA">1組の辺とその両端の角がそれぞれ等しい</option><option value="AA">2組の角がそれぞれ等しい</option><option value="parallelism_to_parallelogram">平行四辺形</option></select></label>
+                <label><span>証明基準</span><select id="filter-method"><option value="all">指定なし</option><option value="ASA">ASA</option><option value="AA">AA</option><option value="parallelism_to_parallelogram">平行四辺形</option></select></label>
                 <fieldset class="feature-filter"><legend>図形条件 <small>複数選択可</small></legend><div class="feature-options">
 <label><input type="checkbox" name="feature-filter" value="circle">円</label>
 <label><input type="checkbox" name="feature-filter" value="diameter">直径</label>
@@ -136,6 +136,10 @@
       </div>
     </main>
   </div>
+  <script src="./js/theorem-catalog.js"></script>
+  <script src="./js/geometry-relations.js"></script>
+  <script src="./js/proof-rules.js"></script>
+  <script src="./js/problem-data-engine.js"></script>
   <script type="module" src="./main.js"></script>
 </body>
 </html>

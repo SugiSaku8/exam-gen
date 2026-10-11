@@ -1,7 +1,9 @@
 import { logger } from './logger.js';
+import { auditGeneratedProblem } from './proof_audit.js';
 import { generateGeometry, geometryToJSON } from './geometry_solver.js';
 import { TEMPLATE_CATALOG, filterTemplates, rankTemplates, getTemplate } from './template_registry.js';
 import { generate2015, generate2016, generate2017 } from './templates/canonical_generators.js';
+import { generate2024, generate2025, generate2026 } from './templates/recent_generators.js';
 
 export const TEMPLATE_2014 = 'SHIZUOKA_CIRCLE_ISOSCELES_PARALLEL_ASA_001';
 
@@ -152,7 +154,10 @@ const GENERATORS = {
   [TEMPLATE_2014]: generate2014Problem,
   SHIZUOKA_DIAMETER_ISOSCELES_AA_001: generate2015,
   SHIZUOKA_CIRCLE_PARALLEL_PARALLELOGRAM_LENGTH_001: generate2016,
-  SHIZUOKA_CIRCLE_ANGLE_BISECTOR_ISOSCELES_SIMILARITY_AREA_001: generate2017
+  SHIZUOKA_CIRCLE_ANGLE_BISECTOR_ISOSCELES_SIMILARITY_AREA_001: generate2017,
+  SHIZUOKA_CIRCLE_ISOSCELES_MOVING_POINT_ISOSCELES_2024_001: generate2024,
+  SHIZUOKA_CIRCLE_ISOSCELES_PARALLEL_SIMILARITY_2025_001: generate2025,
+  SHIZUOKA_CIRCLE_ISOSCELES_PARALLEL_CONGRUENCE_2026_001: generate2026
 };
 
 export class ProblemGenerator {
@@ -174,6 +179,12 @@ export function generateProblem(templateId, options = {}) {
     try {
       logger.debug('PROBLEM', `生成試行 ${i + 1}/${options.retries ?? 5}`, { templateId });
       const result = generator(options);
+      // 生成物を返す前に、定理カタログとの対応候補と幾何データの構造を監査する。
+      // 監査は証明器ではないため、未対応ステップがあっても生成自体を偽って失敗扱いしない。
+      result.validation = {
+        ...(result.validation ?? {}),
+        theorem_audit: auditGeneratedProblem(result)
+      };
       logger.info('PROBLEM', '生成成功', { templateId, attempt: i + 1 });
       return result;
     } catch (error) {

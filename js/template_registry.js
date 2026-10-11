@@ -37,6 +37,30 @@ export const TEMPLATE_CATALOG = [
     proofType: 'similarity', method: 'AA',
     features: ['circle', 'angle_bisector', 'isosceles', 'similarity', 'area_ratio'],
     difficulty: 5, sourceTemplate: '2017', generated: true
+  },
+  {
+    id: 'SHIZUOKA_CIRCLE_ISOSCELES_MOVING_POINT_ISOSCELES_2024_001',
+    year: 2024,
+    title: '円・動点・二等辺三角形・線分の長さ',
+    proofType: 'equal_length', method: 'isosceles_triangle_by_equal_base_angles',
+    features: ['circle', 'moving_point', 'isosceles', 'inscribed_angle', 'exterior_angle'],
+    difficulty: 5, sourceTemplate: '2024', generated: true
+  },
+  {
+    id: 'SHIZUOKA_CIRCLE_ISOSCELES_PARALLEL_SIMILARITY_2025_001',
+    year: 2025,
+    title: '円・動点・平行線・二等辺・相似・弧の長さ',
+    proofType: 'similarity', method: 'AA',
+    features: ['circle', 'moving_point', 'parallel', 'isosceles', 'similarity', 'arc_length'],
+    difficulty: 5, sourceTemplate: '2025', generated: true
+  },
+  {
+    id: 'SHIZUOKA_CIRCLE_ISOSCELES_PARALLEL_CONGRUENCE_2026_001',
+    year: 2026,
+    title: '円・二等辺三角形・平行線・合同・動点',
+    proofType: 'congruence', method: 'ASA',
+    features: ['circle', 'moving_point', 'parallel', 'isosceles', 'inscribed_angle', 'congruence'],
+    difficulty: 5, sourceTemplate: '2026', generated: true
   }
 ];
 

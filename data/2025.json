@@ -1,0 +1,785 @@
+{
+  "schema_version": "1.1.0",
+  "metadata": {
+    "id": "shizuoka_2025_math_07",
+    "prefecture": "静岡県",
+    "exam_type": "公立高校入試",
+    "subject": "数学",
+    "year": 2025,
+    "era": "令和7年度",
+    "problem_number": "7",
+    "total_points": 9,
+    "data_status": "source_verified"
+  },
+  "problem": {
+    "title": "令和7年度 静岡県公立高校入試 数学 大問7",
+    "statement": {
+      "summary": "4点A,B,C,Dは円Oの円周上、CA=CD。ACとBDの交点E。Eを通りBCに平行な直線とABの交点F。Pは弧DC上を動き、APとBDの交点G。PはC,Dと重ならない。",
+      "parts": [
+        {
+          "id": "P1",
+          "label": "(1)",
+          "type": "proof",
+          "points": 6,
+          "target": "△AFE∽△BGP"
+        },
+        {
+          "id": "P2",
+          "label": "(2)",
+          "type": "arc_length",
+          "points": 3,
+          "target": "小さい方の弧DP",
+          "answer": "23π/5 cm"
+        }
+      ]
+    }
+  },
+  "geometry": {
+    "coordinate_system": {
+      "type": "exact_euclidean_model",
+      "status": "verified_canonical",
+      "primary_model": "unit_circle",
+      "radius": 1,
+      "origin": "O=(0,0)",
+      "axis": "x right, y up",
+      "coordinate_basis": "図の配置を保ったP1/P2条件付きcanonical model",
+      "note": "実際の入試図のピクセル座標ではなく、図の点配置に合わせて数学的条件を厳密に満たす正規化座標。"
+    },
+    "points": {
+      "A": {
+        "role": "point",
+        "coordinate_ref": "geometry.coordinates.points.A"
+      },
+      "B": {
+        "role": "point",
+        "coordinate_ref": "geometry.coordinates.points.B"
+      },
+      "C": {
+        "role": "point",
+        "coordinate_ref": "geometry.coordinates.points.C"
+      },
+      "D": {
+        "role": "point",
+        "coordinate_ref": "geometry.coordinates.points.D"
+      },
+      "E": {
+        "role": "point",
+        "coordinate_ref": "geometry.coordinates.points.E"
+      },
+      "F": {
+        "role": "point",
+        "coordinate_ref": "geometry.coordinates.points.F"
+      },
+      "G": {
+        "role": "point",
+        "coordinate_ref": "geometry.coordinates.variants.P1.points.G"
+      },
+      "P": {
+        "role": "point",
+        "coordinate_ref": "geometry.coordinates.variants.P1.points.P"
+      },
+      "O": {
+        "role": "point",
+        "coordinate_ref": "geometry.coordinates.points.O"
+      }
+    },
+    "segments": [
+      {
+        "id": "AB",
+        "from": "A",
+        "to": "B"
+      },
+      {
+        "id": "AC",
+        "from": "A",
+        "to": "C"
+      },
+      {
+        "id": "CD",
+        "from": "C",
+        "to": "D"
+      },
+      {
+        "id": "BD",
+        "from": "B",
+        "to": "D"
+      },
+      {
+        "id": "BC",
+        "from": "B",
+        "to": "C"
+      },
+      {
+        "id": "BE",
+        "from": "B",
+        "to": "E"
+      },
+      {
+        "id": "AE",
+        "from": "A",
+        "to": "E"
+      },
+      {
+        "id": "EF",
+        "from": "E",
+        "to": "F"
+      },
+      {
+        "id": "AP",
+        "from": "A",
+        "to": "P"
+      },
+      {
+        "id": "PG",
+        "from": "P",
+        "to": "G"
+      },
+      {
+        "id": "BG",
+        "from": "B",
+        "to": "G"
+      },
+      {
+        "id": "BP",
+        "from": "B",
+        "to": "P"
+      },
+      {
+        "id": "DP",
+        "from": "D",
+        "to": "P"
+      }
+    ],
+    "lines": [
+      {
+        "id": "l_AC",
+        "through": [
+          "A",
+          "C"
+        ]
+      },
+      {
+        "id": "l_BD",
+        "through": [
+          "B",
+          "D"
+        ]
+      },
+      {
+        "id": "l_EF",
+        "through": [
+          "E",
+          "F"
+        ]
+      },
+      {
+        "id": "l_AP",
+        "through": [
+          "A",
+          "P"
+        ]
+      }
+    ],
+    "circles": [
+      {
+        "id": "O1",
+        "center": "O",
+        "through_points": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "P"
+        ]
+      }
+    ],
+    "triangles": [
+      {
+        "id": "AFE",
+        "vertices": [
+          "A",
+          "F",
+          "E"
+        ]
+      },
+      {
+        "id": "BGP",
+        "vertices": [
+          "B",
+          "G",
+          "P"
+        ]
+      },
+      {
+        "id": "CAD",
+        "vertices": [
+          "C",
+          "A",
+          "D"
+        ],
+        "properties": [
+          "isosceles",
+          "CA=CD"
+        ]
+      },
+      {
+        "id": "BAG",
+        "vertices": [
+          "B",
+          "A",
+          "G"
+        ],
+        "properties": [
+          "isosceles",
+          "BA=BG"
+        ]
+      }
+    ],
+    "incidence": [
+      "A,B,C,D,P on circle O",
+      "E=AC∩BD",
+      "F=AB∩line through E parallel BC",
+      "G=AP∩BD",
+      "P on arc DC"
+    ],
+    "relationships": [
+      "CA=CD",
+      "BC∥EF",
+      "BA=BG for P1",
+      "AP is diameter for P2",
+      "∠FEB=68° for P2",
+      "radius=9 cm for P2"
+    ],
+    "construction_sequence": [
+      "circle O with A,B,C,D",
+      "E=AC∩BD",
+      "through E draw line parallel BC and meet AB at F",
+      "choose P on arc DC",
+      "G=AP∩BD"
+    ],
+    "coordinates": {
+      "points": {
+        "O": {
+          "x": 0.0,
+          "y": 0.0,
+          "exact": [
+            "0.0",
+            "0.0"
+          ]
+        },
+        "A": {
+          "x": 0.0,
+          "y": 1.0,
+          "exact": [
+            "0.0",
+            "1.0"
+          ],
+          "polar_angle_degree": 90
+        },
+        "B": {
+          "x": -1.0,
+          "y": 0.0,
+          "exact": [
+            "-1.0",
+            "0.0"
+          ],
+          "polar_angle_degree": 180
+        },
+        "C": {
+          "x": -0.694658370459,
+          "y": -0.719339800339,
+          "exact": [
+            "-0.694658370459",
+            "-0.719339800339"
+          ],
+          "polar_angle_degree": 226
+        },
+        "D": {
+          "x": 0.999390827019,
+          "y": 0.034899496703,
+          "exact": [
+            "0.999390827019",
+            "0.034899496703"
+          ],
+          "polar_angle_degree": 2
+        },
+        "E": {
+          "x": -0.39979338633,
+          "y": 0.010476645412,
+          "exact": [
+            "-0.39979338633",
+            "0.010476645412"
+          ]
+        },
+        "F": {
+          "x": -0.57552518379,
+          "y": 0.42447481621,
+          "exact": [
+            "-0.57552518379",
+            "0.42447481621"
+          ]
+        }
+      },
+      "variants": {
+        "P1": {
+          "points": {
+            "F": {
+              "x": -0.57552518379,
+              "y": 0.42447481621,
+              "exact": [
+                "-0.57552518379",
+                "0.42447481621"
+              ]
+            },
+            "P": {
+              "x": 0.719339800339,
+              "y": -0.694658370459,
+              "exact": [
+                "0.719339800339",
+                "-0.694658370459"
+              ]
+            },
+            "G": {
+              "x": 0.413998170798,
+              "y": 0.02468142988,
+              "exact": [
+                "0.413998170798",
+                "0.02468142988"
+              ]
+            }
+          },
+          "description": "P1"
+        },
+        "P2": {
+          "points": {
+            "F": {
+              "x": -0.57552518379,
+              "y": 0.42447481621,
+              "exact": [
+                "-0.57552518379",
+                "0.42447481621"
+              ]
+            },
+            "P": {
+              "x": -0.0,
+              "y": -1.0,
+              "exact": [
+                "-0.0",
+                "-1.0"
+              ]
+            },
+            "G": {
+              "x": -0.0,
+              "y": 0.017455064928,
+              "exact": [
+                "-0.0",
+                "0.017455064928"
+              ]
+            }
+          },
+          "description": "P2"
+        }
+      }
+    }
+  },
+  "variables": {},
+  "given_conditions": [
+    {
+      "id": "C01",
+      "statement": "A,B,C,D are on circle O",
+      "type": "concyclic"
+    },
+    {
+      "id": "C02",
+      "statement": "CA=CD",
+      "type": "length_equality"
+    },
+    {
+      "id": "C03",
+      "statement": "E=AC∩BD",
+      "type": "intersection"
+    },
+    {
+      "id": "C04",
+      "statement": "EF∥BC",
+      "type": "parallel"
+    },
+    {
+      "id": "C05",
+      "statement": "P lies on arc DC",
+      "type": "incidence"
+    },
+    {
+      "id": "C06",
+      "statement": "G=AP∩BD",
+      "type": "intersection"
+    },
+    {
+      "id": "C07",
+      "part": "P1",
+      "statement": "BA=BG",
+      "type": "length_equality"
+    },
+    {
+      "id": "C08",
+      "part": "P2",
+      "statement": "AP is a diameter of circle O",
+      "type": "diameter"
+    },
+    {
+      "id": "C09",
+      "part": "P2",
+      "statement": "∠FEB=68°",
+      "type": "angle"
+    },
+    {
+      "id": "C10",
+      "part": "P2",
+      "statement": "radius O=9 cm",
+      "type": "radius"
+    }
+  ],
+  "derived_facts": [
+    {
+      "id": "F01",
+      "statement": "∠AEF=∠ACB",
+      "reason": [
+        "parallel_lines",
+        "C04"
+      ]
+    },
+    {
+      "id": "F02",
+      "statement": "∠BPG=∠ACB",
+      "reason": [
+        "inscribed_angle_arc_AB"
+      ]
+    },
+    {
+      "id": "F03",
+      "statement": "∠AEF=∠BPG",
+      "reason": [
+        "F01",
+        "F02"
+      ]
+    },
+    {
+      "id": "F04",
+      "statement": "∠ABG=∠ACD",
+      "reason": [
+        "inscribed_angle_arc_AD"
+      ]
+    },
+    {
+      "id": "F05",
+      "statement": "∠BAG=(180°−∠ABG)/2",
+      "reason": [
+        "isosceles_triangle",
+        "C07"
+      ]
+    },
+    {
+      "id": "F06",
+      "statement": "∠CAD=(180°−∠ACD)/2",
+      "reason": [
+        "isosceles_triangle",
+        "C02"
+      ]
+    },
+    {
+      "id": "F07",
+      "statement": "∠BAG=∠CAD",
+      "reason": [
+        "F04",
+        "F05",
+        "F06"
+      ]
+    },
+    {
+      "id": "F08",
+      "statement": "∠EAF=∠BAG−∠CAP",
+      "reason": [
+        "angle_subtraction"
+      ]
+    },
+    {
+      "id": "F09",
+      "statement": "∠PAD=∠CAD−∠CAP",
+      "reason": [
+        "angle_subtraction"
+      ]
+    },
+    {
+      "id": "F10",
+      "statement": "∠EAF=∠PAD",
+      "reason": [
+        "F07",
+        "F08",
+        "F09"
+      ]
+    },
+    {
+      "id": "F11",
+      "statement": "∠PBG=∠PAD",
+      "reason": [
+        "inscribed_angle_arc_PD"
+      ]
+    },
+    {
+      "id": "F12",
+      "statement": "∠EAF=∠PBG",
+      "reason": [
+        "F10",
+        "F11"
+      ]
+    },
+    {
+      "id": "F13",
+      "statement": "△AFE∽△BGP",
+      "reason": [
+        "F03",
+        "F12",
+        "AA"
+      ]
+    },
+    {
+      "id": "F14",
+      "part": "P2",
+      "statement": "∠CBD=68°",
+      "reason": [
+        "alternate_angles",
+        "C04",
+        "C09"
+      ]
+    },
+    {
+      "id": "F15",
+      "part": "P2",
+      "statement": "∠CAD=68°",
+      "reason": [
+        "inscribed_angle_arc_CD",
+        "F14"
+      ]
+    },
+    {
+      "id": "F16",
+      "part": "P2",
+      "statement": "∠ACD=44°",
+      "reason": [
+        "isosceles_triangle",
+        "C02",
+        "F15"
+      ]
+    },
+    {
+      "id": "F17",
+      "part": "P2",
+      "statement": "∠ABD=44°",
+      "reason": [
+        "inscribed_angle_arc_AD",
+        "F16"
+      ]
+    },
+    {
+      "id": "F18",
+      "part": "P2",
+      "statement": "∠ABP=90°",
+      "reason": [
+        "diameter_AP",
+        "C08"
+      ]
+    },
+    {
+      "id": "F19",
+      "part": "P2",
+      "statement": "∠DBP=46°",
+      "reason": [
+        "F17",
+        "F18"
+      ]
+    },
+    {
+      "id": "F20",
+      "part": "P2",
+      "statement": "∠DOP=92°",
+      "reason": [
+        "central_angle_twice_inscribed_angle",
+        "F19"
+      ]
+    },
+    {
+      "id": "F21",
+      "part": "P2",
+      "statement": "arc DP=23π/5 cm",
+      "reason": [
+        "arc_length_formula",
+        "F20",
+        "C10"
+      ]
+    }
+  ],
+  "theorem_library": [
+    "inscribed_angle",
+    "parallel_lines",
+    "isosceles_triangle",
+    "angle_subtraction",
+    "AA_similarity",
+    "diameter_right_angle",
+    "central_angle_twice_inscribed_angle",
+    "arc_length_formula"
+  ],
+  "proof": {
+    "target": "△AFE∽△BGP",
+    "method": "AA",
+    "proof_graph": [
+      [
+        "F01",
+        "F03"
+      ],
+      [
+        "F02",
+        "F03"
+      ],
+      [
+        "F04",
+        "F07"
+      ],
+      [
+        "F05",
+        "F07"
+      ],
+      [
+        "F06",
+        "F07"
+      ],
+      [
+        "F07",
+        "F10"
+      ],
+      [
+        "F10",
+        "F12"
+      ],
+      [
+        "F11",
+        "F12"
+      ],
+      [
+        "F03",
+        "F13"
+      ],
+      [
+        "F12",
+        "F13"
+      ]
+    ],
+    "steps": [
+      "FE∥BCより∠AEF=∠ACB",
+      "弧ABに対する円周角より∠BPG=∠ACB",
+      "よって∠AEF=∠BPG",
+      "弧ADに対する円周角より∠ABG=∠ACD",
+      "CA=CDより△CADは二等辺三角形、BA=BGより△BAGも二等辺三角形",
+      "以上から∠BAG=∠CAD",
+      "∠EAF=∠BAG−∠CAP、∠PAD=∠CAD−∠CAPより∠EAF=∠PAD",
+      "弧PDに対する円周角より∠PBG=∠PAD",
+      "よって∠EAF=∠PBG",
+      "2組の角がそれぞれ等しいので△AFE∽△BGP"
+    ]
+  },
+  "follow_up": {
+    "target": "小さい方の弧DPの長さ",
+    "answer": "23π/5 cm",
+    "solution_chain": [
+      "∠CBD=68°",
+      "∠CAD=68°",
+      "∠ACD=44°",
+      "∠ABD=44°",
+      "APが直径より∠ABP=90°",
+      "∠DBP=46°",
+      "∠DOP=92°",
+      "弧DP=2π×9×92/360=23π/5"
+    ]
+  },
+  "question_generation": {
+    "template_id": "SHIZUOKA_CIRCLE_ISOSCELES_PARALLEL_SIMILARITY_2025_001",
+    "family": "circle_moving_point_parallel_similarity",
+    "parameters": [
+      "radius",
+      "given_angle",
+      "moving_point_arc"
+    ],
+    "constraints": [
+      "CA=CD",
+      "EF∥BC",
+      "E=AC∩BD",
+      "F∈AB",
+      "G=AP∩BD",
+      "BA=BG",
+      "AP diameter for follow-up"
+    ],
+    "generation_ready": false
+  },
+  "answer_generation": {
+    "proof_sentence_templates": [
+      "FE∥BCより同位角は等しいので、∠AEF=∠ACB。",
+      "弧ABに対する円周角なので、∠BPG=∠ACB。",
+      "CA=CDより△CADは二等辺三角形。",
+      "BA=BGより△BAGは二等辺三角形。",
+      "2組の角がそれぞれ等しいので、△AFE∽△BGP。"
+    ],
+    "generation_ready": true
+  },
+  "validation": {
+    "geometry": {
+      "status": "symbolic_constraints",
+      "valid": true,
+      "errors": [],
+      "warnings": [
+        "座標配置は未固定"
+      ]
+    },
+    "proof": {
+      "status": "source_verified",
+      "valid": true
+    },
+    "answer": {
+      "P2": "23π/5 cm"
+    }
+  },
+  "difficulty": {
+    "overall": "high",
+    "proof": "high",
+    "calculation": "medium"
+  },
+  "generation": {
+    "method": "constraint_based",
+    "uses_llm": false,
+    "generation_ready": false
+  },
+  "source_analysis": {
+    "excel_fields": {
+      "circle_points": "A,B,C,D,P",
+      "auxiliary_points": "E,F,G",
+      "moving_point": "P",
+      "movement_range": "弧DC",
+      "intersections": "E=AC∩BD,F∈AB,G=AP∩BD",
+      "initial_conditions": "CA=CD, BC∥EF",
+      "moving_condition": "BA=BG",
+      "proof_target": "△AFE∽△BGP",
+      "properties": [
+        "円周角",
+        "同位角",
+        "頂角の等しい二等辺三角形の底角",
+        "角の加法",
+        "三段論法"
+      ]
+    },
+    "web_sources": [
+      "turn3view0",
+      "turn5search6"
+    ],
+    "notes": "Excelの抽出構造と公開解説を統合。",
+    "coordinate_status": "verified_from_figure_layout_and_problem_constraints",
+    "coordinate_note": "P1/P2の動点は同一座標ではないため、geometry.coordinates.variants に分離して保持。"
+  }
+}

@@ -1,0 +1,722 @@
+{
+  "schema_version": "1.1.0",
+  "metadata": {
+    "id": "shizuoka_2024_math_07",
+    "prefecture": "静岡県",
+    "exam_type": "公立高校入試",
+    "subject": "数学",
+    "year": 2024,
+    "era": "令和6年度",
+    "problem_number": "7",
+    "total_points": 9,
+    "data_status": "source_verified"
+  },
+  "problem": {
+    "title": "令和6年度 静岡県公立高校入試 数学 大問7",
+    "statement": {
+      "summary": "3点A,B,Cは円Oの円周上。AC上にAB=ADとなる点Dをとり、BDの延長と円Oとの交点をEとする。PはAE上を動く点、CPとBEの交点をFとする。",
+      "parts": [
+        {
+          "id": "P1",
+          "label": "(1)",
+          "type": "proof",
+          "points": 6,
+          "target": "PA=PC"
+        },
+        {
+          "id": "P2",
+          "label": "(2)",
+          "type": "angle_calculation",
+          "points": 3,
+          "target": "∠ABE",
+          "answer": "76°"
+        }
+      ]
+    }
+  },
+  "geometry": {
+    "coordinate_system": {
+      "type": "exact_euclidean_model",
+      "status": "verified_canonical",
+      "primary_model": "unit_circle",
+      "radius": 1,
+      "origin": "O=(0,0)",
+      "axis": "x right, y up",
+      "coordinate_basis": "図の配置を保ったP1/P2条件付きcanonical model",
+      "note": "実際の入試図のピクセル座標ではなく、図の点配置に合わせて数学的条件を厳密に満たす正規化座標。"
+    },
+    "points": {
+      "A": {
+        "role": "point",
+        "coordinate_ref": "geometry.coordinates.points.A"
+      },
+      "B": {
+        "role": "point",
+        "coordinate_ref": "geometry.coordinates.points.B"
+      },
+      "C": {
+        "role": "point",
+        "coordinate_ref": "geometry.coordinates.points.C"
+      },
+      "D": {
+        "role": "point",
+        "coordinate_ref": "geometry.coordinates.points.D"
+      },
+      "E": {
+        "role": "point",
+        "coordinate_ref": "geometry.coordinates.points.E"
+      },
+      "P": {
+        "role": "point",
+        "coordinate_ref": "geometry.coordinates.variants.P1.points.P"
+      },
+      "F": {
+        "role": "point",
+        "coordinate_ref": "geometry.coordinates.variants.P1.points.F"
+      },
+      "O": {
+        "role": "point",
+        "coordinate_ref": "geometry.coordinates.points.O"
+      }
+    },
+    "segments": [
+      {
+        "id": "AB",
+        "from": "A",
+        "to": "B"
+      },
+      {
+        "id": "AC",
+        "from": "A",
+        "to": "C"
+      },
+      {
+        "id": "AD",
+        "from": "A",
+        "to": "D"
+      },
+      {
+        "id": "BD",
+        "from": "B",
+        "to": "D"
+      },
+      {
+        "id": "BE",
+        "from": "B",
+        "to": "E"
+      },
+      {
+        "id": "AE",
+        "from": "A",
+        "to": "E"
+      },
+      {
+        "id": "CP",
+        "from": "C",
+        "to": "P"
+      },
+      {
+        "id": "EF",
+        "from": "E",
+        "to": "F"
+      },
+      {
+        "id": "CE",
+        "from": "C",
+        "to": "E"
+      }
+    ],
+    "lines": [
+      {
+        "id": "l_BD",
+        "through": [
+          "B",
+          "D"
+        ]
+      },
+      {
+        "id": "l_AE",
+        "through": [
+          "A",
+          "E"
+        ]
+      },
+      {
+        "id": "l_CP",
+        "through": [
+          "C",
+          "P"
+        ]
+      },
+      {
+        "id": "l_BE",
+        "through": [
+          "B",
+          "E"
+        ]
+      }
+    ],
+    "circles": [
+      {
+        "id": "O1",
+        "center": "O",
+        "through_points": [
+          "A",
+          "B",
+          "C",
+          "E"
+        ]
+      }
+    ],
+    "triangles": [
+      {
+        "id": "ABD",
+        "vertices": [
+          "A",
+          "B",
+          "D"
+        ],
+        "properties": [
+          "isosceles",
+          "AB=AD"
+        ]
+      },
+      {
+        "id": "PAC",
+        "vertices": [
+          "P",
+          "A",
+          "C"
+        ]
+      },
+      {
+        "id": "CDF",
+        "vertices": [
+          "C",
+          "D",
+          "F"
+        ]
+      },
+      {
+        "id": "EFP",
+        "vertices": [
+          "E",
+          "F",
+          "P"
+        ]
+      }
+    ],
+    "incidence": [
+      "A,B,C,E are on circle O",
+      "D lies on AC",
+      "E lies on line BD",
+      "P lies on segment AE",
+      "F=CP∩BE"
+    ],
+    "intersections": [
+      {
+        "point": "E",
+        "lines": [
+          "BD",
+          "circle O"
+        ]
+      },
+      {
+        "point": "F",
+        "lines": [
+          "CP",
+          "BE"
+        ]
+      }
+    ],
+    "relationships": [
+      "AB=AD",
+      "P is variable on AE",
+      "∠EFC=∠ABC for P1",
+      "∠EPC=90° for P2",
+      "arc BC : arc CE = 4 : 5 for P2",
+      "∠CFD=49° for P2"
+    ],
+    "construction_sequence": [
+      "circle O with A,B,C",
+      "D on AC such that AB=AD",
+      "extend BD to meet circle again at E",
+      "choose P on AE",
+      "draw CP and BE; F=CP∩BE"
+    ],
+    "display": {
+      "diagram_required": true
+    },
+    "coordinates": {
+      "points": {
+        "O": {
+          "x": -0.0,
+          "y": 0.0,
+          "exact": [
+            "-0.0",
+            "0.0"
+          ]
+        },
+        "A": {
+          "x": -0.0,
+          "y": 1.0,
+          "exact": [
+            "-0.0",
+            "1.0"
+          ],
+          "polar_angle_degree": 90
+        },
+        "B": {
+          "x": -0.990268068742,
+          "y": 0.13917310096,
+          "exact": [
+            "-0.990268068742",
+            "0.13917310096"
+          ],
+          "polar_angle_degree": 172
+        },
+        "C": {
+          "x": -0.669130606359,
+          "y": -0.743144825477,
+          "exact": [
+            "-0.669130606359",
+            "-0.743144825477"
+          ],
+          "polar_angle_degree": 228
+        },
+        "D": {
+          "x": -0.470221058,
+          "y": -0.224967736185,
+          "exact": [
+            "-0.470221058",
+            "-0.224967736185"
+          ]
+        },
+        "E": {
+          "x": 0.469471562786,
+          "y": -0.882947592859,
+          "exact": [
+            "0.469471562786",
+            "-0.882947592859"
+          ],
+          "polar_angle_degree": 298
+        }
+      },
+      "variants": {
+        "P1": {
+          "points": {
+            "P": {
+              "x": 0.275716270316,
+              "y": -0.105837560048,
+              "exact": [
+                "0.275716270316",
+                "-0.105837560048"
+              ]
+            },
+            "F": {
+              "x": -0.190882715051,
+              "y": -0.420562549628,
+              "exact": [
+                "-0.190882715051",
+                "-0.420562549628"
+              ]
+            }
+          },
+          "description": "P1"
+        },
+        "P2": {
+          "points": {
+            "P": {
+              "x": 0.370016788606,
+              "y": -0.484056280831,
+              "exact": [
+                "0.370016788606",
+                "-0.484056280831"
+              ]
+            },
+            "F": {
+              "x": 0.02326586123,
+              "y": -0.570510997038,
+              "exact": [
+                "0.02326586123",
+                "-0.570510997038"
+              ]
+            }
+          },
+          "description": "P2"
+        }
+      }
+    }
+  },
+  "variables": {
+    "x": {
+      "meaning": "∠BAC",
+      "domain": "positive angle"
+    }
+  },
+  "given_conditions": [
+    {
+      "id": "C01",
+      "type": "incidence",
+      "statement": "A,B,C,E are on circle O"
+    },
+    {
+      "id": "C02",
+      "type": "length_equality",
+      "statement": "AB=AD"
+    },
+    {
+      "id": "C03",
+      "type": "collinear",
+      "statement": "A,D,C are collinear"
+    },
+    {
+      "id": "C04",
+      "type": "collinear",
+      "statement": "B,D,E are collinear"
+    },
+    {
+      "id": "C05",
+      "type": "collinear",
+      "statement": "A,P,E are collinear"
+    },
+    {
+      "id": "C06",
+      "type": "intersection",
+      "statement": "F=CP∩BE"
+    },
+    {
+      "id": "C07",
+      "type": "angle_equality",
+      "part": "P1",
+      "statement": "∠EFC=∠ABC"
+    },
+    {
+      "id": "C08",
+      "type": "angle_right",
+      "part": "P2",
+      "statement": "∠EPC=90°"
+    },
+    {
+      "id": "C09",
+      "type": "arc_ratio",
+      "part": "P2",
+      "statement": "arc BC : arc CE = 4 : 5"
+    },
+    {
+      "id": "C10",
+      "type": "angle",
+      "part": "P2",
+      "statement": "∠CFD=49°"
+    }
+  ],
+  "derived_facts": [
+    {
+      "id": "F01",
+      "statement": "△ABD is isosceles, so ∠ABD=∠ADB",
+      "reason": [
+        "C02"
+      ]
+    },
+    {
+      "id": "F02",
+      "statement": "∠CDF=∠ADB",
+      "reason": [
+        "vertical_angles",
+        "C04",
+        "C06"
+      ]
+    },
+    {
+      "id": "F03",
+      "statement": "∠ABD=∠CDF",
+      "reason": [
+        "F01",
+        "F02"
+      ]
+    },
+    {
+      "id": "F04",
+      "statement": "∠DCF=∠EFC−∠CDF",
+      "reason": [
+        "exterior_angle_theorem"
+      ]
+    },
+    {
+      "id": "F05",
+      "statement": "∠EBC=∠ABC−∠ABD",
+      "reason": [
+        "angle_addition"
+      ]
+    },
+    {
+      "id": "F06",
+      "statement": "∠DCF=∠EBC",
+      "reason": [
+        "F03",
+        "F04",
+        "F05",
+        "C07"
+      ]
+    },
+    {
+      "id": "F07",
+      "statement": "∠PAC=∠EBC",
+      "reason": [
+        "equal_inscribed_angles_on_arc_CE"
+      ]
+    },
+    {
+      "id": "F08",
+      "statement": "∠PAC=∠PCA",
+      "reason": [
+        "F06",
+        "F07",
+        "collinearity"
+      ]
+    },
+    {
+      "id": "F09",
+      "statement": "PA=PC",
+      "reason": [
+        "isosceles_triangle_definition",
+        "F08"
+      ]
+    },
+    {
+      "id": "F10",
+      "part": "P2",
+      "statement": "∠EFP=∠CFD=49°",
+      "reason": [
+        "vertical_angles",
+        "C10"
+      ]
+    },
+    {
+      "id": "F11",
+      "part": "P2",
+      "statement": "∠FEP=41°",
+      "reason": [
+        "triangle_angle_sum",
+        "C08",
+        "F10"
+      ]
+    },
+    {
+      "id": "F12",
+      "part": "P2",
+      "statement": "∠BAC:∠EAC=4:5",
+      "reason": [
+        "inscribed_angle_arc_ratio",
+        "C09"
+      ]
+    },
+    {
+      "id": "F13",
+      "part": "P2",
+      "statement": "∠BAC=4x, ∠EAC=5x",
+      "reason": [
+        "F12"
+      ]
+    },
+    {
+      "id": "F14",
+      "part": "P2",
+      "statement": "∠ABE=139°−9x",
+      "reason": [
+        "triangle_angle_sum",
+        "F11",
+        "F13"
+      ]
+    },
+    {
+      "id": "F15",
+      "part": "P2",
+      "statement": "∠ABE=90°−2x",
+      "reason": [
+        "isosceles_triangle_ABD",
+        "F13"
+      ]
+    },
+    {
+      "id": "F16",
+      "part": "P2",
+      "statement": "x=7°",
+      "reason": [
+        "F14",
+        "F15"
+      ]
+    },
+    {
+      "id": "F17",
+      "part": "P2",
+      "statement": "∠ABE=76°",
+      "reason": [
+        "F15",
+        "F16"
+      ]
+    }
+  ],
+  "theorem_library": [
+    "inscribed_angle",
+    "vertical_angles",
+    "isosceles_triangle",
+    "exterior_angle_theorem",
+    "triangle_angle_sum",
+    "arc_angle_ratio",
+    "angle_addition"
+  ],
+  "proof": {
+    "target": "PA=PC",
+    "method": "isosceles_triangle_by_equal_base_angles",
+    "proof_graph": [
+      [
+        "C02",
+        "F01"
+      ],
+      [
+        "F01",
+        "F03"
+      ],
+      [
+        "F02",
+        "F03"
+      ],
+      [
+        "F03",
+        "F04"
+      ],
+      [
+        "F04",
+        "F06"
+      ],
+      [
+        "C07",
+        "F06"
+      ],
+      [
+        "F05",
+        "F06"
+      ],
+      [
+        "F06",
+        "F08"
+      ],
+      [
+        "F07",
+        "F08"
+      ],
+      [
+        "F08",
+        "F09"
+      ]
+    ],
+    "steps": [
+      "∠PAC=∠EBC（弧CEに対する円周角）",
+      "AB=ADより△ABDは二等辺三角形、∠ABD=∠ADB",
+      "対頂角より∠CDF=∠ADB",
+      "したがって∠ABD=∠CDF",
+      "∠EFCは△CDFの外角なので∠DCF=∠EFC−∠CDF",
+      "∠ABC=∠ABD+∠EBCより∠EBC=∠ABC−∠ABD",
+      "仮定∠EFC=∠ABCと上記より∠DCF=∠EBC",
+      "よって∠PAC=∠DCF=∠PCA",
+      "△PACは二等辺三角形だからPA=PC"
+    ]
+  },
+  "follow_up": {
+    "target": "∠ABE",
+    "answer": "76°",
+    "solution_chain": [
+      "∠EFP=49°",
+      "∠FEP=41°",
+      "∠BAC:∠EAC=4:5",
+      "∠BAC=4x, ∠EAC=5x",
+      "∠ABE=139−9x",
+      "AB=ADより∠ABE=90−2x",
+      "x=7",
+      "∠ABE=76°"
+    ]
+  },
+  "question_generation": {
+    "template_id": "SHIZUOKA_CIRCLE_ISOSCELES_MOVING_POINT_ISOSCELES_2024_001",
+    "family": "circle_moving_point_equal_length",
+    "parameters": [
+      "arc_ratio",
+      "given_angle",
+      "point_on_chord"
+    ],
+    "constraints": [
+      "A,B,C,E concyclic",
+      "D∈AC",
+      "AB=AD",
+      "P∈AE",
+      "F=CP∩BE",
+      "target PA=PC"
+    ],
+    "generation_ready": false
+  },
+  "answer_generation": {
+    "proof_sentence_templates": [
+      "弧{arc}に対する円周角なので、∠{a}=∠{b}。",
+      "AB=ADより△ABDは二等辺三角形なので、∠ABD=∠ADB。",
+      "対頂角は等しいので、∠{a}=∠{b}。",
+      "したがって∠PAC=∠PCA。",
+      "よってPA=PC。"
+    ],
+    "generation_ready": true
+  },
+  "validation": {
+    "geometry": {
+      "status": "symbolic_constraints",
+      "valid": true,
+      "errors": [],
+      "warnings": [
+        "座標配置は未固定"
+      ]
+    },
+    "proof": {
+      "status": "source_verified",
+      "valid": true
+    },
+    "answer": {
+      "P2": "76°"
+    }
+  },
+  "difficulty": {
+    "overall": "high",
+    "proof": "high",
+    "calculation": "medium"
+  },
+  "generation": {
+    "method": "constraint_based",
+    "uses_llm": false,
+    "generation_ready": false
+  },
+  "source_analysis": {
+    "excel_fields": {
+      "circle_points": "A,B,C,E",
+      "auxiliary_points": "D,F,P",
+      "moving_point": "P",
+      "movement_range": "線分AE",
+      "intersections": "D=AC上,E=BD∩円O,F=CP∩BE",
+      "initial_conditions": "AB=AD",
+      "moving_condition": "∠EFC=∠ABC",
+      "proof_target": "PA=PC",
+      "properties": [
+        "円周角",
+        "対頂角",
+        "二等辺三角形",
+        "外角定理",
+        "角の加法",
+        "三段論法"
+      ]
+    },
+    "web_sources": [
+      "turn7view0",
+      "turn5search7"
+    ],
+    "notes": "公開解説とExcelの構造を統合。",
+    "coordinate_status": "verified_from_figure_layout_and_problem_constraints",
+    "coordinate_note": "P1/P2の動点は同一座標ではないため、geometry.coordinates.variants に分離して保持。"
+  }
+}

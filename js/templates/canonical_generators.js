@@ -120,6 +120,20 @@ function rationalApprox(value, maxDenominator = 24, tolerance = 1e-8) {
  * 数値を「整数 / 分数 / √n分数」のいずれかに分類する。
  * 係数としてπを伴う場合は coefficient に対して判定する。
  */
+function reduceRadicand(radicand) {
+  let n = Math.trunc(radicand);
+  let outside = 1;
+  for (let p = 2; p * p <= n; p++) {
+    let count = 0;
+    while (n % (p * p) === 0) {
+      n /= p * p;
+      outside *= p;
+      count++;
+    }
+  }
+  return { outside, radicand: n };
+}
+
 function classifySimpleNumber(value, options = {}) {
   const maxDenominator = options.maxDenominator ?? 24;
   const maxRadicand = options.maxRadicand ?? 100;
@@ -135,23 +149,28 @@ function classifySimpleNumber(value, options = {}) {
     };
   }
 
-  // value = √n / d を探索する。
+  // value = k√n / d を探索する。
+  // k=1だけでなく、2√3/3 のような「平方根が分子に来る分数」も許可する。
   for (let d = 1; d <= maxDenominator; d++) {
-    const n = value * d;
-    const n2 = n * n;
-    const roundedN2 = Math.round(n2);
-    if (
-      roundedN2 >= 1 &&
-      roundedN2 <= maxRadicand &&
-      !isPerfectSquareInt(roundedN2) &&
-      Math.abs(n2 - roundedN2) <= tolerance
-    ) {
-      return {
-        type: 'sqrt_fraction',
-        numerator: 1,
-        denominator: d,
-        radicand: roundedN2
-      };
+    for (let k = 1; k <= maxDenominator; k++) {
+      const n = value * d / k;
+      const n2 = n * n;
+      const roundedN2 = Math.round(n2);
+      if (
+        roundedN2 >= 1 &&
+        roundedN2 <= maxRadicand &&
+        !isPerfectSquareInt(roundedN2) &&
+        Math.abs(n2 - roundedN2) <= tolerance
+      ) {
+        const reduced = reduceRadicand(roundedN2);
+        const fraction = simplifyFraction(k * reduced.outside, d);
+        return {
+          type: 'sqrt_fraction',
+          numerator: fraction.n,
+          denominator: fraction.d,
+          radicand: reduced.radicand
+        };
+      }
     }
   }
 
@@ -167,7 +186,11 @@ function formatSimpleNumber(value, options = {}) {
   if (classified.type === 'fraction') {
     return `${classified.numerator}/${classified.denominator}`;
   }
-  return `${sign}√${classified.radicand}/${classified.denominator}`;
+  const rootNumerator = classified.numerator === 1
+    ? `√${classified.radicand}`
+    : `${classified.numerator}√${classified.radicand}`;
+  if (classified.denominator === 1) return `${sign}${rootNumerator}`;
+  return `${sign}${rootNumerator}/${classified.denominator}`;
 }
 
 function formatPiMultiple(coefficient) {
@@ -315,10 +338,10 @@ function build2015(options, random) {
   data.geometry = unitGeometry;
   data.problem.parts[1].question = `ADを延長し、円Oとの交点をHとする。∠CDH=${round(angleCDH, 0)}°、円Oの半径が${round(radius, 2)}cmのとき、弧CHの長さを求めなさい。`;
   data.problem.parts[1].target.answer = answer;
-  data.follow_up.P2.givens.radius = round(radius, 4);
+  data.follow_up.P2.givens.radius = formatGeneratedLength(radius);
   data.follow_up.P2.givens.angle_CDH = round(angleCDH, 0);
   data.follow_up.P2.answer = answer;
-  data.follow_up.P2.substitution = `L=2π×${round(radius, 4)}×${round(chordArcAngle, 0)}/360`;
+  data.follow_up.P2.substitution = `L=2π×${formatGeneratedLength(radius)}×${round(chordArcAngle, 0)}/360`;
   return data;
 }
 
@@ -402,7 +425,8 @@ function solveEqualDistancePoint(B, C, E) {
 function formatGeneratedLength(value, exactText = null) {
   if (exactText) return exactText;
   const simple = formatSimpleNumber(value);
-  return simple ?? round(value, 2).toString();
+  if (!simple) throw new Error(`生成された長さが許容形式ではありません: ${value}`);
+  return simple;
 }
 
 function build2017(options, random) {
@@ -459,10 +483,15 @@ function build2017(options, random) {
   data.problem.parts[1].question = `AD=${adText}cm、AE=${aeText}cm、EC=${ecText}cmのとき、△CDEの面積は△DGEの面積の何倍か答えなさい。`;
   data.problem.parts[1].target.answer = areaRatioAnswer;
   data.follow_up.P2.answer = areaRatioAnswer;
-  data.follow_up.P2.givens = { AD: round(AD, 4), AE: round(AE, 4), EC: round(EC, 4) };
-  data.variables.AG.value = String(round(AG, 4));
-  data.variables.DG.value = String(round(DG, 4));
-  data.generation.parameters.derived = { AD: round(AD, 4), AE: round(AE, 4), EC: round(EC, 4), AG: round(AG, 4), DG: round(DG, 4), areaRatio: areaRatioAnswer };
+  const exactAD = formatGeneratedLength(AD);
+  const exactAE = formatGeneratedLength(AE);
+  const exactEC = formatGeneratedLength(EC);
+  const exactAG = formatGeneratedLength(AG);
+  const exactDG = formatGeneratedLength(DG);
+  data.follow_up.P2.givens = { AD: exactAD, AE: exactAE, EC: exactEC };
+  data.variables.AG.value = exactAG;
+  data.variables.DG.value = exactDG;
+  data.generation.parameters.derived = { AD: exactAD, AE: exactAE, EC: exactEC, AG: exactAG, DG: exactDG, areaRatio: areaRatioAnswer };
   return data;
 }
 
