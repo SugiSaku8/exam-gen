@@ -1,91 +1,117 @@
-/** Convert common Japanese entrance-exam geometry notation into MathJax TeX.
- * The input is plain text (not trusted HTML); the result is safe HTML with TeX delimiters.
+/**
+ * Convert exam geometry text and inline mathematical notation into safe HTML
+ * with MathJax delimiters. All generated TeX is immediately tokenized so later
+ * substitutions can never corrupt the inside of a formula (e.g. 29+17√43)/23.
  */
 export function formatMathText(value) {
   let text = escapeHtml(String(value ?? ''));
-  const protectedTex = [];
-  // Preserve TeX already supplied by templates, avoiding double conversion.
-  text = text.replace(/\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\]/g, match => {
-    const token = `@@MATHJAX_TEX_${protectedTex.length}@@`;
-    protectedTex.push(match);
+  const math = [];
+  const stash = (tex, display = false) => {
+    const token = `@@MATHJAX_TEX_${math.length}@@`;
+    math.push(display ? `\\[\\displaystyle ${tex}\\]` : `\\(${tex}\\)`);
+    return token;
+  };
+
+  // Preserve existing MathJax expressions first.
+  text = text.replace(/\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\]/g, s => {
+    const token = `@@MATHJAX_TEX_${math.length}@@`;
+    math.push(s);
     return token;
   });
 
-  // Translate known English geometry statements before math tokenization.
+  // Capture complete parenthesized numerators BEFORE any notation replacement.
+  // Otherwise a radical pass can convert only the numerator and leave `)/23`.
+  text = protectParenthesizedFractions(text, stash);
+
+  // Normalize common English labels/conditions from imported templates.
   text = text
     .replace(/\b([A-Z](?:\s*,\s*[A-Z])*)\s+are on circle\s+([A-Z])/gi,
       (_, points, circle) => `${points.split(/\s*,\s*/).join('、')}は円${circle}の円周上にある`)
-    .replace(/\b([A-Z])\s+lies on arc\s+([A-Z]{2})\b/gi, (_, point, arc) => `${point}は弧${arc}上にある`)
+    .replace(/\b([A-Z])\s+lies on arc\s+([A-Z]{2})\b/gi, (_, p, a) => `${p}は弧${a}上にある`)
     .replace(/\barc\s+([A-Z]{2})\s*:\s*arc\s+([A-Z]{2})\s*[=＝]\s*(\d+)\s*:\s*(\d+)/gi,
-      (_, first, second, a, b) => `弧${first}と弧${second}の長さの比は\\(${a}:${b}\\)`)
+      (_, a, b, n, d) => `弧${a}と弧${b}の長さの比は${stash(`${n}:${d}`)}`)
     .replace(/\barc\s+([A-Z]{2})/gi, '弧$1')
-    .replace(/\b([A-Z](?:\s*,\s*[A-Z])*)\s+are collinear\b/gi,
-      (_, points) => `${points.split(/\s*,\s*/).join('、')}は一直線上にある`)
-    .replace(/△([A-Z]{3})\s+is isosceles,\s*so\s*(∠[A-Z]{3}\s*[=＝]\s*∠[A-Z]{3})/gi,
-      (_, triangle, equality) => `△${triangle}は二等辺三角形なので、${equality}`)
-    .replace(/\b([A-Z]{2})\s+is a diameter of circle\s+([A-Z])\b/gi, (_, segment, circle) => `${segment}は円${circle}の直径である`)
-    .replace(/\bradius\s+([A-Z])\s*[=＝]\s*(\d+(?:\.\d+)?)\s*(cm)?\b/gi,
-      (_, circle, radius, unit) => `円${circle}の半径は${radius}${unit ? ' cm' : ''}`)
+    .replace(/\b([A-Z]{2})\s+is a diameter of circle\s+([A-Z])\b/gi, (_, s, c) => `${s}は円${c}の直径である`)
+    .replace(/\bradius\s+([A-Z])\s*[=＝]\s*(\d+(?:\.\d+)?)\s*(cm)?\b/gi, (_, c, r, u) => `円${c}の半径は${r}${u ? ' cm' : ''}`)
+    .replace(/\b([A-Z](?:\s*,\s*[A-Z])*)\s+are collinear\b/gi, (_, ps) => `${ps.split(/\s*,\s*/).join('、')}は一直線上にある`)
+    .replace(/(?:△\s*)?\b([A-Z]{3})\s+is isosceles,\s*so\s*∠([A-Z]{3})\s*[=＝]\s*∠([A-Z]{3})/gi,
+      (_, tri, a, b) => `${stash(`\\triangle ${tri}`)}は二等辺三角形なので、${stash(`\\angle ${a}=\\angle ${b}`)}`)
     .replace(/angle_角度の名前/gi, '角度')
-    .replace(/\bangle_([A-Z]{3})\b/g, '∠$1')
-    .replace(/\btriangle_([A-Z]{3})\b/gi, '△$1')
+    .replace(/\bangle_([A-Z]{3})\b/g, (_, a) => stash(`\\angle ${a}`))
+    .replace(/\bangle_([A-Za-z][A-Za-z0-9_]*)\b/g, (_, a) => `角${a.replace(/_/g, ' ')}`)
+    .replace(/\btriangle_([A-Z]{3})\b/gi, (_, a) => stash(`\\triangle ${a}`))
     .replace(/\bdiameter_([A-Z]{2})\b/gi, '$1は直径')
-    .replace(/\bcircle_([A-Z])\b/gi, '円$1')
-    .replace(/\bangle_([A-Za-z][A-Za-z0-9_]*)\b/g, (_, label) => `角${label.replace(/_/g, ' ')}`);
+    .replace(/\bcircle_([A-Z])\b/gi, '円$1');
 
-  // Keep arc-length equalities together as one complete mathematical expression.
-  text = text.replace(/弧\s*([A-Z]{2})\s*[=＝]\s*(\d+)\s*π(?:\s*\/\s*(\d+))?(?:\s*(cm))?/g,
-    (_, arc, numerator, denominator, unit) => `\\(\\widehat{${arc}}=${denominator ? `\\frac{${numerator}\\pi}{${denominator}}` : `${numerator}\\pi`}${unit ? '\\,\\mathrm{cm}' : ''}\\)`);
+  // Arc length forms should remain one complete formula.
+  text = text.replace(/(?:弧\s*)?([A-Z]{2})\s*[=＝]\s*(\d+(?:\.\d+)?)\s*π\s*\/\s*(\d+)(?:\s*(cm))?/g,
+    (whole, arc, n, d, unit) => {
+      const isArc = whole.trim().startsWith('弧');
+      return stash(`${isArc ? `\\widehat{${arc}}=` : ''}\\frac{${n}\\pi}{${d}}${unit ? '\\,\\mathrm{cm}' : ''}`);
+    });
+  text = text.replace(/(?:弧\s*)?([A-Z]{2})\s*[=＝]\s*(\d+(?:\.\d+)?)\s*π(?![A-Za-z])(?:\s*(cm))?/g,
+    (whole, arc, n, unit) => stash(`${whole.trim().startsWith('弧') ? `\\widehat{${arc}}=` : ''}${n}\\pi${unit ? '\\,\\mathrm{cm}' : ''}`));
 
-  // Exact multiples of pi, including fractional arc lengths such as 46π/5.
+  // Pi expressions and ordinary fractions are converted before any broad symbol
+  // replacements. Each result is stashed, preventing partial conversion later.
   text = text.replace(/(\d+(?:\.\d+)?)\s*π\s*\/\s*(\d+)(?:\s*(cm))?/g,
-    (_, numerator, denominator, unit) => `\\(\\displaystyle \\frac{${numerator}\\pi}{${denominator}}${unit ? '\\,\\mathrm{cm}' : ''}\\)`);
-  text = text.replace(/(\d+(?:\.\d+)?)\s*π(?![A-Za-z])/g, (_, n) => `\\(${n}\\pi\\)`);
-  text = text.replace(/π\s*\/\s*(\d+)/g, (_, denominator) => `\\(\\displaystyle \\frac{\\pi}{${denominator}}\\)`);
+    (_, n, d, u) => stash(`\\frac{${n}\\pi}{${d}}${u ? '\\,\\mathrm{cm}' : ''}`));
+  text = text.replace(/π\s*\/\s*(\d+)/g, (_, d) => stash(`\\frac{\\pi}{${d}}`));
+  text = text.replace(/(\d+(?:\.\d+)?)\s*π(?![A-Za-z])/g, (_, n) => stash(`${n}\\pi`));
+  // Keep arithmetic expressions involving radicals together, not as isolated symbols.
+  text = text.replace(/\(?[+-]?\d+(?:\s*[+-]\s*\d+\s*√(?:\([^()]*\)|\d+))+\)?/g, expr =>
+    stash(toTexExpression(expr.replace(/^\(|\)$/g, ''))));
+  text = text.replace(/\b(\d+)\s*\/\s*(\d+)\b/g, (_, n, d) => stash(`\\frac{${n}}{${d}}`));
 
-  // Whole radical fraction, e.g. (7+4√(AD²+16AE²))/23.
-  text = text.replace(/\(([^()\n]*√\([^()\n]*\)[^()\n]*)\)\s*\/\s*(\d+)/g,
-    (_, numerator, denominator) => `\\[\\displaystyle \\frac{${toTexExpression(numerator)}}{${denominator}}\\]`);
-  // Radical with a parenthesized expression, including superscripts.
-  text = text.replace(/√\(((?:[^()]|\([^()]*\))*)\)/g, (_, inside) => `\\(\\sqrt{${toTexExpression(inside)}}\\)`);
-  // Equality of two angles/arcs is kept in one TeX span, rather than splitting around '='.
-  text = text.replace(/∠\s*([A-Z]{3})\s*[＝=]\s*∠\s*([A-Z]{3})/g, (_, a, b) => {
-    const token = `@@MATHJAX_TEX_${protectedTex.length}@@`;
-    protectedTex.push(`\\(\\angle ${a}=\\angle ${b}\\)`);
-    return token;
-  });
-  text = text.replace(/弧\s*([A-Z]{2})\s*[＝=]\s*弧\s*([A-Z]{2})/g, (_, a, b) => {
-    const token = `@@MATHJAX_TEX_${protectedTex.length}@@`;
-    protectedTex.push(`弧\\(\\widehat{${a}}=\\widehat{${b}}\\)`);
-    return token;
-  });
-  // Similarity / congruence statements must be converted as one math span.
-  text = text.replace(/△\s*([A-Z]{3})\s*(?:∽|∼|≃|≅|≡)\s*△\s*([A-Z]{3})/g,
-    (_, a, b) => `\\(\\triangle ${a}\\sim\\triangle ${b}\\)`);
-  text = text.replace(/△\s*([A-Z]{3})/g, (_, a) => `\\(\\triangle ${a}\\)`);
-  text = text.replace(/∠\s*([A-Z]{3})/g, (_, a) => `\\(\\angle ${a}\\)`);
-  text = text.replace(/弧\s*([A-Z]{2})/g, (_, a) => `弧\\(\\widehat{${a}}\\)`);
+  // Geometry relations, preserving complete equalities as one formula.
+  text = text.replace(/∠\s*([A-Z]{3})\s*[＝=]\s*∠\s*([A-Z]{3})/g, (_, a, b) => stash(`\\angle ${a}=\\angle ${b}`));
+  text = text.replace(/△\s*([A-Z]{3})\s*(?:∽|∼|≃|≅|≡)\s*△\s*([A-Z]{3})/g, (_, a, b) => stash(`\\triangle ${a}\\sim\\triangle ${b}`));
+  text = text.replace(/△\s*([A-Z]{3})/g, (_, a) => stash(`\\triangle ${a}`));
+  text = text.replace(/∠\s*([A-Z]{3})/g, (_, a) => stash(`\\angle ${a}`));
+  text = text.replace(/弧\s*([A-Z]{2})/g, (_, a) => `弧${stash(`\\widehat{${a}}`)}`);
+  text = text.replace(/([A-Z]{2,3}(?:\s*[＝=]\s*(?:[A-Z]{2,3}|\d+(?:\.\d+)?(?:\s*cm)?)){2,})/g, expr =>
+    stash(expr.replace(/＝/g, '=').replace(/\s*cm/g, '\\,\\mathrm{cm}')));
+  text = text.replace(/([A-Z]{2,3})\s*[＝=]\s*([A-Z]{2,3})/g, (_, a, b) => stash(`${a}=${b}`));
+  text = text.replace(/([A-Z]{2,3})\s*[＝=]\s*(\d+(?:\.\d+)?)(?:\s*cm)?/g, (_, a, n) => stash(`${a}=${n}`));
+  text = text.replace(/([A-Z]{2,3})\s*⟂\s*([A-Z]{2,3})/g, (_, a, b) => stash(`${a}\\perp ${b}`));
+  text = text.replace(/([A-Z]{2,3})\s*∥\s*([A-Z]{2,3})/g, (_, a, b) => stash(`${a}\\parallel ${b}`));
+  text = text.replace(/√\(((?:[^()]|\([^()]*\))*)\)/g, (_, inside) => stash(`\\sqrt{${toTexExpression(inside)}}`));
+  text = text.replace(/√(\d+)/g, (_, n) => stash(`\\sqrt{${n}}`));
+  text = text.replace(/([A-Z]{1,3})²/g, (_, x) => stash(`${x}^2`));
+  text = text.replace(/(\d+(?:\.\d+)?)°/g, (_, n) => stash(`${n}^\\circ`));
+  text = text.replace(/∽|∼/g, () => stash('\\sim'))
+    .replace(/≡|≅/g, () => stash('\\cong'))
+    .replace(/⟂/g, () => stash('\\perp'))
+    .replace(/∥/g, () => stash('\\parallel'));
 
-  // Common equalities and geometric operators. Keep chained equalities together.
-  text = text.replace(/([A-Z]{2,3}(?:\s*[＝=]\s*(?:[A-Z]{2,3}|\d+(?:\.\d+)?(?:\s*cm)?)){2,})/g, expression => {
-    const token = `@@MATHJAX_TEX_${protectedTex.length}@@`;
-    protectedTex.push(`\\(${expression.replace(/＝/g, '=').replace(/\s*cm/g, '\\,\\mathrm{cm}')}\\)`);
-    return token;
-  });
-  text = text.replace(/(?<!angle )([A-Z]{2,3})\s*[＝=]\s*([A-Z]{2,3})/g, (_, a, b) => `\\(${a}=${b}\\)`);
-  text = text.replace(/([A-Z]{2,3})\s*[＝=]\s*(\d+(?:\.\d+)?)(?:\s*cm)?/g, (_, segment, length) => `\\(${segment}=${length}\\)`);
-  text = text.replace(/([A-Z]{2,3})\s*⟂\s*([A-Z]{2,3})/g, (_, a, b) => `\\(${a}\\perp ${b}\\)`);
-  text = text.replace(/([A-Z]{2,3})\s*∥\s*([A-Z]{2,3})/g, (_, a, b) => `\\(${a}\\parallel ${b}\\)`);
-  text = text.replace(/√(\d+)/g, (_, n) => `\\(\\sqrt{${n}}\\)`);
-  text = text.replace(/([A-Z]{1,3})²/g, (_, x) => `\\(${x}^2\\)`);
-  text = text.replace(/(\d+(?:\.\d+)?)°/g, (_, n) => `\\(${n}^\\circ\\)`);
-  text = text.replace(/\b(\d+)\s*\/\s*(\d+)\b/g, (_, n, d) => `\\(\\displaystyle \\frac{${n}}{${d}}\\)`);
-  text = text.replace(/∽|∼/g, '\\(\\sim\\)')
-    .replace(/≡|≅/g, '\\(\\cong\\)')
-    .replace(/⟂/g, '\\(\\perp\\)')
-    .replace(/∥/g, '\\(\\parallel\\)');
+  return text.replace(/@@MATHJAX_TEX_(\d+)@@/g, (_, i) => math[Number(i)] ?? '');
+}
 
-  text = text.replace(/@@MATHJAX_TEX_(\d+)@@/g, (_, i) => protectedTex[Number(i)] ?? '');
+function protectParenthesizedFractions(input, stash) {
+  let text = input;
+  const suffixPattern = /\)\s*\/\s*(\d+(?:\.\d+)?)(?![A-Za-z0-9])/g;
+  const matches = [...text.matchAll(suffixPattern)];
+  // Right-to-left replacement keeps earlier match offsets valid.
+  for (let m = matches.length - 1; m >= 0; m--) {
+    const match = matches[m];
+    const close = match.index;
+    let depth = 0;
+    let open = -1;
+    for (let i = close; i >= 0; i--) {
+      if (text[i] === ')') depth++;
+      else if (text[i] === '(') {
+        depth--;
+        if (depth === 0) { open = i; break; }
+      }
+    }
+    if (open < 0) continue;
+    const numerator = text.slice(open + 1, close).trim();
+    if (!numerator || numerator.includes('@@MATHJAX_TEX_')) continue;
+    const denominator = match[1];
+    const end = match.index + match[0].length;
+    const replacement = stash(`\\frac{${toTexExpression(numerator)}}{${denominator}}`, true);
+    text = text.slice(0, open) + replacement + text.slice(end);
+  }
   return text;
 }
 
