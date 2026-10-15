@@ -1,0 +1,123 @@
+{
+  "schema_version": "1.0.0",
+  "title": "静岡県公立高校入試 数学 図形問題 2018–2020 検証台帳",
+  "policy": "未検証の証明・解答・座標を確定値として扱わない。",
+  "years": [
+    {
+      "year": 2018,
+      "problem_number": 7,
+      "transcription": {
+        "figure": "図8",
+        "statement": "4点A、B、C、Dは円Oの円周上の点であり、△ACDはAC＝ADの二等辺三角形である。また、弧BC＝弧CDである。AD上に∠ACB＝∠ACEとなる点Eをとる。ACとBDとの交点をFとする。",
+        "P1": "△BCF ∽ △ADE を証明する",
+        "P2": "AD＝6 cm、BC＝3 cmのときBFを求める",
+        "status": "画像から転記済み"
+      },
+      "condition_checks": {
+        "concyclic_ABCD": "転記済み・座標未検証",
+        "AC_equals_AD": "転記済み・座標未検証",
+        "arc_BC_equals_arc_CD": "転記済み・座標未検証",
+        "E_on_AD_and_angle_condition": "転記済み・座標未検証",
+        "F_intersection_AC_BD": "転記済み・座標未検証"
+      },
+      "proof_status": "未検証。以前の角追跡には根拠不足があり採用しない。",
+      "answer_BF_cm": null,
+      "answer_status": "未検証。相似を仮定したBF/AE=1/2だけではBFを決められない。",
+      "coordinates_status": "以前の座標案は検証できないため撤回。",
+      "generation_ready": false
+    },
+    {
+      "year": 2019,
+      "problem_number": 7,
+      "transcription": {
+        "figure": "図5",
+        "statement": "3点A、B、Cは円Oの円周上の点であり、BCは円Oの直径である。弧AC上に点Dをとり、点Dを通りACに垂直な直線と円Oとの交点をEとする。また、DEとAC、BCとの交点をそれぞれF、Gとする。",
+        "P1": "△DAC ∽ △GEC を証明する",
+        "P2": "弧AD：弧DC＝3：2、∠BGE＝70°のとき∠EDCを求める",
+        "status": "画像から転記済み"
+      },
+      "condition_checks": {
+        "BC_diameter": "∠BAC=90°が成立",
+        "DE_perpendicular_AC": "転記済み・座標未検証",
+        "F_and_G_intersections": "転記済み・座標未検証",
+        "arc_ratio": "転記済み・数値モデル未検証"
+      },
+      "proof_status": "未検証。以前の角説明は根拠不足。",
+      "answer_angle_EDC_deg": null,
+      "answer_status": "以前の48°は全条件を満たすモデルで独立確認できていないため撤回。",
+      "coordinates_status": "以前の座標案は検証できないため撤回。",
+      "generation_ready": false
+    },
+    {
+      "year": 2020,
+      "problem_number": 6,
+      "transcription": {
+        "figure": "図6",
+        "statement": "3点A、B、Cは円Oの円周上の点であり、AB＝ACである。AC上にBC＝BDとなる点Dをとり、BDの延長と円Oとの交点をEとする。",
+        "P1": "CB＝CE を証明する",
+        "P2": "AB＝6 cm、BC＝4 cmのときDEを求める",
+        "status": "画像から転記済み"
+      },
+      "condition_checks": {
+        "AB_equals_AC": "検証済み",
+        "BC_equals_BD": "検証済み",
+        "D_on_AC": "検証済み",
+        "E_on_circle_and_line_BD": "検証済み"
+      },
+      "proof_status": "検証済み",
+      "proof_steps": [
+        "AB=ACより∠ABC=∠BCA。",
+        "BC=BDより∠BCD=∠BDC。",
+        "A,D,Cは一直線上なので∠BCD=∠BCA。",
+        "B,D,Eは一直線上なので∠CBE=∠CBD。",
+        "円周角より∠BEC=∠BAC。",
+        "AB=ACと内角和から∠BAC=180°−2∠BCA。",
+        "△BCDの内角和から∠CBD=180°−2∠BCD。",
+        "よって∠CBE=∠BEC、したがってCB=CE。"
+      ],
+      "answer_DE_cm": "20/9",
+      "answer_status": "厳密座標モデルで検算済み",
+      "coordinate_model": {
+        "A": [
+          0,
+          "4*sqrt(2)"
+        ],
+        "B": [
+          -2,
+          0
+        ],
+        "C": [
+          2,
+          0
+        ],
+        "D": [
+          "10/9",
+          "16*sqrt(2)/9"
+        ],
+        "O": [
+          0,
+          "7*sqrt(2)/4"
+        ],
+        "E": "直線BDと円ABCのB以外の交点",
+        "radius": "9*sqrt(2)/4",
+        "checks": [
+          "AB=AC=6",
+          "BC=BD=4",
+          "A,B,C,Eは同一円周上",
+          "DはAC上",
+          "DE=20/9"
+        ]
+      },
+      "correction": "以前の4 cmという値は誤り。Dを直線BDのパラメータs=1、Eをs=14/9と扱うのでDE=(14/9−1)×4=20/9 cm。",
+      "generation_ready": false,
+      "reason": "数学的検算はできたが、生成用の最終QAは未完了。"
+    }
+  ],
+  "global_findings": [
+    "2018年の以前の座標案は撤回。",
+    "2019年の以前の48°は撤回。",
+    "2020年の正しいDEは20/9 cm。以前の4 cmは誤り。",
+    "2018・2019年は証明・解答・座標がすべて検証済みではない。",
+    "3年分すべてを生成可能と宣言することはできない。"
+  ]
+}
